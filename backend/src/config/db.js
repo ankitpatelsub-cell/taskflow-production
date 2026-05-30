@@ -17,6 +17,9 @@ function getDb() {
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     applySchema(db);
+    // Run any pending migrations
+    const { runMigrations } = require('./migrations');
+    runMigrations(db);
   }
   return db;
 }
