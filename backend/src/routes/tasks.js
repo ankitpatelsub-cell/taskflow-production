@@ -9,13 +9,21 @@ const router = express.Router({ mergeParams: true });
 router.use(authenticate, requireProjectAccess);
 
 function getTaskWithDetails(db, taskId) {
-  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
+  const task = db.prepare(`
+    SELECT t.*,
+           a.name  AS assignee_name, a.avatar_url AS assignee_avatar,
+           c.name  AS creator_name
+    FROM tasks t
+    LEFT JOIN users a ON a.id = t.assignee_id
+    LEFT JOIN users c ON c.id = t.created_by
+    WHERE t.id = ?
+  `).get(taskId);
   if (!task) return null;
   task.tags        = db.prepare('SELECT tg.id, tg.name, tg.color FROM task_tags tt JOIN tags tg ON tg.id = tt.tag_id WHERE tt.task_id = ?').all(taskId);
   task.subtasks    = db.prepare('SELECT t.*, u.name as assignee_name FROM tasks t LEFT JOIN users u ON u.id = t.assignee_id WHERE t.parent_task_id = ? ORDER BY t.position').all(taskId);
   task.comments    = db.prepare('SELECT c.*, u.name as user_name, u.avatar_url FROM comments c JOIN users u ON u.id = c.user_id WHERE c.task_id = ? ORDER BY c.created_at').all(taskId);
   task.attachments = db.prepare('SELECT a.*, u.name as user_name FROM attachments a JOIN users u ON u.id = a.user_id WHERE a.task_id = ?').all(taskId);
-  task.activity    = db.prepare('SELECT al.*, u.name as user_name FROM activity_log al LEFT JOIN users u ON u.id = al.user_id WHERE al.entity_type = "task" AND al.entity_id = ? ORDER BY al.created_at DESC LIMIT 50').all(taskId);
+  task.activity    = db.prepare("SELECT al.*, u.name as user_name FROM activity_log al LEFT JOIN users u ON u.id = al.user_id WHERE al.entity_type = 'task' AND al.entity_id = ? ORDER BY al.created_at DESC LIMIT 50").all(taskId);
   return task;
 }
 

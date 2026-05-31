@@ -60,6 +60,7 @@ export function ProfilePage() {
 
   function handlePasswordChange(e) {
     e.preventDefault();
+    if (!newPw || !confPw) { setPwMsg('empty'); return; }
     if (newPw !== confPw) { setPwMsg('mismatch'); return; }
     if (newPw.length < 6) { setPwMsg('short'); return; }
     changePassword.mutate({ password: newPw });
@@ -69,6 +70,7 @@ export function ProfilePage() {
     success:  { text: 'Password changed successfully!', cls: 'text-emerald-600' },
     mismatch: { text: 'New passwords do not match.',    cls: 'text-red-600' },
     short:    { text: 'Password must be at least 6 characters.', cls: 'text-red-600' },
+    empty:    { text: 'Please fill in both password fields.', cls: 'text-red-600' },
     error:    { text: 'Failed to change password.',     cls: 'text-red-600' },
   };
 
@@ -203,7 +205,7 @@ export function ProfilePage() {
           )}
 
           <div className="flex justify-end pt-1">
-            <Button type="submit" disabled={changePassword.isPending || !newPw || !confPw}>
+            <Button type="submit" disabled={changePassword.isPending}>
               {changePassword.isPending ? 'Changing…' : 'Change Password'}
             </Button>
           </div>

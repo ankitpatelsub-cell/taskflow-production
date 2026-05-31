@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from '@tanstack/react-router';
-import { useTasks, useDeleteTask } from '@/hooks/useTasks';
+import { useTasks } from '@/hooks/useTasks';
 import { useProject } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
@@ -16,12 +16,12 @@ import { TableSkeleton } from '@/components/ui/Skeleton';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from '@/components/ui/Toast';
 
 export function TaskListPage() {
   const { projectId } = useParams({ strict: false });
   const [filters, setFilters] = useState({});
-  const { data, isLoading } = useTasks(projectId, { ...filters, limit: 200 });
-  const tasks = data?.tasks || [];
+  const { data: tasks = [], isLoading } = useTasks(projectId, { ...filters, limit: 200 });
   const { data: project } = useProject(projectId);
   const { openTaskDrawer, setActiveProject } = useUiStore();
   const [showAdd, setShowAdd]     = useState(false);
@@ -32,7 +32,7 @@ export function TaskListPage() {
   // Members for filter
   const { data: members = [] } = useQuery({
     queryKey: ['project-members', projectId],
-    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members),
+    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members ?? []),
     enabled: !!projectId,
   });
 
@@ -53,24 +53,46 @@ export function TaskListPage() {
 
   async function applyBulkStatus() {
     if (!bulkStatus || !selected.size) return;
-    await api.patch(`/projects/${projectId}/tasks/bulk/update`, {
-      taskIds: [...selected],
-      updates: { status: bulkStatus },
-    });
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    setSelected(new Set());
-    setBulkStatus('');
+    try {
+      await api.patch(`/projects/${projectId}/tasks/bulk/update`, {
+        taskIds: [...selected],
+        updates: { status: bulkStatus },
+      });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      toast.success(`Updated ${selected.size} task(s)`);
+      setSelected(new Set());
+      setBulkStatus('');
+    } catch {
+      toast.error('Bulk update failed');
+    }
   }
 
   async function bulkDelete() {
     if (!confirm(`Delete ${selected.size} task(s)?`)) return;
-    await Promise.all([...selected].map((id) => api.delete(`/projects/${projectId}/tasks/${id}`)));
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    setSelected(new Set());
+    try {
+      await Promise.all([...selected].map((id) => api.delete(`/projects/${projectId}/tasks/${id}`)));
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success(`Deleted ${selected.size} task(s)`);
+      setSelected(new Set());
+    } catch {
+      toast.error('Bulk delete failed');
+    }
   }
 
-  function handleExport() {
-    window.open(`/api/projects/${projectId}/tasks/export.csv`, '_blank');
+  async function handleExport() {
+    try {
+      const res = await api.get(`/projects/${projectId}/tasks/export.csv`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tasks-${projectId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('CSV downloaded');
+    } catch {
+      toast.error('Export failed');
+    }
   }
 
   return (

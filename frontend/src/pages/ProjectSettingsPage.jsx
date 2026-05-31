@@ -1,20 +1,23 @@
 import { useState } from 'react';
-import { useParams } from '@tanstack/react-router';
+import { useParams, useNavigate } from '@tanstack/react-router';
 import { useProject, useUpdateProject } from '@/hooks/useProjects';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ProjectNav } from './ProjectNav';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { toast } from '@/components/ui/Toast';
 const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'];
 
 export function ProjectSettingsPage() {
   const { projectId } = useParams({ strict: false });
+  const navigate = useNavigate();
   const { data: project } = useProject(projectId);
   const update = useUpdateProject(projectId);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('#6366f1');
+  const [archiveConfirm, setArchiveConfirm] = useState(false);
 
   // Tags
   const { data: tags = [] } = useQuery({
@@ -74,7 +77,22 @@ export function ProjectSettingsPage() {
               </div>
             </div>
             <div className="flex justify-between items-center pt-2">
-              <Button variant="danger" onClick={() => update.mutate({ status: 'archived' })}>Archive Project</Button>
+              {archiveConfirm ? (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                  <span className="text-sm text-red-700 font-medium">Archive "{project?.name}"?</span>
+                  <Button size="sm" variant="danger" onClick={() => {
+                    update.mutate({ status: 'archived' }, {
+                      onSuccess: () => { toast.success('Project archived'); navigate({ to: '/app/dashboard' }); }
+                    });
+                    setArchiveConfirm(false);
+                  }}>
+                    Yes, archive
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => setArchiveConfirm(false)}>Cancel</Button>
+                </div>
+              ) : (
+                <Button variant="danger" onClick={() => setArchiveConfirm(true)}>Archive Project</Button>
+              )}
               <Button onClick={handleUpdate} disabled={update.isPending}>{update.isPending ? 'Saving…' : 'Save'}</Button>
             </div>
           </div>

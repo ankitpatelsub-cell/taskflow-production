@@ -4,6 +4,7 @@ import { Keyboard } from 'lucide-react';
 const SHORTCUTS = [
   { key: 'D',   desc: 'Go to Dashboard' },
   { key: 'N',   desc: 'Notifications' },
+  { key: 'Q',   desc: 'Quick create task' },
   { key: 'B',   desc: 'Board view (in project)' },
   { key: 'L',   desc: 'List view (in project)' },
   { key: 'S',   desc: 'Standup view (in project)' },

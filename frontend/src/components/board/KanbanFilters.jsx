@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Filter, X, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/Toast';
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'];
 
@@ -10,12 +11,12 @@ export function KanbanFilters({ projectId, filters, onChange }) {
   const [open, setOpen] = useState(false);
   const { data: members = [] } = useQuery({
     queryKey: ['project-members', projectId],
-    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members),
+    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members ?? []),
     enabled: !!projectId,
   });
   const { data: tags = [] } = useQuery({
     queryKey: ['tags', projectId],
-    queryFn: () => api.get(`/projects/${projectId}/tags`).then((r) => r.data),
+    queryFn: () => api.get(`/projects/${projectId}/tags`).then((r) => Array.isArray(r.data) ? r.data : []),
     enabled: !!projectId,
   });
 
@@ -23,8 +24,19 @@ export function KanbanFilters({ projectId, filters, onChange }) {
 
   function clear() { onChange({ assignee: '', priority: '', tag: '', q: '' }); }
 
-  function handleExport() {
-    window.open(`/api/projects/${projectId}/tasks/export.csv`, '_blank');
+  async function handleExport() {
+    try {
+      const res = await api.get(`/projects/${projectId}/tasks/export.csv`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tasks-${projectId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('CSV downloaded');
+    } catch {
+      toast.error('Export failed');
+    }
   }
 
   return (
@@ -84,7 +96,7 @@ export function KanbanFilters({ projectId, filters, onChange }) {
                   !filters.assignee ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-indigo-300'
                 )}
               >All</button>
-              {members.map((m) => (
+              {(members ?? []).map((m) => (
                 <button
                   key={m.id}
                   onClick={() => onChange({ ...filters, assignee: filters.assignee === m.id ? '' : m.id })}
@@ -131,7 +143,7 @@ export function KanbanFilters({ projectId, filters, onChange }) {
                     !filters.tag ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300'
                   )}
                 >All</button>
-                {tags.map((t) => (
+                {(tags ?? []).map((t) => (
                   <button
                     key={t.id}
                     onClick={() => onChange({ ...filters, tag: filters.tag === t.id ? '' : t.id })}

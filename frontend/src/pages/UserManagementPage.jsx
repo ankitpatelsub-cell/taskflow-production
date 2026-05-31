@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
+import { toast } from '@/components/ui/Toast';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -40,11 +41,13 @@ function UserFormModal({ onClose, editUser = null }) {
 
   const create = useMutation({
     mutationFn: (d) => api.post('/users', d),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); onClose(); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); toast.success('User created'); onClose(); },
+    onError: (e) => toast.error(e.response?.data?.error || 'Failed to create user'),
   });
   const update = useMutation({
     mutationFn: (d) => api.patch(`/users/${editUser.id}`, d),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); onClose(); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); toast.success('User updated'); onClose(); },
+    onError: (e) => toast.error(e.response?.data?.error || 'Failed to update user'),
   });
 
   const onSubmit = (data) => isEdit ? update.mutate(data) : create.mutate(data);
@@ -168,7 +171,14 @@ function ResetPasswordModal({ user: targetUser, onClose }) {
         </div>
         <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button disabled={!pw || pw.length < 6 || reset.isPending} onClick={() => reset.mutate()}>
+          <Button
+            variant="danger"
+            disabled={!pw || pw.length < 6 || reset.isPending}
+            onClick={() => {
+              if (!confirm(`Reset password for ${targetUser.name}? Make sure to share the new password with them securely.`)) return;
+              reset.mutate();
+            }}
+          >
             {reset.isPending ? 'Resetting…' : 'Reset Password'}
           </Button>
         </div>
@@ -192,7 +202,11 @@ export function UserManagementPage() {
 
   const toggle = useMutation({
     mutationFn: ({ id, is_active }) => api.patch(`/users/${id}`, { is_active }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+    onSuccess: (_, { is_active }) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(is_active ? 'User activated' : 'User deactivated');
+    },
+    onError: (e) => toast.error(e.response?.data?.error || 'Failed to update user'),
   });
 
   const filtered = users.filter((u) => {
@@ -320,28 +334,28 @@ export function UserManagementPage() {
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => setEditUser(u)}
-                        className="px-2.5 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                        className="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors dark:hover:bg-indigo-900/30"
                         title="Edit user"
                       >
-                        Edit
+                        <Shield size={15} />
                       </button>
                       <button
                         onClick={() => setResetUser(u)}
-                        className="px-2.5 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-50 rounded-lg transition-colors flex items-center gap-1 dark:text-amber-400 dark:hover:bg-amber-900/30"
+                        className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors dark:hover:bg-amber-900/30"
                         title="Reset password"
                       >
-                        <Key size={12} /> Reset PW
+                        <Key size={15} />
                       </button>
                       <button
                         onClick={() => toggle.mutate({ id: u.id, is_active: u.is_active ? 0 : 1 })}
-                        className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                        className={`p-1.5 rounded-lg transition-colors ${
                           u.is_active
-                            ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30'
-                            : 'text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30'
+                            ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30'
+                            : 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
                         }`}
-                        title={u.is_active ? 'Deactivate' : 'Activate'}
+                        title={u.is_active ? 'Deactivate user' : 'Activate user'}
                       >
-                        {u.is_active ? <><UserX size={12} /> Deactivate</> : <><UserCheck size={12} /> Activate</>}
+                        {u.is_active ? <UserX size={15} /> : <UserCheck size={15} />}
                       </button>
                     </div>
                   </td>

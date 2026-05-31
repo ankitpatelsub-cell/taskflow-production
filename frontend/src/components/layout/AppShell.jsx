@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from '@tanstack/react-router';
+import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
@@ -8,11 +8,32 @@ import { useUiStore } from '@/stores/uiStore';
 import { QuickCreateButton } from '@/components/shared/QuickCreateButton';
 import { KeyboardShortcutsHelp } from '@/components/shared/KeyboardShortcutsHelp';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { ToastProvider } from '@/components/ui/Toast';
+import { useThemeStore } from '@/stores/themeStore';
 
 export function AppShell() {
   const { isAuthenticated } = useAuthStore();
   const { taskDrawerOpen, selectedTaskId, activeProjectId, closeTaskDrawer, sidebarOpen, toggleSidebar } = useUiStore();
   const navigate = useNavigate();
+  const { initTheme } = useThemeStore();
+  const { location } = useRouterState();
+
+  // Dynamic document title
+  useEffect(() => {
+    const path = location.pathname;
+    let title = 'TaskFlow';
+    if (path.includes('/board'))       title = 'Board | TaskFlow';
+    else if (path.includes('/list'))   title = 'List | TaskFlow';
+    else if (path.includes('/standup')) title = 'Standup | TaskFlow';
+    else if (path.includes('/members')) title = 'Members | TaskFlow';
+    else if (path.includes('/settings')) title = 'Settings | TaskFlow';
+    else if (path.includes('/dashboard')) title = 'Dashboard | TaskFlow';
+    else if (path.includes('/notifications')) title = 'Notifications | TaskFlow';
+    else if (path.includes('/profile')) title = 'My Profile | TaskFlow';
+    else if (path.includes('/admin/users')) title = 'User Management | TaskFlow';
+    else if (path.includes('/admin/backups')) title = 'Backups | TaskFlow';
+    document.title = title;
+  }, [location.pathname]);
 
   // Register global keyboard shortcuts
   useKeyboardShortcuts();
@@ -20,6 +41,9 @@ export function AppShell() {
   useEffect(() => {
     if (!isAuthenticated) navigate({ to: '/login' });
   }, [isAuthenticated]);
+
+  // Re-sync theme class on mount in case zustand rehydrated but DOM wasn't updated
+  useEffect(() => { initTheme(); }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950">
@@ -60,6 +84,7 @@ export function AppShell() {
       {/* Floating buttons */}
       <QuickCreateButton />
       <KeyboardShortcutsHelp />
+      <ToastProvider />
     </div>
   );
 }

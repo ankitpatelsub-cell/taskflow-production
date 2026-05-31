@@ -71,8 +71,9 @@ export function KanbanColumn({ status, title, color, tasks, projectId }) {
             ))}
           </SortableContext>
           {tasks.length === 0 && (
-            <div className="h-20 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center">
-              <p className="text-xs text-gray-400">Drop tasks here</p>
+            <div className="h-24 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center px-3">
+              <p className="text-xs font-medium text-gray-400">No tasks yet</p>
+              <p className="text-[11px] text-gray-300">Click <strong>+</strong> to add one or drop a task here</p>
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useLogin } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/Input';
@@ -10,6 +10,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showHint, setShowHint] = useState(false);
   const login = useLogin();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
@@ -80,9 +81,20 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-xs text-indigo-200/40 mt-5">
-          Default: admin@taskflow.local / admin123
-        </p>
+        <div className="text-center mt-5">
+          <button
+            type="button"
+            onClick={() => setShowHint((v) => !v)}
+            className="text-xs text-indigo-200/40 hover:text-indigo-200/70 transition-colors underline underline-offset-2"
+          >
+            {showHint ? 'Hide demo credentials' : 'Show demo credentials'}
+          </button>
+          {showHint && (
+            <p className="text-xs text-indigo-200/60 mt-1.5 font-mono bg-white/5 rounded-lg px-3 py-2 inline-block">
+              admin@taskflow.local / admin123
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

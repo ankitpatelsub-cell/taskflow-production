@@ -10,10 +10,12 @@ export function CreateProjectModal({ onClose }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('#6366f1');
+  const [nameError, setNameError] = useState('');
   const create = useCreateProject();
 
   const handle = () => {
-    if (!name.trim()) return;
+    if (!name.trim()) { setNameError('Project name is required'); return; }
+    setNameError('');
     create.mutate({ name: name.trim(), description, color }, { onSuccess: onClose });
   };
 
@@ -22,7 +24,13 @@ export function CreateProjectModal({ onClose }) {
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Project name" />
+          <Input
+            value={name}
+            onChange={(e) => { setName(e.target.value); if (nameError) setNameError(''); }}
+            placeholder="Project name"
+            className={nameError ? 'border-red-400 focus:ring-red-400' : ''}
+          />
+          {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -49,7 +57,7 @@ export function CreateProjectModal({ onClose }) {
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button onClick={handle} disabled={create.isPending || !name.trim()}>
+          <Button onClick={handle} disabled={create.isPending}>
             {create.isPending ? 'Creating…' : 'Create Project'}
           </Button>
         </div>

@@ -124,7 +124,20 @@ export function StandupView({ projectId }) {
               </div>
               <div className="divide-y divide-gray-50">
                 {data.unassigned.map((t) => (
-                  <div key={t.id} className="px-4 py-3 text-sm text-gray-700">{t.title}</div>
+                  <div key={t.id} className="px-4 py-3 flex items-center gap-3">
+                    <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0', STATUS_COLORS[t.status])}>
+                      {STATUS_LABELS[t.status]}
+                    </span>
+                    <span className="text-sm text-gray-700 flex-1">{t.title}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <PriorityBadge priority={t.priority} />
+                      {t.deadline && (
+                        <span className={cn('text-xs flex items-center gap-1', t.is_overdue ? 'text-red-600 font-semibold' : 'text-gray-400')}>
+                          <Calendar size={12} />{formatDate(t.deadline)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

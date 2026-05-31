@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useProject, useAddMember, useRemoveMember } from '@/hooks/useProjects';
+import { toast } from '@/components/ui/Toast';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Avatar } from '@/components/ui/Avatar';
@@ -42,8 +43,14 @@ export function MembersPage() {
               ))}
             </Select>
             <Button
-              onClick={() => addMember.mutate(selectedUser, { onSuccess: () => setSelectedUser('') })}
-              disabled={!selectedUser || addMember.isPending}
+              onClick={() => {
+                if (!selectedUser) { toast.error('Please select a user to add'); return; }
+                addMember.mutate(selectedUser, {
+                  onSuccess: () => { setSelectedUser(''); toast.success('Member added'); },
+                  onError: (e) => toast.error(e.response?.data?.error || 'Failed to add member'),
+                });
+              }}
+              disabled={addMember.isPending}
             >
               Add
             </Button>
@@ -61,7 +68,10 @@ export function MembersPage() {
               <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{m.role}</span>
               {user?.role === 'admin' && m.id !== user.id && (
                 <button
-                  onClick={() => removeMember.mutate(m.id)}
+                  onClick={() => removeMember.mutate(m.id, {
+                    onSuccess: () => toast.success('Member removed'),
+                    onError: (e) => toast.error(e.response?.data?.error || 'Failed to remove member'),
+                  })}
                   className="text-gray-300 hover:text-red-500 transition-colors"
                 >
                   <Trash2 size={15} />

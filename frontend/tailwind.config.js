@@ -14,11 +14,13 @@ export default {
         pagein:   { from: { opacity: '0', transform: 'translateY(5px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
         slidein:  { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
         fadein:   { from: { opacity: '0' }, to: { opacity: '1' } },
+        fadeout:  { from: { opacity: '1' }, to: { opacity: '0' } },
       },
       animation: {
         pagein:  'pagein 0.18s ease',
         slidein: 'slidein 0.2s ease',
         fadein:  'fadein 0.15s ease',
+        fadeout: 'fadeout 0.2s ease',
       },
     },
   },

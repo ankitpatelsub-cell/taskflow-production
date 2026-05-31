@@ -19,7 +19,7 @@ export function KanbanBoard({ projectId, filters = {} }) {
     ...(filters.q         && { q:         filters.q }),
     limit: 200,
   });
-  const tasks = data?.tasks || [];
+  const tasks = data || [];
   const move = useMoveTask(projectId);
   const [activeTask, setActiveTask] = useState(null);
 
@@ -51,16 +51,20 @@ export function KanbanBoard({ projectId, filters = {} }) {
       onDragEnd={handleDragEnd}
     >
       <div className="flex gap-4 p-6 h-full overflow-x-auto">
-        {COLUMNS.map((status) => (
-          <KanbanColumn
-            key={status}
-            status={status}
-            title={STATUS_LABELS[status]}
-            tasks={tasks.filter((t) => t.status === status)}
-            projectId={projectId}
-            filtered={hasFilters}
-          />
-        ))}
+        {COLUMNS.map((status) => {
+          const colTasks = tasks.filter((t) => t.status === status);
+          if (hasFilters && colTasks.length === 0) return null;
+          return (
+            <KanbanColumn
+              key={status}
+              status={status}
+              title={STATUS_LABELS[status]}
+              tasks={colTasks}
+              projectId={projectId}
+              filtered={hasFilters}
+            />
+          );
+        })}
       </div>
       <DragOverlay dropAnimation={{ duration: 180 }}>
         {activeTask && (

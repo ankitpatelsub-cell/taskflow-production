@@ -86,7 +86,8 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
               <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
                 <Edit3 size={13} /> Edit
               </Button>
-              <Button size="sm" variant="danger" onClick={handleDelete}>
+              <div className="w-px h-5 bg-gray-200 dark:bg-slate-600" />
+              <Button size="sm" variant="danger" onClick={handleDelete} title="Delete task">
                 <Trash2 size={13} />
               </Button>
             </div>

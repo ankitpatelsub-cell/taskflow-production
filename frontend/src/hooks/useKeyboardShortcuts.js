@@ -17,7 +17,7 @@ import { useThemeStore } from '@/stores/themeStore';
  */
 export function useKeyboardShortcuts() {
   const navigate   = useNavigate();
-  const { toggleSidebar, closeTaskDrawer, taskDrawerOpen, activeProjectId } = useUiStore();
+  const { toggleSidebar, closeTaskDrawer, taskDrawerOpen, activeProjectId, openQuickCreate } = useUiStore();
   const { toggleTheme } = useThemeStore();
 
   useEffect(() => {
@@ -28,6 +28,7 @@ export function useKeyboardShortcuts() {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       switch (e.key) {
+        case 'q': openQuickCreate(); break;
         case 'd': navigate({ to: '/app/dashboard' }); break;
         case 'n': navigate({ to: '/app/notifications' }); break;
         case 'b':
@@ -48,5 +49,5 @@ export function useKeyboardShortcuts() {
     }
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [activeProjectId, taskDrawerOpen]);
+  }, [activeProjectId, taskDrawerOpen, openQuickCreate]);
 }

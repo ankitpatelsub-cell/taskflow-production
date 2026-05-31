@@ -10,7 +10,7 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
 
   const { data: members = [] } = useQuery({
     queryKey: ['project-members', projectId],
-    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members),
+    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members ?? []),
     enabled: !!projectId,
   });
 
@@ -58,7 +58,7 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
           <label className="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
           <Select {...register('assignee_id')}>
             <option value="">Unassigned</option>
-            {members.map((m) => (
+            {(members ?? []).map((m) => (
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </Select>

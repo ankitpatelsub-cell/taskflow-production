@@ -37,15 +37,21 @@ const updateProjectSchema = z.object({
 });
 
 // ─── Tasks ───────────────────────────────────────────────────────────────────
+const emptyToNull = (v) => (v === '' ? null : v);
+const uuidOrEmpty = z.preprocess(emptyToNull, z.string().uuid().optional().nullable());
+
 const createTaskSchema = z.object({
   title:           z.string().min(1, 'Title required').max(200),
-  description:     z.string().max(2000).optional().nullable(),
+  description:     z.preprocess(emptyToNull, z.string().max(2000).optional().nullable()),
   status:          z.enum(['todo', 'in_progress', 'review', 'done']).optional().default('todo'),
   priority:        z.enum(['low', 'medium', 'high', 'critical']).optional().default('medium'),
-  assignee_id:     z.string().uuid().optional().nullable(),
-  deadline:        z.string().optional().nullable(),
-  estimated_hours: z.number().positive().optional().nullable(),
-  parent_task_id:  z.string().uuid().optional().nullable(),
+  assignee_id:     uuidOrEmpty,
+  deadline:        z.preprocess(emptyToNull, z.string().optional().nullable()),
+  estimated_hours: z.preprocess(
+    (v) => (v === '' || v === undefined || v === null ? undefined : Number(v)),
+    z.number().positive().optional().nullable()
+  ),
+  parent_task_id:  uuidOrEmpty,
   tag_ids:         z.array(z.string().uuid()).optional(),
 });
 

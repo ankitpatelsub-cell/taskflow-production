@@ -1,4 +1,4 @@
-import { Calendar, MessageSquare, Paperclip, CheckCircle2 } from 'lucide-react';
+import { Calendar, MessageSquare, Paperclip, AlertTriangle } from 'lucide-react';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue } from '@/lib/utils';
@@ -14,6 +14,7 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
 
   const overdue = task.deadline && isOverdue(task.deadline) && task.status !== 'done';
   const done = task.status === 'done';
+  const incomplete = !done && (!task.assignee_id || !task.deadline);
 
   return (
     <div
@@ -21,7 +22,7 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
       className={cn(
         'bg-white rounded-xl p-3.5 cursor-pointer transition-all select-none',
         'border shadow-sm hover:shadow-md',
-        overdue ? 'border-red-200 hover:border-red-300' : 'border-gray-100 hover:border-indigo-200',
+        overdue ? 'border-red-200 hover:border-red-300' : incomplete ? 'border-amber-200 hover:border-amber-300' : 'border-gray-100 hover:border-indigo-200',
         done && 'opacity-60'
       )}
       {...dragHandleProps}
@@ -51,6 +52,11 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
         <PriorityBadge priority={task.priority} />
 
         <div className="flex items-center gap-2">
+          {incomplete && (
+            <span title={`Missing: ${[!task.assignee_id && 'assignee', !task.deadline && 'deadline'].filter(Boolean).join(', ')}`}>
+              <AlertTriangle size={12} className="text-amber-400" />
+            </span>
+          )}
           {/* Meta icons */}
           <div className="flex items-center gap-1.5 text-gray-300">
             {(task.comments?.length > 0 || task.comment_count > 0) && (

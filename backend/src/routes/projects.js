@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
   if (req.user.role === 'admin') {
     projects = db.prepare(`
       SELECT p.*, u.name as creator_name,
-        (SELECT COUNT(*) FROM tasks WHERE project_id = p.id) as task_count,
+        (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL) as task_count,
         (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
       FROM projects p JOIN users u ON p.created_by = u.id
       ORDER BY p.created_at DESC
@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
   } else {
     projects = db.prepare(`
       SELECT p.*, u.name as creator_name,
-        (SELECT COUNT(*) FROM tasks WHERE project_id = p.id) as task_count,
+        (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL) as task_count,
         (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
       FROM projects p
       JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = ?
