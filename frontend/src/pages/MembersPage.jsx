@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useProject, useAddMember, useRemoveMember } from '@/hooks/useProjects';
 import { toast } from '@/components/ui/Toast';
+import { isProjectManagerOrAbove, ROLE_LABELS, ROLE_COLORS } from '@/lib/roles';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Avatar } from '@/components/ui/Avatar';
@@ -34,7 +35,7 @@ export function MembersPage() {
       <div className="p-6 max-w-2xl mx-auto w-full">
         <h3 className="font-semibold text-gray-800 mb-4">Project Members ({project?.members?.length || 0})</h3>
 
-        {user?.role === 'admin' && nonMembers.length > 0 && (
+        {isProjectManagerOrAbove(user?.role) && nonMembers.length > 0 && (
           <div className="flex gap-2 mb-4">
             <Select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="flex-1">
               <option value="">Select user to add…</option>
@@ -65,8 +66,10 @@ export function MembersPage() {
                 <p className="text-sm font-medium text-gray-900">{m.name}</p>
                 <p className="text-xs text-gray-400">{m.email}</p>
               </div>
-              <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{m.role}</span>
-              {user?.role === 'admin' && m.id !== user.id && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_COLORS[m.role] || 'bg-gray-100 text-gray-600'}`}>
+                {ROLE_LABELS[m.role] || m.role}
+              </span>
+              {isProjectManagerOrAbove(user?.role) && m.id !== user.id && (
                 <button
                   onClick={() => removeMember.mutate(m.id, {
                     onSuccess: () => toast.success('Member removed'),

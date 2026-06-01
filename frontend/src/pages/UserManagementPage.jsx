@@ -3,6 +3,8 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { toast } from '@/components/ui/Toast';
+import { useAuthStore } from '@/stores/authStore';
+import { ROLE_LABELS, ROLE_COLORS, ROLE_DESCRIPTIONS, ALL_ROLES, isSuperAdmin, isAdminOrAbove } from '@/lib/roles';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -33,10 +35,11 @@ function StatCard({ label, value, icon: Icon, color }) {
 // ─── Add / Edit User Modal ────────────────────────────────────────────────────
 function UserFormModal({ onClose, editUser = null }) {
   const isEdit = !!editUser;
+  const { user: currentUser } = useAuthStore();
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: isEdit
       ? { name: editUser.name, email: editUser.email, role: editUser.role, timezone: editUser.timezone || 'UTC' }
-      : { role: 'user', timezone: getCurrentTimezone() },
+      : { role: 'member', timezone: getCurrentTimezone() },
   });
 
   const create = useMutation({
@@ -103,9 +106,16 @@ function UserFormModal({ onClose, editUser = null }) {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
             <Select {...register('role')}>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              {ALL_ROLES
+                .filter((r) => isSuperAdmin(currentUser?.role) || r !== 'super_admin')
+                .map((r) => (
+                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                ))
+              }
             </Select>
+            <p className="text-xs text-gray-400 mt-1">
+              {/* Show description dynamically — just a static hint here */}
+            </p>
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Timezone</label>
@@ -305,12 +315,11 @@ export function UserManagementPage() {
                     </div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                      u.role === 'admin'
-                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-                        : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'
-                    }`}>
-                      {u.role}
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-xs font-bold ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-600'}`}
+                      title={ROLE_DESCRIPTIONS[u.role]}
+                    >
+                      {ROLE_LABELS[u.role] || u.role}
                     </span>
                   </td>
                   <td className="px-5 py-3.5">

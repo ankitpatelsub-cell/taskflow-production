@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from '@tanstack/react-router';
 import { FolderKanban, CheckCircle2, Archive, Users, ArrowRight, ArchiveRestore } from 'lucide-react';
 import { useState } from 'react';
+import { isAdminOrAbove } from '@/lib/roles';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -102,7 +103,7 @@ export function DashboardPage() {
               <FolderKanban size={40} className="mx-auto mb-3 text-gray-200" />
               <p className="font-medium text-gray-500 mb-1">No active projects</p>
               <p className="text-sm text-gray-400">
-                {user?.role === 'admin' ? 'Create one from the sidebar.' : 'Ask an admin to add you to a project.'}
+                {isAdminOrAbove(user?.role) ? 'Create one from the sidebar.' : 'Ask an admin to add you to a project.'}
               </p>
             </div>
           )}
@@ -110,7 +111,7 @@ export function DashboardPage() {
       </div>
 
       {/* Archived Projects */}
-      {archivedCount > 0 && user?.role === 'admin' && (
+      {archivedCount > 0 && isAdminOrAbove(user?.role) && (
         <div className="mt-8">
           <button
             onClick={() => setShowArchived((v) => !v)}

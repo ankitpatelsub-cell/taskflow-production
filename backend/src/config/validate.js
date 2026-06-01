@@ -11,7 +11,7 @@ const createUserSchema = z.object({
   name:     z.string().min(2, 'Name must be at least 2 chars'),
   email:    z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 chars'),
-  role:     z.enum(['admin', 'user']).optional().default('user'),
+  role:     z.enum(['super_admin','admin','project_manager','member','viewer']).optional().default('member'),
   timezone: z.string().optional().default('UTC'),
 });
 

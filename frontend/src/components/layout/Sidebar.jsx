@@ -8,6 +8,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useUiStore } from '@/stores/uiStore';
 import { useNotifications } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
+import { isAdminOrAbove, isSuperAdmin } from '@/lib/roles';
 import { useState } from 'react';
 import { CreateProjectModal } from '@/components/shared/CreateProjectModal';
 import { useLogout } from '@/hooks/useAuth';
@@ -92,7 +93,7 @@ export function Sidebar() {
             >
               <span>Projects</span>
               <span className="flex items-center gap-1">
-                {user?.role === 'admin' && (
+                {isAdminOrAbove(user?.role) && (
                   <span
                     onClick={(e) => { e.stopPropagation(); setShowCreateProject(true); }}
                     className="hover:text-indigo-400 cursor-pointer p-0.5 rounded hover:bg-white/10"
@@ -128,7 +129,7 @@ export function Sidebar() {
                 })}
                 {activeProjects.length === 0 && (
                   <p className="px-3 py-2 text-xs text-slate-600 italic">
-                    {user?.role === 'admin' ? 'No projects yet' : 'No projects assigned'}
+                    {isAdminOrAbove(user?.role) ? 'No projects yet' : 'No projects assigned'}
                   </p>
                 )}
               </div>
@@ -136,11 +137,13 @@ export function Sidebar() {
           </div>
 
           {/* ── Admin ──── */}
-          {user?.role === 'admin' && (
+          {isAdminOrAbove(user?.role) && (
             <div className="pt-1 border-t border-slate-800 mt-2">
               <SectionLabel>Admin</SectionLabel>
               <NavItem to="/app/admin/users" icon={Shield}>User Management</NavItem>
-              <NavItem to="/app/admin/backups" icon={Database}>Backups</NavItem>
+              {isSuperAdmin(user?.role) && (
+                <NavItem to="/app/admin/backups" icon={Database}>Backups</NavItem>
+              )}
             </div>
           )}
         </nav>

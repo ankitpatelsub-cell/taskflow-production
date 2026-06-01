@@ -42,6 +42,40 @@ const MIGRATIONS = [
       if (!cols.includes('recurrence_parent_id'))db.exec("ALTER TABLE tasks ADD COLUMN recurrence_parent_id TEXT");
     },
   },
+  {
+    version: 5,
+    description: 'Expand roles: super_admin, admin, project_manager, member, viewer; rename user→member',
+    up: (db) => {
+      db.pragma('foreign_keys = OFF');
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS users_v5 (
+            id            TEXT PRIMARY KEY,
+            name          TEXT NOT NULL,
+            email         TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            role          TEXT NOT NULL DEFAULT 'member'
+                          CHECK(role IN ('super_admin','admin','project_manager','member','viewer')),
+            avatar_url    TEXT,
+            timezone      TEXT DEFAULT 'UTC',
+            is_active     INTEGER NOT NULL DEFAULT 1,
+            created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+          )
+        `);
+        db.exec(`
+          INSERT INTO users_v5 (id, name, email, password_hash, role, avatar_url, timezone, is_active, created_at)
+          SELECT id, name, email, password_hash,
+                 CASE WHEN role = 'user' THEN 'member' ELSE role END,
+                 avatar_url, timezone, is_active, created_at
+          FROM users
+        `);
+        db.exec('DROP TABLE users');
+        db.exec('ALTER TABLE users_v5 RENAME TO users');
+      } finally {
+        db.pragma('foreign_keys = ON');
+      }
+    },
+  },
 ];
 
 function runMigrations(db) {

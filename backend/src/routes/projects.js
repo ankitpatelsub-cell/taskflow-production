@@ -1,7 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../config/db');
-const { authenticate, requireRole, requireProjectAccess } = require('../middleware/auth');
+const { authenticate, requireRole, requireMinRole, requireProjectAccess, requireProjectManage } = require('../middleware/auth');
 const { logActivity } = require('../services/notificationService');
 
 const router = express.Router();
@@ -33,8 +33,8 @@ router.get('/', (req, res) => {
   res.json(projects);
 });
 
-// POST /api/projects
-router.post('/', requireRole('admin'), (req, res) => {
+// POST /api/projects  (admin+)
+router.post('/', requireMinRole('admin'), (req, res) => {
   const { name, description, color = '#6366f1' } = req.body;
   if (!name) return res.status(400).json({ error: 'name required' });
   const db = getDb();
@@ -61,8 +61,8 @@ router.get('/:projectId', requireProjectAccess, (req, res) => {
   res.json({ ...project, members });
 });
 
-// PATCH /api/projects/:projectId
-router.patch('/:projectId', requireRole('admin'), (req, res) => {
+// PATCH /api/projects/:projectId  (admin+ OR project_manager who is a member)
+router.patch('/:projectId', requireProjectManage, (req, res) => {
   const db = getDb();
   const { name, description, color, status } = req.body;
   db.prepare(`
@@ -77,16 +77,16 @@ router.patch('/:projectId', requireRole('admin'), (req, res) => {
   res.json({ message: 'Updated' });
 });
 
-// DELETE /api/projects/:projectId
-router.delete('/:projectId', requireRole('admin'), (req, res) => {
+// DELETE /api/projects/:projectId  (admin+ OR project_manager who is a member)
+router.delete('/:projectId', requireProjectManage, (req, res) => {
   const db = getDb();
   db.prepare("UPDATE projects SET status = 'archived', updated_at = datetime('now') WHERE id = ?")
     .run(req.params.projectId);
   res.json({ message: 'Archived' });
 });
 
-// POST /api/projects/:projectId/members
-router.post('/:projectId/members', requireRole('admin'), (req, res) => {
+// POST /api/projects/:projectId/members  (admin+ OR project_manager who is a member)
+router.post('/:projectId/members', requireProjectManage, (req, res) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'userId required' });
   const db = getDb();
@@ -98,8 +98,8 @@ router.post('/:projectId/members', requireRole('admin'), (req, res) => {
   res.status(201).json({ message: 'Member added' });
 });
 
-// DELETE /api/projects/:projectId/members/:userId
-router.delete('/:projectId/members/:userId', requireRole('admin'), (req, res) => {
+// DELETE /api/projects/:projectId/members/:userId  (admin+ OR project_manager who is a member)
+router.delete('/:projectId/members/:userId', requireProjectManage, (req, res) => {
   const db = getDb();
   db.prepare('DELETE FROM project_members WHERE project_id = ? AND user_id = ?')
     .run(req.params.projectId, req.params.userId);

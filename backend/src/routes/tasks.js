@@ -1,7 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../config/db');
-const { authenticate, requireProjectAccess } = require('../middleware/auth');
+const { authenticate, requireProjectAccess, requireWriteAccess } = require('../middleware/auth');
 const { logActivity, notifyTaskAssigned } = require('../services/notificationService');
 const { validate, createTaskSchema, updateTaskSchema } = require('../config/validate');
 
@@ -244,7 +244,7 @@ router.get('/export.csv', (req, res) => {
 });
 
 // ─── POST /tasks ──────────────────────────────────────────────────────────────
-router.post('/', validate(createTaskSchema), (req, res) => {
+router.post('/', requireWriteAccess, validate(createTaskSchema), (req, res) => {
   const db = getDb();
   const {
     title, description, priority, status, assignee_id, deadline, estimated_hours,
@@ -283,7 +283,7 @@ router.get('/:taskId', (req, res) => {
 });
 
 // ─── PATCH /tasks/:taskId ─────────────────────────────────────────────────────
-router.patch('/:taskId', validate(updateTaskSchema), (req, res) => {
+router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), (req, res) => {
   const db = getDb();
   const old = db.prepare('SELECT * FROM tasks WHERE id = ? AND project_id = ?').get(req.params.taskId, req.params.projectId);
   if (!old) return res.status(404).json({ error: 'Task not found' });
@@ -343,7 +343,7 @@ router.patch('/:taskId', validate(updateTaskSchema), (req, res) => {
 });
 
 // ─── DELETE /tasks/:taskId ────────────────────────────────────────────────────
-router.delete('/:taskId', (req, res) => {
+router.delete('/:taskId', requireWriteAccess, (req, res) => {
   const db = getDb();
   const t = db.prepare('SELECT id FROM tasks WHERE id = ? AND project_id = ?').get(req.params.taskId, req.params.projectId);
   if (!t) return res.status(404).json({ error: 'Task not found' });
@@ -352,7 +352,7 @@ router.delete('/:taskId', (req, res) => {
 });
 
 // ─── PATCH /tasks/:taskId/position ───────────────────────────────────────────
-router.patch('/:taskId/position', (req, res) => {
+router.patch('/:taskId/position', requireWriteAccess, (req, res) => {
   const { status, position } = req.body;
   const db = getDb();
   const old = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.taskId);
@@ -369,7 +369,7 @@ router.patch('/:taskId/position', (req, res) => {
 });
 
 // ─── PATCH /tasks/bulk ────────────────────────────────────────────────────────
-router.patch('/bulk/update', (req, res) => {
+router.patch('/bulk/update', requireWriteAccess, (req, res) => {
   const { taskIds, updates } = req.body;
   if (!Array.isArray(taskIds) || !taskIds.length) return res.status(400).json({ error: 'taskIds required' });
   const db = getDb();

@@ -1,12 +1,12 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, requireMinRole } = require('../middleware/auth');
 const { createBackup, restoreBackup, listBackups } = require('../services/backupService');
 const { upload } = require('../utils/fileUpload');
 
 const router = express.Router();
-router.use(authenticate, requireRole('admin'));
+router.use(authenticate, requireMinRole('super_admin')); // DB backups = super_admin only
 
 // GET /api/admin/backups
 router.get('/backups', (req, res) => {
