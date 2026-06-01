@@ -29,6 +29,7 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
   });
 
   const recurrenceRule = useWatch({ control, name: 'recurrence_rule' });
+  const recurrenceDays = useWatch({ control, name: 'recurrence_days' });
   // Parse existing days for the checkbox state
   const existingDays = (() => {
     try { return JSON.parse(defaultValues.recurrence_days || '[]'); } catch { return []; }
@@ -170,13 +171,15 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
             <input type="hidden" {...register('recurrence_days')} />
             <div className="flex gap-1 flex-wrap">
               {WEEKDAYS.map(({ label, value }) => {
-                const days = useWatch({ control, name: 'recurrence_days' });
-                const active = (() => { try { return JSON.parse(days || '[]').includes(value); } catch { return existingDays.includes(value); } })();
+                const active = (() => {
+                  try { return JSON.parse(recurrenceDays || '[]').includes(value); }
+                  catch { return existingDays.includes(value); }
+                })();
                 return (
                   <button
                     key={value}
                     type="button"
-                    onClick={() => handleDayToggle(value, !active, days)}
+                    onClick={() => handleDayToggle(value, !active, recurrenceDays)}
                     className={cn(
                       'w-9 h-9 rounded-lg text-xs font-semibold border transition-colors',
                       active
