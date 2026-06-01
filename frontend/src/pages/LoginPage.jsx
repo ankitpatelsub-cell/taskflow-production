@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, Link } from '@tanstack/react-router';
 import { useLogin } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -81,11 +81,19 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <div className="text-center mt-5">
+        {/* Sign up link */}
+        <p className="text-center text-sm text-indigo-200/60 mt-5">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-indigo-300 hover:text-white font-medium transition-colors">
+            Sign up
+          </Link>
+        </p>
+
+        <div className="text-center mt-3">
           <button
             type="button"
             onClick={() => setShowHint((v) => !v)}
-            className="text-xs text-indigo-200/40 hover:text-indigo-200/70 transition-colors underline underline-offset-2"
+            className="text-xs text-indigo-200/30 hover:text-indigo-200/60 transition-colors underline underline-offset-2"
           >
             {showHint ? 'Hide demo credentials' : 'Show demo credentials'}
           </button>

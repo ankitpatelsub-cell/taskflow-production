@@ -13,6 +13,16 @@ export function useLogin() {
   });
 }
 
+export function useRegister() {
+  const { login } = useAuthStore();
+  return useMutation({
+    mutationFn: (data) => api.post('/auth/register', data).then((r) => r.data),
+    onSuccess: (data) => {
+      login(data.accessToken, data.user);
+    },
+  });
+}
+
 export function useLogout() {
   const { logout } = useAuthStore();
   return useMutation({

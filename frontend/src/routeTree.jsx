@@ -6,8 +6,9 @@ import { useAuthStore } from './stores/authStore';
 import { BoardSkeleton, TableSkeleton } from './components/ui/Skeleton';
 
 // ── Eager-loaded (small, always needed) ───────────────────────────────────────
-import { LoginPage }  from './pages/LoginPage';
-import { AppShell }   from './components/layout/AppShell';
+import { LoginPage }    from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { AppShell }     from './components/layout/AppShell';
 
 // ── Lazy-loaded routes (code splitting) ───────────────────────────────────────
 const DashboardPage       = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
@@ -33,7 +34,8 @@ const S = (Component, Loader = PageLoader) => (props) => (
 // ── Route tree ────────────────────────────────────────────────────────────────
 const rootRoute = createRootRoute({ component: Outlet });
 
-const loginRoute = createRoute({ getParentRoute: () => rootRoute, path: '/login', component: LoginPage });
+const loginRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/login',    component: LoginPage });
+const registerRoute = createRoute({ getParentRoute: () => rootRoute, path: '/register', component: RegisterPage });
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -67,6 +69,7 @@ const routes = [
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
+  registerRoute,
   indexRoute,
   appRoute.addChildren(routes),
 ]);
