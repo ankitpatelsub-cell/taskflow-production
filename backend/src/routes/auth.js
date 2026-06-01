@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
 
   db.prepare(`
     INSERT INTO users (id, name, email, password_hash, role, is_active)
-    VALUES (?, ?, ?, ?, 'user', 1)
+    VALUES (?, ?, ?, ?, 'member', 1)
   `).run(id, name.trim(), email.toLowerCase().trim(), passwordHash);
 
   // Auto login — return access token
