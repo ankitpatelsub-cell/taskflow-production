@@ -5,6 +5,133 @@ const { authenticate, requireProjectAccess } = require('../middleware/auth');
 const { logActivity, notifyTaskAssigned } = require('../services/notificationService');
 const { validate, createTaskSchema, updateTaskSchema } = require('../config/validate');
 
+// ─── Recurrence helper ────────────────────────────────────────────────────────
+/**
+ * Calculate the next occurrence date for a recurring task.
+ * @param {string} deadline  ISO date string "YYYY-MM-DD"
+ * @param {string} rule      'daily' | 'weekly' | 'monthly'
+ * @param {number} interval  every N days/weeks/months
+ * @param {string|null} days JSON array of weekday numbers [0..6], only for 'weekly'
+ * @returns {string|null}    next "YYYY-MM-DD" or null if can't compute
+ */
+function calcNextDate(deadline, rule, interval = 1, days = null) {
+  if (!deadline || !rule) return null;
+  const d = new Date(deadline + 'T12:00:00Z'); // noon UTC avoids DST edge cases
+
+  if (rule === 'daily') {
+    d.setUTCDate(d.getUTCDate() + interval);
+    return d.toISOString().slice(0, 10);
+  }
+
+  if (rule === 'weekly') {
+    const targets = days ? JSON.parse(days).map(Number).sort((a, b) => a - b) : [d.getUTCDay()];
+    const cur = d.getUTCDay();
+    // Look for the next target day AFTER today (within the next interval weeks)
+    let found = null;
+    for (let week = 0; week < interval + 1; week++) {
+      for (const t of targets) {
+        const diff = (t - cur + 7) % 7 + week * 7;
+        if (diff === 0) continue; // skip same day
+        const candidate = new Date(d);
+        candidate.setUTCDate(d.getUTCDate() + diff);
+        if (!found || candidate < found) found = candidate;
+      }
+      if (found) {
+        // If interval > 1, the first match must be at least interval*7 days ahead
+        const minDiff = (interval - 1) * 7 + 1;
+        const actualDiff = Math.round((found - d) / 86400000);
+        if (actualDiff >= minDiff) break;
+        found = null; // too soon, keep looking next week
+      }
+    }
+    if (!found) {
+      // Fallback: just add interval weeks
+      d.setUTCDate(d.getUTCDate() + interval * 7);
+      return d.toISOString().slice(0, 10);
+    }
+    return found.toISOString().slice(0, 10);
+  }
+
+  if (rule === 'monthly') {
+    d.setUTCMonth(d.getUTCMonth() + interval);
+    return d.toISOString().slice(0, 10);
+  }
+
+  return null;
+}
+
+/**
+ * When a recurring task is marked done, create the next occurrence.
+ * Returns the new task id (or null if no recurrence / ends reached).
+ */
+function maybeCreateNextOccurrence(db, task, userId) {
+  if (!task.recurrence_rule) return null;
+
+  const nextDate = calcNextDate(
+    task.deadline,
+    task.recurrence_rule,
+    task.recurrence_interval || 1,
+    task.recurrence_days
+  );
+  if (!nextDate) return null;
+
+  // Check recurrence_ends_at
+  if (task.recurrence_ends_at && nextDate > task.recurrence_ends_at) return null;
+
+  const newId = uuidv4();
+  const parentId = task.recurrence_parent_id || task.id;
+  const maxPos = db.prepare(
+    "SELECT COALESCE(MAX(position),0)+1 as pos FROM tasks WHERE project_id = ? AND status = 'todo'"
+  ).get(task.project_id);
+
+  db.prepare(`
+    INSERT INTO tasks (
+      id, project_id, parent_task_id, title, description, status, priority,
+      assignee_id, created_by, deadline, estimated_hours, position,
+      recurrence_rule, recurrence_interval, recurrence_days,
+      recurrence_ends_at, recurrence_parent_id
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+  `).run(
+    newId,
+    task.project_id,
+    task.parent_task_id || null,
+    task.title,
+    task.description || null,
+    'todo',
+    task.priority,
+    task.assignee_id || null,
+    userId,
+    nextDate,
+    task.estimated_hours || null,
+    maxPos.pos,
+    task.recurrence_rule,
+    task.recurrence_interval || 1,
+    task.recurrence_days || null,
+    task.recurrence_ends_at || null,
+    parentId
+  );
+
+  // Copy tags from original task
+  const tags = db.prepare('SELECT tag_id FROM task_tags WHERE task_id = ?').all(task.id);
+  tags.forEach((t) =>
+    db.prepare('INSERT OR IGNORE INTO task_tags (id, task_id, tag_id) VALUES (?,?,?)').run(uuidv4(), newId, t.tag_id)
+  );
+
+  logActivity('task', newId, userId, 'created', null, {
+    title: task.title,
+    note: `Auto-created from recurring task (${task.recurrence_rule})`,
+  });
+
+  if (task.assignee_id) {
+    notifyTaskAssigned(
+      { id: newId, title: task.title, assignee_id: task.assignee_id },
+      { id: userId, name: 'System' }
+    );
+  }
+
+  return newId;
+}
+
 const router = express.Router({ mergeParams: true });
 router.use(authenticate, requireProjectAccess);
 
@@ -119,13 +246,26 @@ router.get('/export.csv', (req, res) => {
 // ─── POST /tasks ──────────────────────────────────────────────────────────────
 router.post('/', validate(createTaskSchema), (req, res) => {
   const db = getDb();
-  const { title, description, priority, status, assignee_id, deadline, estimated_hours, parent_task_id, tag_ids } = req.body;
+  const {
+    title, description, priority, status, assignee_id, deadline, estimated_hours,
+    parent_task_id, tag_ids,
+    recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at,
+  } = req.body;
   const id = uuidv4();
   const maxPos = db.prepare("SELECT COALESCE(MAX(position),0)+1 as pos FROM tasks WHERE project_id = ? AND status = ?").get(req.params.projectId, status || 'todo');
   db.prepare(`
-    INSERT INTO tasks (id, project_id, parent_task_id, title, description, status, priority, assignee_id, created_by, deadline, estimated_hours, position)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, req.params.projectId, parent_task_id || null, title, description || null, status || 'todo', priority || 'medium', assignee_id || null, req.user.id, deadline || null, estimated_hours || null, maxPos.pos);
+    INSERT INTO tasks (
+      id, project_id, parent_task_id, title, description, status, priority,
+      assignee_id, created_by, deadline, estimated_hours, position,
+      recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+  `).run(
+    id, req.params.projectId, parent_task_id || null,
+    title, description || null, status || 'todo', priority || 'medium',
+    assignee_id || null, req.user.id, deadline || null, estimated_hours || null, maxPos.pos,
+    recurrence_rule || null, recurrence_interval || 1,
+    recurrence_days || null, recurrence_ends_at || null
+  );
   if (tag_ids?.length) {
     tag_ids.forEach((tid) => db.prepare('INSERT OR IGNORE INTO task_tags (id, task_id, tag_id) VALUES (?,?,?)').run(uuidv4(), id, tid));
   }
@@ -147,27 +287,59 @@ router.patch('/:taskId', validate(updateTaskSchema), (req, res) => {
   const db = getDb();
   const old = db.prepare('SELECT * FROM tasks WHERE id = ? AND project_id = ?').get(req.params.taskId, req.params.projectId);
   if (!old) return res.status(404).json({ error: 'Task not found' });
-  const { title, description, status, priority, assignee_id, deadline, estimated_hours, tag_ids } = req.body;
+
+  const {
+    title, description, status, priority, assignee_id, deadline, estimated_hours, tag_ids,
+    recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at,
+  } = req.body;
+
+  // Handle explicit recurrence_rule = null (user removing recurrence)
+  const newRecurrenceRule = recurrence_rule !== undefined ? (recurrence_rule || null) : undefined;
+
   db.prepare(`
     UPDATE tasks SET
-      title = COALESCE(?, title), description = COALESCE(?, description),
-      status = COALESCE(?, status), priority = COALESCE(?, priority),
-      assignee_id = CASE WHEN ? IS NOT NULL THEN ? ELSE assignee_id END,
-      deadline = COALESCE(?, deadline), estimated_hours = COALESCE(?, estimated_hours),
-      updated_at = datetime('now')
+      title              = COALESCE(?, title),
+      description        = COALESCE(?, description),
+      status             = COALESCE(?, status),
+      priority           = COALESCE(?, priority),
+      assignee_id        = CASE WHEN ? IS NOT NULL THEN ? ELSE assignee_id END,
+      deadline           = COALESCE(?, deadline),
+      estimated_hours    = COALESCE(?, estimated_hours),
+      recurrence_rule    = CASE WHEN ? IS NOT NULL THEN ? ELSE recurrence_rule END,
+      recurrence_interval= COALESCE(?, recurrence_interval),
+      recurrence_days    = CASE WHEN ? IS NOT NULL THEN ? ELSE recurrence_days END,
+      recurrence_ends_at = CASE WHEN ? IS NOT NULL THEN ? ELSE recurrence_ends_at END,
+      updated_at         = datetime('now')
     WHERE id = ?
-  `).run(title??null, description??null, status??null, priority??null,
-         assignee_id??null, assignee_id??null, deadline??null, estimated_hours??null,
-         req.params.taskId);
+  `).run(
+    title ?? null, description ?? null, status ?? null, priority ?? null,
+    assignee_id ?? null, assignee_id ?? null,
+    deadline ?? null, estimated_hours ?? null,
+    recurrence_rule !== undefined ? 'set' : null, newRecurrenceRule,
+    recurrence_interval ?? null,
+    recurrence_days !== undefined ? 'set' : null, recurrence_days ?? null,
+    recurrence_ends_at !== undefined ? 'set' : null, recurrence_ends_at ?? null,
+    req.params.taskId
+  );
+
   if (tag_ids !== undefined) {
     db.prepare('DELETE FROM task_tags WHERE task_id = ?').run(req.params.taskId);
     tag_ids.forEach((tid) => db.prepare('INSERT OR IGNORE INTO task_tags (id, task_id, tag_id) VALUES (?,?,?)').run(uuidv4(), req.params.taskId, tid));
   }
+
   logActivity('task', req.params.taskId, req.user.id, 'updated', old, req.body);
   if (assignee_id && assignee_id !== old.assignee_id) {
-    notifyTaskAssigned({ id: req.params.taskId, title: title||old.title, assignee_id }, req.user);
+    notifyTaskAssigned({ id: req.params.taskId, title: title || old.title, assignee_id }, req.user);
   }
-  res.json({ message: 'Updated' });
+
+  // ── Auto-create next occurrence when marked done ──────────────────────────
+  let nextTaskId = null;
+  if (status === 'done' && old.status !== 'done') {
+    const fresh = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.taskId);
+    nextTaskId = maybeCreateNextOccurrence(db, fresh, req.user.id);
+  }
+
+  res.json({ message: 'Updated', nextTaskId });
 });
 
 // ─── DELETE /tasks/:taskId ────────────────────────────────────────────────────
@@ -183,8 +355,17 @@ router.delete('/:taskId', (req, res) => {
 router.patch('/:taskId/position', (req, res) => {
   const { status, position } = req.body;
   const db = getDb();
-  db.prepare("UPDATE tasks SET status = COALESCE(?, status), position = COALESCE(?, position), updated_at = datetime('now') WHERE id = ?").run(status??null, position??null, req.params.taskId);
-  res.json({ message: 'Updated' });
+  const old = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.taskId);
+  db.prepare("UPDATE tasks SET status = COALESCE(?, status), position = COALESCE(?, position), updated_at = datetime('now') WHERE id = ?").run(status ?? null, position ?? null, req.params.taskId);
+
+  // Auto-create next occurrence when dragged to done
+  let nextTaskId = null;
+  if (status === 'done' && old && old.status !== 'done') {
+    const fresh = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.taskId);
+    nextTaskId = maybeCreateNextOccurrence(db, fresh, req.user.id);
+  }
+
+  res.json({ message: 'Updated', nextTaskId });
 });
 
 // ─── PATCH /tasks/bulk ────────────────────────────────────────────────────────

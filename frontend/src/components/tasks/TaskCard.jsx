@@ -1,4 +1,4 @@
-import { Calendar, MessageSquare, Paperclip, AlertTriangle } from 'lucide-react';
+import { Calendar, MessageSquare, Paperclip, AlertTriangle, RefreshCw } from 'lucide-react';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue } from '@/lib/utils';
@@ -49,7 +49,18 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
 
       {/* Footer row */}
       <div className="flex items-center justify-between gap-2 mt-2.5">
-        <PriorityBadge priority={task.priority} />
+        <div className="flex items-center gap-1.5">
+          <PriorityBadge priority={task.priority} />
+          {task.recurrence_rule && (
+            <span
+              title={`Repeats ${task.recurrence_rule}${task.recurrence_interval > 1 ? ` every ${task.recurrence_interval}` : ''}`}
+              className="flex items-center gap-0.5 text-[10px] font-semibold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/40 px-1.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-700"
+            >
+              <RefreshCw size={9} />
+              {task.recurrence_rule}
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center gap-2">
           {incomplete && (
@@ -95,3 +106,4 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
     </div>
   );
 }
+

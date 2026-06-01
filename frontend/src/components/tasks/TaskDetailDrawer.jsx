@@ -5,7 +5,7 @@ import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X } from 'lucide-react';
+import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw } from 'lucide-react';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { TaskForm } from './TaskForm';
@@ -66,8 +66,12 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
               projectId={projectId}
               defaultValues={{
                 ...task,
-                deadline: task.deadline?.slice(0, 10),
-                assignee_id: task.assignee_id || '',
+                deadline:            task.deadline?.slice(0, 10),
+                recurrence_ends_at:  task.recurrence_ends_at?.slice(0, 10),
+                assignee_id:         task.assignee_id         || '',
+                recurrence_rule:     task.recurrence_rule     || '',
+                recurrence_interval: task.recurrence_interval || 1,
+                recurrence_days:     task.recurrence_days     || '',
               }}
               onSubmit={handleUpdate}
               onCancel={() => setEditing(false)}
@@ -198,9 +202,36 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                 {/* Tab content */}
                 <div className="min-h-[120px]">
                   {tab === 'details' && (
-                    <div className="text-sm text-gray-500 space-y-1">
-                      <p>Created by <strong className="text-gray-700">{task.creator_name || 'Unknown'}</strong></p>
-                      <p>Last updated <strong className="text-gray-700">{formatDate(task.updated_at)}</strong></p>
+                    <div className="text-sm text-gray-500 dark:text-slate-400 space-y-2">
+                      <p>Created by <strong className="text-gray-700 dark:text-slate-200">{task.creator_name || 'Unknown'}</strong></p>
+                      <p>Last updated <strong className="text-gray-700 dark:text-slate-200">{formatDate(task.updated_at)}</strong></p>
+                      {task.recurrence_rule && (
+                        <div className="flex items-start gap-2 mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                          <RefreshCw size={14} className="text-indigo-500 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-0.5">Recurring task</p>
+                            <p className="text-xs text-indigo-600 dark:text-indigo-400">
+                              Repeats <strong>{task.recurrence_rule}</strong>
+                              {task.recurrence_interval > 1 && ` every ${task.recurrence_interval}`}
+                              {task.recurrence_rule === 'weekly' && task.recurrence_days && (() => {
+                                const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                                try {
+                                  const d = JSON.parse(task.recurrence_days).map((n) => days[n]).join(', ');
+                                  return ` on ${d}`;
+                                } catch { return ''; }
+                              })()}
+                            </p>
+                            {task.recurrence_ends_at && (
+                              <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">
+                                Ends on {formatDate(task.recurrence_ends_at)}
+                              </p>
+                            )}
+                            {task.recurrence_parent_id && (
+                              <p className="text-xs text-indigo-400 mt-0.5">Part of a recurring series</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

@@ -51,8 +51,16 @@ const createTaskSchema = z.object({
     (v) => (v === '' || v === undefined || v === null ? undefined : Number(v)),
     z.number().positive().optional().nullable()
   ),
-  parent_task_id:  uuidOrEmpty,
-  tag_ids:         z.array(z.string().uuid()).optional(),
+  parent_task_id:   uuidOrEmpty,
+  tag_ids:          z.array(z.string().uuid()).optional(),
+  // ── Recurrence ──────────────────────────────────────────────────────────────
+  recurrence_rule:     z.enum(['daily','weekly','monthly']).optional().nullable(),
+  recurrence_interval: z.preprocess(
+    (v) => (v === '' || v === undefined || v === null ? 1 : Number(v)),
+    z.number().int().min(1).max(365).optional().default(1)
+  ),
+  recurrence_days:     z.string().optional().nullable(),   // JSON array e.g. "[1,3,5]"
+  recurrence_ends_at:  z.preprocess(emptyToNull, z.string().optional().nullable()),
 });
 
 const updateTaskSchema = createTaskSchema.partial();

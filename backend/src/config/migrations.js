@@ -30,12 +30,18 @@ const MIGRATIONS = [
       }
     },
   },
-  // ── Add future migrations here ────────────────────────────────────────────
-  // {
-  //   version: 4,
-  //   description: 'Add due_date_reminder column',
-  //   up: (db) => { db.exec("ALTER TABLE tasks ADD COLUMN reminder_sent INTEGER DEFAULT 0"); }
-  // },
+  {
+    version: 4,
+    description: 'Add recurrence columns to tasks',
+    up: (db) => {
+      const cols = db.prepare("PRAGMA table_info('tasks')").all().map((c) => c.name);
+      if (!cols.includes('recurrence_rule'))     db.exec("ALTER TABLE tasks ADD COLUMN recurrence_rule TEXT");
+      if (!cols.includes('recurrence_interval')) db.exec("ALTER TABLE tasks ADD COLUMN recurrence_interval INTEGER DEFAULT 1");
+      if (!cols.includes('recurrence_days'))     db.exec("ALTER TABLE tasks ADD COLUMN recurrence_days TEXT");
+      if (!cols.includes('recurrence_ends_at'))  db.exec("ALTER TABLE tasks ADD COLUMN recurrence_ends_at TEXT");
+      if (!cols.includes('recurrence_parent_id'))db.exec("ALTER TABLE tasks ADD COLUMN recurrence_parent_id TEXT");
+    },
+  },
 ];
 
 function runMigrations(db) {
