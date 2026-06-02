@@ -1,37 +1,40 @@
 const { v4: uuidv4 } = require('uuid');
-const { getDb } = require('../config/db');
+const { execute, queryOne } = require('../config/db');
+const { broadcastToUser } = require('./wsService');
 
-function logActivity(entityType, entityId, userId, action, oldValue, newValue) {
+async function logActivity(entityType, entityId, userId, action, oldValue, newValue) {
   try {
-    const db = getDb();
-    db.prepare(`
-      INSERT INTO activity_log (id, entity_type, entity_id, user_id, action, old_value, new_value)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      uuidv4(), entityType, entityId, userId, action,
-      oldValue ? JSON.stringify(oldValue) : null,
-      newValue ? JSON.stringify(newValue) : null
+    await execute(
+      `INSERT INTO activity_log (id, entity_type, entity_id, user_id, action, old_value, new_value)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        uuidv4(), entityType, entityId, userId, action,
+        oldValue ? JSON.stringify(oldValue) : null,
+        newValue ? JSON.stringify(newValue) : null,
+      ]
     );
   } catch (err) {
-    console.error('Activity log error:', err.message);
+    console.error('[Activity]', err.message);
   }
 }
 
-function createNotification(userId, type, message, entityType, entityId) {
+async function createNotification(userId, type, message, entityType, entityId) {
   try {
-    const db = getDb();
-    db.prepare(`
-      INSERT INTO notifications (id, user_id, type, message, entity_type, entity_id)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(uuidv4(), userId, type, message, entityType, entityId);
+    const id = uuidv4();
+    await execute(
+      `INSERT INTO notifications (id, user_id, type, message, entity_type, entity_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, userId, type, message, entityType, entityId]
+    );
+    broadcastToUser(userId, { type: 'notification:new', payload: { id, type, message, entityType, entityId } });
   } catch (err) {
-    console.error('Notification error:', err.message);
+    console.error('[Notification]', err.message);
   }
 }
 
-function notifyTaskAssigned(task, assignedByUser) {
+async function notifyTaskAssigned(task, assignedByUser) {
   if (!task.assignee_id || task.assignee_id === assignedByUser.id) return;
-  createNotification(
+  await createNotification(
     task.assignee_id,
     'task_assigned',
     `${assignedByUser.name} assigned you to "${task.title}"`,
@@ -40,10 +43,9 @@ function notifyTaskAssigned(task, assignedByUser) {
   );
 }
 
-function notifyComment(comment, task, commenter) {
-  // Notify task assignee if different from commenter
+async function notifyComment(comment, task, commenter) {
   if (task.assignee_id && task.assignee_id !== commenter.id) {
-    createNotification(
+    await createNotification(
       task.assignee_id,
       'comment_added',
       `${commenter.name} commented on "${task.title}"`,
@@ -51,9 +53,8 @@ function notifyComment(comment, task, commenter) {
       task.id
     );
   }
-  // Notify task creator if different
   if (task.created_by !== commenter.id && task.created_by !== task.assignee_id) {
-    createNotification(
+    await createNotification(
       task.created_by,
       'comment_added',
       `${commenter.name} commented on "${task.title}"`,

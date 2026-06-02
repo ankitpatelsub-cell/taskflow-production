@@ -6,11 +6,16 @@ const { createBackup, restoreBackup, listBackups } = require('../services/backup
 const { upload } = require('../utils/fileUpload');
 
 const router = express.Router();
-router.use(authenticate, requireMinRole('super_admin')); // DB backups = super_admin only
+router.use(authenticate, requireMinRole('super_admin'));
 
 // GET /api/admin/backups
-router.get('/backups', (req, res) => {
-  res.json(listBackups());
+router.get('/backups', async (req, res) => {
+  try {
+    const backups = await listBackups();
+    res.json(backups);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to list backups' });
+  }
 });
 
 // POST /api/admin/backups
@@ -30,7 +35,7 @@ router.post('/backups/restore', upload.single('file'), async (req, res) => {
   try {
     await restoreBackup(uploadedPath);
     fs.unlinkSync(uploadedPath);
-    res.json({ message: 'Database restored successfully. Please restart the server if needed.' });
+    res.json({ message: 'Database restored successfully.' });
   } catch (err) {
     if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
     res.status(400).json({ error: err.message });

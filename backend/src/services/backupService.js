@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { getDb, closeDb, DB_PATH } = require('../config/db');
+const { getPool, queryAll, execute } = require('../config/db');
 const { BACKUP_ENCRYPTION_KEY, BACKUP_RETENTION_DAYS } = require('../config/env');
 const { v4: uuidv4 } = require('uuid');
 
@@ -30,37 +30,51 @@ function decryptBuffer(buf) {
   return Buffer.concat([decipher.update(data), decipher.final()]);
 }
 
+// Tables to back up, in dependency order
+const TABLES = [
+  'users', 'refresh_tokens', 'projects', 'project_members',
+  'tasks', 'tags', 'task_tags', 'comments', 'attachments',
+  'activity_log', 'notifications', 'backups', 'subscriptions', 'invite_tokens',
+];
+
 async function createBackup(userId = null, notes = 'Scheduled backup') {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const filename = `backup_${timestamp}.db.enc`;
+  const filename = `backup_${timestamp}.json.enc`;
   const destPath = path.join(BACKUP_DIR, filename);
 
-  if (!fs.existsSync(DB_PATH)) throw new Error('Database file not found');
+  // Dump all tables to JSON
+  const dump = {};
+  for (const table of TABLES) {
+    try {
+      dump[table] = await queryAll(`SELECT * FROM ${table}`);
+    } catch {
+      dump[table] = [];
+    }
+  }
 
-  const dbBuf = fs.readFileSync(DB_PATH);
-  const encrypted = encryptBuffer(dbBuf);
+  const jsonBuf = Buffer.from(JSON.stringify({ version: 2, tables: dump, created_at: new Date().toISOString() }), 'utf8');
+  const encrypted = encryptBuffer(jsonBuf);
   fs.writeFileSync(destPath, encrypted);
 
   const size = fs.statSync(destPath).size;
-  const db = getDb();
-  db.prepare('INSERT INTO backups (id, filename, size_bytes, created_by, notes) VALUES (?, ?, ?, ?, ?)')
-    .run(uuidv4(), filename, size, userId, notes);
+  await execute(
+    'INSERT INTO backups (id, filename, size_bytes, created_by, notes) VALUES (?, ?, ?, ?, ?)',
+    [uuidv4(), filename, size, userId, notes]
+  );
 
-  cleanOldBackups(db);
+  await cleanOldBackups();
   console.log(`[Backup] Created: ${filename} (${(size / 1024).toFixed(1)} KB)`);
   return { filename, size };
 }
 
-function cleanOldBackups(db) {
+async function cleanOldBackups() {
   const files = fs.readdirSync(BACKUP_DIR)
-    .filter(f => f.endsWith('.db.enc'))
-    .map(f => ({ name: f, mtime: fs.statSync(path.join(BACKUP_DIR, f)).mtime }))
+    .filter((f) => f.endsWith('.json.enc') || f.endsWith('.db.enc'))
+    .map((f) => ({ name: f, mtime: fs.statSync(path.join(BACKUP_DIR, f)).mtime }))
     .sort((a, b) => b.mtime - a.mtime);
 
-  const retain = BACKUP_RETENTION_DAYS;
-  files.slice(retain).forEach(f => {
+  files.slice(BACKUP_RETENTION_DAYS).forEach((f) => {
     fs.unlinkSync(path.join(BACKUP_DIR, f.name));
-    db.prepare('DELETE FROM backups WHERE filename = ?').run(f.name);
     console.log(`[Backup] Removed old backup: ${f.name}`);
   });
 }
@@ -68,26 +82,54 @@ function cleanOldBackups(db) {
 async function restoreBackup(encryptedFilePath) {
   const encrypted = fs.readFileSync(encryptedFilePath);
   const decrypted = decryptBuffer(encrypted);
+  const data = JSON.parse(decrypted.toString('utf8'));
 
-  // Validate it's a SQLite database
-  const magic = decrypted.slice(0, 16).toString('utf8');
-  if (!magic.startsWith('SQLite format 3')) {
-    throw new Error('Invalid backup file: not a valid SQLite database');
+  if (!data.tables || data.version !== 2) {
+    throw new Error('Invalid backup format');
   }
 
-  const tempPath = DB_PATH + '.restore_tmp';
-  fs.writeFileSync(tempPath, decrypted);
-  fs.renameSync(tempPath, DB_PATH);
-  console.log('[Backup] Database restored successfully');
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Delete in reverse order to respect FK constraints
+    for (const table of [...TABLES].reverse()) {
+      try {
+        await client.query(`DELETE FROM ${table}`);
+      } catch { /* table may not exist */ }
+    }
+
+    // Reinsert
+    for (const table of TABLES) {
+      const rows = data.tables[table] || [];
+      for (const row of rows) {
+        const cols = Object.keys(row);
+        const vals = Object.values(row);
+        const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ');
+        await client.query(
+          `INSERT INTO ${table} (${cols.join(', ')}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`,
+          vals
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    console.log('[Backup] Database restored successfully');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
-function listBackups() {
-  const db = getDb();
-  return db.prepare(`
+async function listBackups() {
+  return queryAll(`
     SELECT b.*, u.name as created_by_name
     FROM backups b LEFT JOIN users u ON u.id = b.created_by
     ORDER BY b.created_at DESC
-  `).all();
+  `);
 }
 
 module.exports = { createBackup, restoreBackup, listBackups };

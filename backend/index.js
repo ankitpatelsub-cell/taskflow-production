@@ -1,16 +1,20 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const pinoHttp = require('pino-http');
+const passport = require('passport');
+const { WebSocketServer } = require('ws');
 
 const { PORT, CORS_ORIGIN, NODE_ENV } = require('./src/config/env');
 const logger = require('./src/config/logger');
-const { getDb } = require('./src/config/db');
+const { initSchema, queryOne, execute } = require('./src/config/db');
 const { startCronJobs } = require('./src/config/cron');
 const errorHandler = require('./src/middleware/errorHandler');
+const wsService = require('./src/services/wsService');
 
 const authRoutes         = require('./src/routes/auth');
 const userRoutes         = require('./src/routes/users');
@@ -22,8 +26,15 @@ const standupRoutes      = require('./src/routes/standup');
 const notificationRoutes = require('./src/routes/notifications');
 const attachmentRoutes   = require('./src/routes/attachments');
 const adminRoutes        = require('./src/routes/admin');
+const invitationRoutes   = require('./src/routes/invitations');
+const billingRoutes      = require('./src/routes/billing');
 
 const app = express();
+const server = http.createServer(app);
+
+// ── WebSocket server ───────────────────────────────────────────────────────────
+const wss = new WebSocketServer({ server, path: '/ws' });
+wsService.register(wss);
 
 // ── Security headers ───────────────────────────────────────────────────────────
 app.use(helmet({
@@ -32,8 +43,8 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc:  ["'self'", "'unsafe-inline'"],
       styleSrc:   ["'self'", "'unsafe-inline'"],
-      imgSrc:     ["'self'", 'data:'],
-      connectSrc: ["'self'"],
+      imgSrc:     ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'wss:', 'ws:'],
     },
   },
 }));
@@ -45,8 +56,12 @@ if (NODE_ENV !== 'test') {
   app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 }
 
+// ── Stripe webhook needs raw body — mount BEFORE express.json() ───────────────
+app.use('/api/billing/webhook', billingRoutes);
+
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
+app.use(passport.initialize());
 
 // ── Rate limiting ──────────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
@@ -79,30 +94,44 @@ app.use('/api/tasks/:taskId/comments',       commentRoutes);
 app.use('/api/tasks/:taskId/attachments',    attachmentRoutes);
 app.use('/api/notifications',                notificationRoutes);
 app.use('/api/admin',                        adminRoutes);
+app.use('/api/invitations',                  invitationRoutes);
+app.use('/api/billing',                      billingRoutes);
 
-app.get('/api/health', (req, res) => {
-  const db = getDb();
-  const userCount = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
-  res.json({ status: 'ok', time: new Date().toISOString(), users: userCount });
+app.get('/api/health', async (req, res) => {
+  try {
+    const row = await queryOne('SELECT COUNT(*) as c FROM users');
+    res.json({ status: 'ok', time: new Date().toISOString(), users: parseInt(row.c, 10) });
+  } catch (err) {
+    res.status(503).json({ status: 'error', error: err.message });
+  }
 });
 
 app.use(errorHandler);
 
 // ── Startup ────────────────────────────────────────────────────────────────────
 async function init() {
-  const db = getDb();
-  const adminExists = db.prepare("SELECT id FROM users WHERE role = 'admin' LIMIT 1").get();
+  // Wait for PostgreSQL schema
+  await initSchema();
+  logger.info('[DB] Schema initialized');
+
+  // Seed default admin if none exists
+  const { hash } = require('./src/utils/password');
+  const { v4: uuidv4 } = require('uuid');
+  const adminExists = await queryOne("SELECT id FROM users WHERE role IN ('admin','super_admin') LIMIT 1");
   if (!adminExists) {
-    const { hash } = require('./src/utils/password');
-    const { v4: uuidv4 } = require('uuid');
     const passwordHash = await hash('admin123');
-    db.prepare('INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)')
-      .run(uuidv4(), 'Administrator', 'admin@taskflow.local', passwordHash, 'admin');
+    await execute(
+      "INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, 'admin')",
+      [uuidv4(), 'Administrator', 'admin@taskflow.local', passwordHash]
+    );
     logger.info('Default admin created: admin@taskflow.local / admin123');
   }
+
   startCronJobs();
-  app.listen(PORT, () => {
+
+  server.listen(PORT, () => {
     logger.info(`TaskFlow API running on http://localhost:${PORT} [${NODE_ENV}]`);
+    logger.info(`WebSocket server at ws://localhost:${PORT}/ws`);
   });
 }
 

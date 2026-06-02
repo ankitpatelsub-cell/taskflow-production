@@ -1,13 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { KanbanBoard } from '@/components/board/KanbanBoard';
 import { KanbanFilters } from '@/components/board/KanbanFilters';
 import { useProject } from '@/hooks/useProjects';
 import { ProjectNav } from './ProjectNav';
+import { subscribeProject, unsubscribeProject, useWsEvent } from '@/hooks/useWebSocket';
+import { queryClient } from '@/lib/queryClient';
 
 export function KanbanBoardPage() {
   const { projectId } = useParams({ strict: false });
   const { data: project } = useProject(projectId);
+
+  // Subscribe to real-time project events
+  useEffect(() => {
+    if (!projectId) return;
+    subscribeProject(projectId);
+    return () => unsubscribeProject(projectId);
+  }, [projectId]);
+
+  // Invalidate task queries on real-time events
+  useWsEvent('task:created',      () => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
+  useWsEvent('task:updated',      () => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
+  useWsEvent('task:deleted',      () => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
+  useWsEvent('tasks:bulk_updated',() => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
+  useWsEvent('comment:created',   () => queryClient.invalidateQueries({ queryKey: ['task'] }));
   const [filters, setFilters] = useState({ assignee: '', priority: '', tag: '', q: '' });
 
   return (

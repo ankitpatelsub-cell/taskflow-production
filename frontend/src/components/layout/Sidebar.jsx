@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   LayoutDashboard, Bell, User, Shield, Plus, ChevronDown,
-  ChevronRight, Database, LogOut,
+  ChevronRight, Database, LogOut, CreditCard,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjects } from '@/hooks/useProjects';
@@ -84,6 +84,9 @@ export function Sidebar() {
           <NavItem to="/app/dashboard" icon={LayoutDashboard}>Dashboard</NavItem>
           <NavItem to="/app/notifications" icon={Bell} badge={unreadCount}>Notifications</NavItem>
           <NavItem to="/app/profile" icon={User}>My Profile</NavItem>
+          {isAdminOrAbove(user?.role) && (
+            <NavItem to="/app/billing" icon={CreditCard}>Billing</NavItem>
+          )}
 
           {/* ── Projects ──── */}
           <div className="pt-1">

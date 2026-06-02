@@ -10,9 +10,10 @@ import { KeyboardShortcutsHelp } from '@/components/shared/KeyboardShortcutsHelp
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { ToastProvider } from '@/components/ui/Toast';
 import { useThemeStore } from '@/stores/themeStore';
+import { connectWebSocket, disconnectWebSocket } from '@/hooks/useWebSocket';
 
 export function AppShell() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, accessToken } = useAuthStore();
   const { taskDrawerOpen, selectedTaskId, activeProjectId, closeTaskDrawer, sidebarOpen, toggleSidebar } = useUiStore();
   const navigate = useNavigate();
   const { initTheme } = useThemeStore();
@@ -22,32 +23,38 @@ export function AppShell() {
   useEffect(() => {
     const path = location.pathname;
     let title = 'TaskFlow';
-    if (path.includes('/board'))       title = 'Board | TaskFlow';
-    else if (path.includes('/list'))   title = 'List | TaskFlow';
+    if (path.includes('/board'))        title = 'Board | TaskFlow';
+    else if (path.includes('/list'))    title = 'List | TaskFlow';
     else if (path.includes('/standup')) title = 'Standup | TaskFlow';
     else if (path.includes('/members')) title = 'Members | TaskFlow';
     else if (path.includes('/settings')) title = 'Settings | TaskFlow';
     else if (path.includes('/dashboard')) title = 'Dashboard | TaskFlow';
     else if (path.includes('/notifications')) title = 'Notifications | TaskFlow';
     else if (path.includes('/profile')) title = 'My Profile | TaskFlow';
+    else if (path.includes('/billing')) title = 'Billing | TaskFlow';
     else if (path.includes('/admin/users')) title = 'User Management | TaskFlow';
     else if (path.includes('/admin/backups')) title = 'Backups | TaskFlow';
     document.title = title;
   }, [location.pathname]);
 
-  // Register global keyboard shortcuts
   useKeyboardShortcuts();
 
   useEffect(() => {
     if (!isAuthenticated) navigate({ to: '/login' });
   }, [isAuthenticated]);
 
-  // Re-sync theme class on mount in case zustand rehydrated but DOM wasn't updated
+  // Connect WebSocket when authenticated
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      connectWebSocket(accessToken);
+      return () => disconnectWebSocket();
+    }
+  }, [isAuthenticated, accessToken]);
+
   useEffect(() => { initTheme(); }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950">
-      {/* Mobile overlay behind sidebar */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 lg:hidden"
@@ -55,7 +62,6 @@ export function AppShell() {
         />
       )}
 
-      {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-40 lg:relative lg:z-auto
         transition-transform duration-200
@@ -64,7 +70,6 @@ export function AppShell() {
         <Sidebar />
       </div>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 w-full">
         <Topbar />
         <main className="flex-1 overflow-auto">
@@ -72,7 +77,6 @@ export function AppShell() {
         </main>
       </div>
 
-      {/* Drawers & overlays */}
       {taskDrawerOpen && selectedTaskId && activeProjectId && (
         <TaskDetailDrawer
           projectId={activeProjectId}
@@ -81,7 +85,6 @@ export function AppShell() {
         />
       )}
 
-      {/* Floating buttons */}
       <QuickCreateButton />
       <KeyboardShortcutsHelp />
       <ToastProvider />

@@ -1,109 +1,140 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const { getDb } = require('../config/db');
-const { authenticate, requireRole, requireMinRole, requireProjectAccess, requireProjectManage } = require('../middleware/auth');
+const { queryOne, queryAll, execute } = require('../config/db');
+const { authenticate, requireMinRole, requireProjectAccess, requireProjectManage } = require('../middleware/auth');
 const { logActivity } = require('../services/notificationService');
 
 const router = express.Router();
 router.use(authenticate);
 
 // GET /api/projects
-router.get('/', (req, res) => {
-  const db = getDb();
-  let projects;
-  if (req.user.role === 'admin') {
-    projects = db.prepare(`
-      SELECT p.*, u.name as creator_name,
-        (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL) as task_count,
-        (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
-      FROM projects p JOIN users u ON p.created_by = u.id
-      ORDER BY p.created_at DESC
-    `).all();
-  } else {
-    projects = db.prepare(`
-      SELECT p.*, u.name as creator_name,
-        (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL) as task_count,
-        (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
-      FROM projects p
-      JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = ?
-      JOIN users u ON p.created_by = u.id
-      ORDER BY p.created_at DESC
-    `).all(req.user.id);
+router.get('/', async (req, res) => {
+  try {
+    let projects;
+    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      projects = await queryAll(`
+        SELECT p.*, u.name as creator_name,
+          (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL) as task_count,
+          (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
+        FROM projects p JOIN users u ON p.created_by = u.id
+        ORDER BY p.created_at DESC
+      `);
+    } else {
+      projects = await queryAll(`
+        SELECT p.*, u.name as creator_name,
+          (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL) as task_count,
+          (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
+        FROM projects p
+        JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = ?
+        JOIN users u ON p.created_by = u.id
+        ORDER BY p.created_at DESC
+      `, [req.user.id]);
+    }
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch projects' });
   }
-  res.json(projects);
 });
 
-// POST /api/projects  (admin+)
-router.post('/', requireMinRole('admin'), (req, res) => {
-  const { name, description, color = '#6366f1' } = req.body;
-  if (!name) return res.status(400).json({ error: 'name required' });
-  const db = getDb();
-  const id = uuidv4();
-  db.prepare('INSERT INTO projects (id, name, description, color, created_by) VALUES (?, ?, ?, ?, ?)')
-    .run(id, name, description || null, color, req.user.id);
-  // Creator is automatically a member
-  db.prepare('INSERT INTO project_members (id, project_id, user_id) VALUES (?, ?, ?)')
-    .run(uuidv4(), id, req.user.id);
-  logActivity('project', id, req.user.id, 'created', null, { name });
-  res.status(201).json({ id, name, description, color });
+// POST /api/projects
+router.post('/', requireMinRole('admin'), async (req, res) => {
+  try {
+    const { name, description, color = '#6366f1' } = req.body;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    const id = uuidv4();
+    await execute(
+      'INSERT INTO projects (id, name, description, color, created_by) VALUES (?, ?, ?, ?, ?)',
+      [id, name, description || null, color, req.user.id]
+    );
+    await execute(
+      'INSERT INTO project_members (id, project_id, user_id) VALUES (?, ?, ?)',
+      [uuidv4(), id, req.user.id]
+    );
+    await logActivity('project', id, req.user.id, 'created', null, { name });
+    res.status(201).json({ id, name, description, color });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create project' });
+  }
 });
 
 // GET /api/projects/:projectId
-router.get('/:projectId', requireProjectAccess, (req, res) => {
-  const db = getDb();
-  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.projectId);
-  if (!project) return res.status(404).json({ error: 'Project not found' });
-  const members = db.prepare(`
-    SELECT u.id, u.name, u.email, u.avatar_url, u.role, pm.joined_at
-    FROM project_members pm JOIN users u ON u.id = pm.user_id
-    WHERE pm.project_id = ?
-  `).all(req.params.projectId);
-  res.json({ ...project, members });
+router.get('/:projectId', requireProjectAccess, async (req, res) => {
+  try {
+    const project = await queryOne('SELECT * FROM projects WHERE id = ?', [req.params.projectId]);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    const members = await queryAll(`
+      SELECT u.id, u.name, u.email, u.avatar_url, u.role, pm.joined_at
+      FROM project_members pm JOIN users u ON u.id = pm.user_id
+      WHERE pm.project_id = ?
+    `, [req.params.projectId]);
+    res.json({ ...project, members });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch project' });
+  }
 });
 
-// PATCH /api/projects/:projectId  (admin+ OR project_manager who is a member)
-router.patch('/:projectId', requireProjectManage, (req, res) => {
-  const db = getDb();
-  const { name, description, color, status } = req.body;
-  db.prepare(`
-    UPDATE projects SET
-      name = COALESCE(?, name),
-      description = COALESCE(?, description),
-      color = COALESCE(?, color),
-      status = COALESCE(?, status),
-      updated_at = datetime('now')
-    WHERE id = ?
-  `).run(name ?? null, description ?? null, color ?? null, status ?? null, req.params.projectId);
-  res.json({ message: 'Updated' });
+// PATCH /api/projects/:projectId
+router.patch('/:projectId', requireProjectManage, async (req, res) => {
+  try {
+    const { name, description, color, status } = req.body;
+    const sets = ['updated_at = NOW()'];
+    const vals = [];
+    if (name !== undefined)        { sets.push('name = ?');        vals.push(name); }
+    if (description !== undefined) { sets.push('description = ?'); vals.push(description); }
+    if (color !== undefined)       { sets.push('color = ?');       vals.push(color); }
+    if (status !== undefined)      { sets.push('status = ?');      vals.push(status); }
+    vals.push(req.params.projectId);
+    await execute(`UPDATE projects SET ${sets.join(', ')} WHERE id = ?`, vals);
+    res.json({ message: 'Updated' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update project' });
+  }
 });
 
-// DELETE /api/projects/:projectId  (admin+ OR project_manager who is a member)
-router.delete('/:projectId', requireProjectManage, (req, res) => {
-  const db = getDb();
-  db.prepare("UPDATE projects SET status = 'archived', updated_at = datetime('now') WHERE id = ?")
-    .run(req.params.projectId);
-  res.json({ message: 'Archived' });
+// DELETE /api/projects/:projectId (archives it)
+router.delete('/:projectId', requireProjectManage, async (req, res) => {
+  try {
+    await execute(
+      "UPDATE projects SET status = 'archived', updated_at = NOW() WHERE id = ?",
+      [req.params.projectId]
+    );
+    res.json({ message: 'Archived' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to archive project' });
+  }
 });
 
-// POST /api/projects/:projectId/members  (admin+ OR project_manager who is a member)
-router.post('/:projectId/members', requireProjectManage, (req, res) => {
-  const { userId } = req.body;
-  if (!userId) return res.status(400).json({ error: 'userId required' });
-  const db = getDb();
-  const existing = db.prepare('SELECT id FROM project_members WHERE project_id = ? AND user_id = ?')
-    .get(req.params.projectId, userId);
-  if (existing) return res.status(409).json({ error: 'Already a member' });
-  db.prepare('INSERT INTO project_members (id, project_id, user_id) VALUES (?, ?, ?)')
-    .run(uuidv4(), req.params.projectId, userId);
-  res.status(201).json({ message: 'Member added' });
+// POST /api/projects/:projectId/members
+router.post('/:projectId/members', requireProjectManage, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    const existing = await queryOne(
+      'SELECT id FROM project_members WHERE project_id = ? AND user_id = ?',
+      [req.params.projectId, userId]
+    );
+    if (existing) return res.status(409).json({ error: 'Already a member' });
+    await execute(
+      'INSERT INTO project_members (id, project_id, user_id) VALUES (?, ?, ?)',
+      [uuidv4(), req.params.projectId, userId]
+    );
+    res.status(201).json({ message: 'Member added' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add member' });
+  }
 });
 
-// DELETE /api/projects/:projectId/members/:userId  (admin+ OR project_manager who is a member)
-router.delete('/:projectId/members/:userId', requireProjectManage, (req, res) => {
-  const db = getDb();
-  db.prepare('DELETE FROM project_members WHERE project_id = ? AND user_id = ?')
-    .run(req.params.projectId, req.params.userId);
-  res.json({ message: 'Member removed' });
+// DELETE /api/projects/:projectId/members/:userId
+router.delete('/:projectId/members/:userId', requireProjectManage, async (req, res) => {
+  try {
+    await execute(
+      'DELETE FROM project_members WHERE project_id = ? AND user_id = ?',
+      [req.params.projectId, req.params.userId]
+    );
+    res.json({ message: 'Member removed' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to remove member' });
+  }
 });
 
 module.exports = router;
