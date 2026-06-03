@@ -29,6 +29,8 @@ export function TaskListPage() {
   const [showAdd, setShowAdd]     = useState(false);
   const [selected, setSelected]   = useState(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkAssignee, setBulkAssignee] = useState('');
+  const [bulkPriority, setBulkPriority] = useState('');
   const [sort, setSort] = useState({ col: null, dir: 'asc' });
   const [search, setSearch] = useState('');
 
@@ -101,6 +103,38 @@ export function TaskListPage() {
       setBulkStatus('');
     } catch {
       toast.error('Bulk update failed');
+    }
+  }
+
+  async function applyBulkAssignee() {
+    if (!selected.size) return;
+    try {
+      await api.patch(`/projects/${projectId}/tasks/bulk/update`, {
+        taskIds: [...selected],
+        updates: { assignee_id: bulkAssignee || null },
+      });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      toast.success(`Reassigned ${selected.size} task(s)`);
+      setSelected(new Set());
+      setBulkAssignee('');
+    } catch {
+      toast.error('Bulk reassign failed');
+    }
+  }
+
+  async function applyBulkPriority() {
+    if (!bulkPriority || !selected.size) return;
+    try {
+      await api.patch(`/projects/${projectId}/tasks/bulk/update`, {
+        taskIds: [...selected],
+        updates: { priority: bulkPriority },
+      });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      toast.success(`Updated priority for ${selected.size} task(s)`);
+      setSelected(new Set());
+      setBulkPriority('');
+    } catch {
+      toast.error('Bulk priority update failed');
     }
   }
 
@@ -218,13 +252,14 @@ export function TaskListPage() {
             <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
               {selected.size} selected
             </span>
-            <div className="flex items-center gap-2 ml-2">
+            <div className="flex items-center gap-2 ml-2 flex-wrap">
+              {/* Status */}
               <select
                 value={bulkStatus}
                 onChange={(e) => setBulkStatus(e.target.value)}
                 className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
               >
-                <option value="">Change status…</option>
+                <option value="">Status…</option>
                 <option value="todo">To Do</option>
                 <option value="in_progress">In Progress</option>
                 <option value="review">Review</option>
@@ -232,6 +267,31 @@ export function TaskListPage() {
               </select>
               {bulkStatus && (
                 <Button size="sm" onClick={applyBulkStatus}>Apply</Button>
+              )}
+              {/* Assignee */}
+              <select
+                value={bulkAssignee}
+                onChange={(e) => setBulkAssignee(e.target.value)}
+                className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
+              >
+                <option value="">Assign to…</option>
+                <option value="">Unassign</option>
+                {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+              {bulkAssignee !== '' && (
+                <Button size="sm" onClick={applyBulkAssignee}>Assign</Button>
+              )}
+              {/* Priority */}
+              <select
+                value={bulkPriority}
+                onChange={(e) => setBulkPriority(e.target.value)}
+                className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
+              >
+                <option value="">Priority…</option>
+                {['low','medium','high','critical'].map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              {bulkPriority && (
+                <Button size="sm" onClick={applyBulkPriority}>Set</Button>
               )}
               <Button size="sm" variant="danger" onClick={bulkDelete}>
                 <Trash2 size={13} /> Delete

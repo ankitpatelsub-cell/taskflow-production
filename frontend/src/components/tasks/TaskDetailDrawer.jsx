@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Drawer } from '@/components/ui/Drawer';
 import { Button } from '@/components/ui/Button';
 import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
@@ -34,6 +35,15 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
   const [descDraft, setDescDraft] = useState('');
   const [newSubtask, setNewSubtask] = useState('');
   const [togglingSubtask, setTogglingSubtask] = useState(null);
+  const [editingPriority, setEditingPriority] = useState(false);
+  const [editingAssignee, setEditingAssignee] = useState(false);
+  const [editingDeadline, setEditingDeadline] = useState(false);
+
+  const { data: members = [] } = useQuery({
+    queryKey: ['project-members', projectId],
+    queryFn: () => api.get(`/projects/${projectId}`).then(r => r.data.members ?? []),
+    enabled: !!projectId,
+  });
 
   if (isLoading) {
     return (
@@ -129,7 +139,21 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   </button>
                 ))}
               </div>
-              <PriorityBadge priority={task.priority} />
+              {editingPriority ? (
+                <select
+                  autoFocus
+                  defaultValue={task.priority || 'medium'}
+                  onBlur={() => setEditingPriority(false)}
+                  onChange={(e) => { update.mutate({ priority: e.target.value }); setEditingPriority(false); }}
+                  className="text-xs border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
+                >
+                  {['low','medium','high','critical'].map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              ) : (
+                <button onClick={() => setEditingPriority(true)} title="Click to change priority" className="hover:scale-105 transition-transform">
+                  <PriorityBadge priority={task.priority} />
+                </button>
+              )}
               <div className="flex-1" />
               <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
                 <Edit3 size={13} /> Edit
@@ -145,30 +169,69 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
               {/* Meta cards */}
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Assignee */}
-                  <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Assignee</p>
-                    {task.assignee_id ? (
+                  {/* Assignee — click to edit */}
+                  <div
+                    className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3.5 border border-gray-100 dark:border-slate-600 cursor-pointer hover:border-indigo-300 transition-colors"
+                    onClick={() => !editingAssignee && setEditingAssignee(true)}
+                    title="Click to change assignee"
+                  >
+                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-2">Assignee</p>
+                    {editingAssignee ? (
+                      <select
+                        autoFocus
+                        defaultValue={task.assignee_id || ''}
+                        onBlur={() => setEditingAssignee(false)}
+                        onChange={(e) => {
+                          update.mutate({ assignee_id: e.target.value || null });
+                          setEditingAssignee(false);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full text-sm border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="">Unassigned</option>
+                        {members.map(m => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </select>
+                    ) : task.assignee_id ? (
                       <div className="flex items-center gap-2">
                         <Avatar name={task.assignee_name} size="sm" />
-                        <span className="text-sm font-medium text-gray-800">{task.assignee_name}</span>
+                        <span className="text-sm font-medium text-gray-800 dark:text-slate-200">{task.assignee_name}</span>
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400">Unassigned</span>
+                      <span className="text-sm text-gray-400 dark:text-slate-500">Unassigned</span>
                     )}
                   </div>
 
-                  {/* Deadline */}
-                  <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Deadline</p>
-                    {task.deadline ? (
-                      <div className={cn('flex items-center gap-1.5 text-sm font-medium', overdue ? 'text-red-600' : 'text-gray-800')}>
+                  {/* Deadline — click to edit */}
+                  <div
+                    className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3.5 border border-gray-100 dark:border-slate-600 cursor-pointer hover:border-indigo-300 transition-colors"
+                    onClick={() => !editingDeadline && setEditingDeadline(true)}
+                    title="Click to change deadline"
+                  >
+                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-2">Deadline</p>
+                    {editingDeadline ? (
+                      <input
+                        type="date"
+                        autoFocus
+                        defaultValue={task.deadline?.slice(0, 10) || ''}
+                        onBlur={(e) => {
+                          if (e.target.value !== (task.deadline?.slice(0, 10) || '')) {
+                            update.mutate({ deadline: e.target.value || null });
+                          }
+                          setEditingDeadline(false);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full text-sm border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    ) : task.deadline ? (
+                      <div className={cn('flex items-center gap-1.5 text-sm font-medium', overdue ? 'text-red-600' : 'text-gray-800 dark:text-slate-200')}>
                         <Calendar size={14} />
                         {formatDate(task.deadline)}
                         {overdue && <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-bold">OVERDUE</span>}
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400">Not set</span>
+                      <span className="text-sm text-gray-400 dark:text-slate-500">Not set</span>
                     )}
                   </div>
 

@@ -5,6 +5,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { queryClient } from './lib/queryClient';
 import { routeTree } from './routeTree';
 import { useThemeStore } from './stores/themeStore';
+import { ErrorBoundary } from './components/layout/ErrorBoundary';
 import './index.css';
 
 // Sentry frontend error tracking
@@ -31,8 +32,10 @@ const router = createRouter({ routeTree, defaultPreload: 'intent' });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

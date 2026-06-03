@@ -24,7 +24,16 @@ export function KanbanBoardPage() {
   useWsEvent('task:deleted',      () => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
   useWsEvent('tasks:bulk_updated',() => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
   useWsEvent('comment:created',   () => queryClient.invalidateQueries({ queryKey: ['task'] }));
-  const [filters, setFilters] = useState({ assignee: '', priority: '', tag: '', q: '', to: '' });
+
+  const FILTER_KEY = `kf_${projectId}`;
+  const [filters, setFilters] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(FILTER_KEY)) || { assignee: '', priority: '', tag: '', q: '', to: '' }; }
+    catch { return { assignee: '', priority: '', tag: '', q: '', to: '' }; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(FILTER_KEY, JSON.stringify(filters)); } catch {}
+  }, [filters, FILTER_KEY]);
 
   return (
     <div className="h-full flex flex-col">
