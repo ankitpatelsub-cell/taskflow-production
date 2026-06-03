@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { LayoutGrid, List, Calendar, CalendarDays, Users, Settings, BarChart2, Zap } from 'lucide-react';
+import { LayoutGrid, List, Calendar, CalendarDays, Users, Settings, BarChart2, Zap, Clock } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { AISummaryButton } from '@/components/shared/AISummaryButton';
 
@@ -12,6 +12,7 @@ export function ProjectNav({ projectId, project }) {
     { to: `/app/projects/${projectId}/standup`,     icon: Calendar,    label: 'Standup' },
     { to: `/app/projects/${projectId}/workload`,    icon: BarChart2,   label: 'Workload' },
     { to: `/app/projects/${projectId}/automations`, icon: Zap,         label: 'Automations' },
+    { to: `/app/projects/${projectId}/time-report`, icon: Clock,       label: 'Time' },
     { to: `/app/projects/${projectId}/members`,     icon: Users,       label: 'Members' },
     ...(user?.role === 'admin'
       ? [{ to: `/app/projects/${projectId}/settings`, icon: Settings, label: 'Settings' }]
