@@ -4,6 +4,16 @@ import {
 } from '@tanstack/react-router';
 import { useAuthStore } from './stores/authStore';
 import { BoardSkeleton, TableSkeleton } from './components/ui/Skeleton';
+import { CookieBanner } from './components/shared/CookieBanner';
+
+function RootLayout() {
+  return (
+    <>
+      <Outlet />
+      <CookieBanner />
+    </>
+  );
+}
 
 // ── Eager-loaded ──────────────────────────────────────────────────────────────
 import { LoginPage }           from './pages/LoginPage';
@@ -43,7 +53,7 @@ const S = (Component, Loader = PageLoader) => (props) => (
 );
 
 // ── Route tree ────────────────────────────────────────────────────────────────
-const rootRoute = createRootRoute({ component: Outlet });
+const rootRoute = createRootRoute({ component: RootLayout });
 
 const loginRoute          = createRoute({ getParentRoute: () => rootRoute, path: '/login',                   component: LoginPage });
 const registerRoute       = createRoute({ getParentRoute: () => rootRoute, path: '/register',                component: RegisterPage });

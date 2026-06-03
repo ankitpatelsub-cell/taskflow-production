@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
         COUNT(t.id) FILTER (WHERE t.status = 'todo')  AS todo_tasks,
         COUNT(t.id) FILTER (WHERE t.status = 'in_progress') AS in_progress_tasks,
         COUNT(t.id) FILTER (WHERE t.status = 'review') AS review_tasks,
-        COUNT(t.id) FILTER (WHERE t.deadline < NOW() AND t.status != 'done') AS overdue_tasks,
+        COUNT(t.id) FILTER (WHERE t.deadline IS NOT NULL AND t.deadline::date < CURRENT_DATE AND t.status != 'done') AS overdue_tasks,
         COALESCE(SUM(t.estimated_hours) FILTER (WHERE t.status != 'done'), 0) AS estimated_hours_remaining,
         COALESCE(SUM(tl.duration_minutes), 0) AS logged_minutes
       FROM project_members pm

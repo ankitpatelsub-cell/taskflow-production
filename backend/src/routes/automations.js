@@ -25,10 +25,11 @@ router.get('/', async (req, res) => {
 // POST /api/projects/:projectId/automations
 router.post('/', requireProjectManage, async (req, res) => {
   try {
-    const { name, trigger_type, trigger_value, action_type, action_value } = req.body;
-    if (!name || !trigger_type || !action_type) {
-      return res.status(400).json({ error: 'name, trigger_type, action_type required' });
+    const { trigger_type, trigger_value, action_type, action_value } = req.body;
+    if (!trigger_type || !action_type) {
+      return res.status(400).json({ error: 'trigger_type, action_type required' });
     }
+    const name = `${trigger_type.replace(/_/g, ' ')} → ${action_type.replace(/_/g, ' ')}`;
     if (!VALID_TRIGGERS.includes(trigger_type)) {
       return res.status(400).json({ error: `trigger_type must be one of: ${VALID_TRIGGERS.join(', ')}` });
     }

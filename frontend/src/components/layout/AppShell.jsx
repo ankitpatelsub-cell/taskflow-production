@@ -47,6 +47,21 @@ export function AppShell() {
     if (!isAuthenticated) navigate({ to: '/login' });
   }, [isAuthenticated]);
 
+  // On page refresh the access token is gone (memory only) but isAuthenticated
+  // persists. Trigger a silent refresh so the token is restored before any
+  // child component fires an API call.
+  useEffect(() => {
+    if (isAuthenticated && !accessToken) {
+      import('@/lib/api').then(({ default: api }) => {
+        api.post('/auth/refresh').then(({ data }) => {
+          useAuthStore.getState().setToken(data.accessToken);
+        }).catch(() => {
+          useAuthStore.getState().logout();
+        });
+      });
+    }
+  }, []);
+
   // Connect WebSocket when authenticated
   useEffect(() => {
     if (isAuthenticated && accessToken) {

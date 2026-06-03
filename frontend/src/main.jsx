@@ -5,7 +5,6 @@ import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { queryClient } from './lib/queryClient';
 import { routeTree } from './routeTree';
 import { useThemeStore } from './stores/themeStore';
-import { CookieBanner } from './components/shared/CookieBanner';
 import './index.css';
 
 // Sentry frontend error tracking
@@ -34,7 +33,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
-      <CookieBanner />
     </QueryClientProvider>
   </React.StrictMode>
 );
