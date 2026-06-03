@@ -348,6 +348,30 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   );
                 })()}
 
+                {/* Recurrence badge — always visible when set */}
+                {task.recurrence_rule && (
+                  <div className="flex items-start gap-2 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                    <RefreshCw size={14} className="text-indigo-500 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-0.5">Recurring task</p>
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400">
+                        Repeats <strong>{task.recurrence_rule}</strong>
+                        {task.recurrence_interval > 1 && ` every ${task.recurrence_interval}`}
+                        {task.recurrence_rule === 'weekly' && task.recurrence_days && (() => {
+                          const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                          try {
+                            const d = JSON.parse(task.recurrence_days).map((n) => days[n]).join(', ');
+                            return ` on ${d}`;
+                          } catch { return ''; }
+                        })()}
+                      </p>
+                      {task.recurrence_ends_at && (
+                        <p className="text-xs text-indigo-500 mt-0.5">Ends on {formatDate(task.recurrence_ends_at)}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Tabs */}
                 <div className="border-b border-gray-100 -mx-6 px-6 pt-2">
                   <div className="flex gap-0 -mb-px overflow-x-auto">
@@ -384,32 +408,8 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                     <div className="text-sm text-gray-500 dark:text-slate-400 space-y-2">
                       <p>Created by <strong className="text-gray-700 dark:text-slate-200">{task.creator_name || 'Unknown'}</strong></p>
                       <p>Last updated <strong className="text-gray-700 dark:text-slate-200">{formatDate(task.updated_at)}</strong></p>
-                      {task.recurrence_rule && (
-                        <div className="flex items-start gap-2 mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
-                          <RefreshCw size={14} className="text-indigo-500 mt-0.5 shrink-0" />
-                          <div>
-                            <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-0.5">Recurring task</p>
-                            <p className="text-xs text-indigo-600 dark:text-indigo-400">
-                              Repeats <strong>{task.recurrence_rule}</strong>
-                              {task.recurrence_interval > 1 && ` every ${task.recurrence_interval}`}
-                              {task.recurrence_rule === 'weekly' && task.recurrence_days && (() => {
-                                const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                                try {
-                                  const d = JSON.parse(task.recurrence_days).map((n) => days[n]).join(', ');
-                                  return ` on ${d}`;
-                                } catch { return ''; }
-                              })()}
-                            </p>
-                            {task.recurrence_ends_at && (
-                              <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">
-                                Ends on {formatDate(task.recurrence_ends_at)}
-                              </p>
-                            )}
-                            {task.recurrence_parent_id && (
-                              <p className="text-xs text-indigo-400 mt-0.5">Part of a recurring series</p>
-                            )}
-                          </div>
-                        </div>
+                      {task.recurrence_parent_id && (
+                        <p className="text-xs text-indigo-400">Part of a recurring series</p>
                       )}
                     </div>
                   )}

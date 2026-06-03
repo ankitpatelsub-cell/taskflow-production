@@ -95,5 +95,9 @@ export function useMoveTask(projectId) {
         .patch(`/projects/${projectId}/tasks/${taskId}/position`, { status, position })
         .then((r) => r.data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }),
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      toast.error('Failed to move task');
+    },
   });
 }

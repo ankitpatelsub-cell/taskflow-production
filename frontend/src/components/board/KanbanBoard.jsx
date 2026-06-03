@@ -44,6 +44,23 @@ export function KanbanBoard({ projectId, filters = {} }) {
 
   const hasFilters = Object.values(filters).some(Boolean);
 
+  if (!hasFilters && tasks.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center max-w-sm px-6">
+          <div className="text-6xl mb-4">🚀</div>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">No tasks yet</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">
+            Click the <strong>+ Add task</strong> button in any column to get started.
+          </p>
+          <p className="text-xs text-gray-400 dark:text-slate-500">
+            Drag cards between columns to update status.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DndContext
       sensors={sensors}
