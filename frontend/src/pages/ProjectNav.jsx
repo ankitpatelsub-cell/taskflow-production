@@ -1,14 +1,15 @@
 import { Link } from '@tanstack/react-router';
-import { LayoutGrid, List, Calendar, Users, Settings } from 'lucide-react';
+import { LayoutGrid, List, Calendar, CalendarDays, Users, Settings } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
 export function ProjectNav({ projectId, project }) {
   const { user } = useAuthStore();
   const tabs = [
-    { to: `/app/projects/${projectId}/board`,   icon: LayoutGrid, label: 'Board' },
-    { to: `/app/projects/${projectId}/list`,    icon: List,        label: 'List' },
-    { to: `/app/projects/${projectId}/standup`, icon: Calendar,    label: 'Standup' },
-    { to: `/app/projects/${projectId}/members`, icon: Users,       label: 'Members' },
+    { to: `/app/projects/${projectId}/board`,    icon: LayoutGrid,  label: 'Board' },
+    { to: `/app/projects/${projectId}/list`,     icon: List,        label: 'List' },
+    { to: `/app/projects/${projectId}/calendar`, icon: CalendarDays,label: 'Calendar' },
+    { to: `/app/projects/${projectId}/standup`,  icon: Calendar,    label: 'Standup' },
+    { to: `/app/projects/${projectId}/members`,  icon: Users,       label: 'Members' },
     ...(user?.role === 'admin'
       ? [{ to: `/app/projects/${projectId}/settings`, icon: Settings, label: 'Settings' }]
       : []),

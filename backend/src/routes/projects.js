@@ -137,4 +137,35 @@ router.delete('/:projectId/members/:userId', requireProjectManage, async (req, r
   }
 });
 
+// GET /api/projects/:projectId/time-report — aggregate time per task and per user
+router.get('/:projectId/time-report', requireProjectAccess, async (req, res) => {
+  try {
+    const byTask = await queryAll(`
+      SELECT t.id, t.title, t.status,
+             COALESCE(SUM(tl.duration_minutes), 0) AS total_minutes
+      FROM tasks t
+      LEFT JOIN time_logs tl ON tl.task_id = t.id
+      WHERE t.project_id = ?
+      GROUP BY t.id, t.title, t.status
+      ORDER BY total_minutes DESC
+    `, [req.params.projectId]);
+
+    const byUser = await queryAll(`
+      SELECT u.id, u.name, u.avatar_url,
+             COALESCE(SUM(tl.duration_minutes), 0) AS total_minutes
+      FROM project_members pm
+      JOIN users u ON u.id = pm.user_id
+      LEFT JOIN time_logs tl ON tl.user_id = u.id
+        AND tl.task_id IN (SELECT id FROM tasks WHERE project_id = ?)
+      WHERE pm.project_id = ?
+      GROUP BY u.id, u.name, u.avatar_url
+      ORDER BY total_minutes DESC
+    `, [req.params.projectId, req.params.projectId]);
+
+    res.json({ byTask, byUser });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch time report' });
+  }
+});
+
 module.exports = router;

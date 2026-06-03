@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useAuthStore } from '@/stores/authStore';
@@ -7,6 +7,8 @@ import { TaskDetailDrawer } from '@/components/tasks/TaskDetailDrawer';
 import { useUiStore } from '@/stores/uiStore';
 import { QuickCreateButton } from '@/components/shared/QuickCreateButton';
 import { KeyboardShortcutsHelp } from '@/components/shared/KeyboardShortcutsHelp';
+import { CommandPalette } from '@/components/shared/CommandPalette';
+import { OnboardingChecklist } from '@/components/shared/OnboardingChecklist';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { ToastProvider } from '@/components/ui/Toast';
 import { useThemeStore } from '@/stores/themeStore';
@@ -14,6 +16,7 @@ import { connectWebSocket, disconnectWebSocket } from '@/hooks/useWebSocket';
 
 export function AppShell() {
   const { isAuthenticated, accessToken } = useAuthStore();
+  const [cmdOpen, setCmdOpen] = useState(false);
   const { taskDrawerOpen, selectedTaskId, activeProjectId, closeTaskDrawer, sidebarOpen, toggleSidebar } = useUiStore();
   const navigate = useNavigate();
   const { initTheme } = useThemeStore();
@@ -25,6 +28,7 @@ export function AppShell() {
     let title = 'TaskFlow';
     if (path.includes('/board'))        title = 'Board | TaskFlow';
     else if (path.includes('/list'))    title = 'List | TaskFlow';
+    else if (path.includes('/calendar')) title = 'Calendar | TaskFlow';
     else if (path.includes('/standup')) title = 'Standup | TaskFlow';
     else if (path.includes('/members')) title = 'Members | TaskFlow';
     else if (path.includes('/settings')) title = 'Settings | TaskFlow';
@@ -52,6 +56,18 @@ export function AppShell() {
   }, [isAuthenticated, accessToken]);
 
   useEffect(() => { initTheme(); }, []);
+
+  // Global ⌘K / Ctrl+K handler
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen(o => !o);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950">
@@ -87,6 +103,8 @@ export function AppShell() {
 
       <QuickCreateButton />
       <KeyboardShortcutsHelp />
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+      <OnboardingChecklist />
       <ToastProvider />
     </div>
   );

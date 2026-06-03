@@ -31,6 +31,7 @@ const NotificationsPage   = lazy(() => import('./pages/NotificationsPage').then(
 const UserManagementPage  = lazy(() => import('./pages/UserManagementPage').then((m) => ({ default: m.UserManagementPage })));
 const BackupManagerPage   = lazy(() => import('./components/admin/BackupManager').then((m) => ({ default: m.BackupManager })));
 const BillingPage         = lazy(() => import('./pages/BillingPage').then((m) => ({ default: m.BillingPage })));
+const CalendarPage        = lazy(() => import('./pages/CalendarPage').then((m) => ({ default: m.CalendarPage })));
 
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 const PageLoader  = () => <div className="p-6 space-y-4"><TableSkeleton rows={8} /></div>;
@@ -75,6 +76,7 @@ const routes = [
   { path: '/dashboard',                         Component: S(DashboardPage) },
   { path: '/projects/$projectId/board',         Component: S(KanbanBoardPage, BoardLoader) },
   { path: '/projects/$projectId/list',          Component: S(TaskListPage) },
+  { path: '/projects/$projectId/calendar',      Component: S(CalendarPage) },
   { path: '/projects/$projectId/standup',       Component: S(StandupPage) },
   { path: '/projects/$projectId/members',       Component: S(MembersPage) },
   { path: '/projects/$projectId/settings',      Component: S(ProjectSettingsPage) },

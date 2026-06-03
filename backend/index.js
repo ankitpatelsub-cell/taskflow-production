@@ -40,6 +40,7 @@ const adminRoutes        = require('./src/routes/admin');
 const invitationRoutes   = require('./src/routes/invitations');
 const billingRoutes      = require('./src/routes/billing');
 const accountRoutes      = require('./src/routes/account');
+const timeLogRoutes      = require('./src/routes/timeLogs');
 
 const app = express();
 const server = http.createServer(app);
@@ -106,6 +107,7 @@ app.use('/api/projects/:projectId/tags',     tagRoutes);
 app.use('/api/projects/:projectId/standup',  standupRoutes);
 app.use('/api/tasks/:taskId/comments',       commentRoutes);
 app.use('/api/tasks/:taskId/attachments',    attachmentRoutes);
+app.use('/api/tasks/:taskId/time-logs',      timeLogRoutes);
 app.use('/api/notifications',                notificationRoutes);
 app.use('/api/admin',                        adminRoutes);
 app.use('/api/invitations',                  invitationRoutes);

@@ -265,6 +265,20 @@ async function initSchema() {
   `);
 
   await p.query(`
+    CREATE TABLE IF NOT EXISTS time_logs (
+      id               TEXT PRIMARY KEY,
+      task_id          TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+      user_id          TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      duration_minutes INTEGER NOT NULL CHECK(duration_minutes > 0),
+      note             TEXT,
+      logged_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_time_logs_task ON time_logs(task_id)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_time_logs_user ON time_logs(user_id)`);
+
+  await p.query(`
     CREATE TABLE IF NOT EXISTS email_verification_tokens (
       id         TEXT PRIMARY KEY,
       user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
