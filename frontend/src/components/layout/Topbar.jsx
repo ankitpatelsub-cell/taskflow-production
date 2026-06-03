@@ -1,4 +1,4 @@
-import { Menu, Sun, Moon } from 'lucide-react';
+import { Menu, Sun, Moon, Search } from 'lucide-react';
 import { useUiStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeStore } from '@/stores/themeStore';
@@ -23,6 +23,16 @@ export function Topbar() {
         title="Toggle sidebar"
       >
         <Menu size={18} />
+      </button>
+
+      {/* Search hint — clicks open command palette */}
+      <button
+        onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 hover:text-gray-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+      >
+        <Search size={13} />
+        <span className="text-xs">Search…</span>
+        <kbd className="text-[10px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1 py-0.5 font-mono leading-none">⌘K</kbd>
       </button>
 
       <div className="flex-1" />

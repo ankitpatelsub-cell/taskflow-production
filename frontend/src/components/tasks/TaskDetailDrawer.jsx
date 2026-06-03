@@ -85,10 +85,25 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
         ) : (
           <>
             {/* Action bar */}
-            <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-100 bg-gray-50/50 shrink-0">
-              <span className={cn('px-3 py-1 rounded-full text-xs font-semibold', STATUS_COLORS[task.status])}>
-                {STATUS_LABELS[task.status]}
-              </span>
+            <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-800/50 shrink-0 flex-wrap">
+              {/* Quick status change */}
+              <div className="flex items-center gap-1 flex-wrap">
+                {Object.entries(STATUS_LABELS).map(([s, label]) => (
+                  <button
+                    key={s}
+                    onClick={() => task.status !== s && update.mutate({ status: s })}
+                    disabled={update.isPending}
+                    className={cn(
+                      'px-2.5 py-1 rounded-full text-xs font-semibold transition-all border',
+                      task.status === s
+                        ? cn(STATUS_COLORS[s], 'shadow-sm scale-105 border-transparent')
+                        : 'text-gray-400 dark:text-slate-500 bg-transparent border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 hover:text-gray-600 dark:hover:text-slate-300'
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               <PriorityBadge priority={task.priority} />
               <div className="flex-1" />
               <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
@@ -172,6 +187,28 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                     ))}
                   </div>
                 )}
+
+                {/* Subtask progress bar */}
+                {task.subtasks?.length > 0 && (() => {
+                  const done = task.subtasks.filter((s) => s.status === 'done').length;
+                  const pct = Math.round((done / task.subtasks.length) * 100);
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                          Subtasks {done}/{task.subtasks.length}
+                        </span>
+                        <span className="text-xs font-bold text-gray-600 dark:text-slate-300">{pct}%</span>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-500 rounded-full transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Tabs */}
                 <div className="border-b border-gray-100 -mx-6 px-6 pt-2">

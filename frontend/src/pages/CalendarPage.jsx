@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link } from '@tanstack/react-router';
-import { useTasks } from '@/hooks/useTasks';
+import { useTasks, useCreateTask } from '@/hooks/useTasks';
 import { useProject } from '@/hooks/useProjects';
 import { ProjectNav } from './ProjectNav';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Modal } from '@/components/ui/Modal';
+import { TaskForm } from '@/components/tasks/TaskForm';
 
 const STATUS_COLOR = {
   todo:        'bg-gray-100 text-gray-700 border-gray-200',
@@ -34,6 +36,8 @@ export function CalendarPage() {
   const { projectId } = useParams({ strict: false });
   const { data: project } = useProject(projectId);
   const { data: tasks = [] } = useTasks(projectId);
+  const create = useCreateTask(projectId);
+  const [addDate, setAddDate] = useState(null);
 
   const today = new Date();
   const [year,  setYear]  = useState(today.getFullYear());
@@ -119,17 +123,23 @@ export function CalendarPage() {
             return (
               <div
                 key={dateStr}
+                onClick={() => !isPast && setAddDate(dateStr)}
                 className={cn(
-                  'bg-white dark:bg-slate-900 min-h-[90px] p-1.5',
-                  isPast && !isToday && 'opacity-60'
+                  'group bg-white dark:bg-slate-900 min-h-[90px] p-1.5 transition-colors',
+                  isPast && !isToday ? 'opacity-60' : 'cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10'
                 )}
               >
-                <span className={cn(
-                  'inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold mb-1',
-                  isToday ? 'bg-indigo-600 text-white' : 'text-gray-700 dark:text-slate-300'
-                )}>
-                  {day}
-                </span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className={cn(
+                    'inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold',
+                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-700 dark:text-slate-300'
+                  )}>
+                    {day}
+                  </span>
+                  {!isPast && (
+                    <Plus size={12} className="text-gray-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </div>
 
                 <div className="space-y-0.5">
                   {dayTasks.slice(0, 3).map(t => (
@@ -156,14 +166,28 @@ export function CalendarPage() {
         </div>
 
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-wrap gap-3 items-center">
           {Object.entries(STATUS_COLOR).map(([s, cls]) => (
             <span key={s} className={cn('px-2 py-0.5 rounded-full text-xs font-medium border', cls)}>
               {s.replace('_', ' ')}
             </span>
           ))}
+          <span className="text-xs text-gray-400 ml-2">· Click a day to add a task</span>
         </div>
       </div>
+
+      {/* Quick-create task modal */}
+      {addDate && (
+        <Modal open onClose={() => setAddDate(null)} title={`New task — ${addDate}`}>
+          <TaskForm
+            projectId={projectId}
+            defaultValues={{ deadline: addDate, priority: 'medium', status: 'todo' }}
+            onSubmit={(data) => create.mutate(data, { onSuccess: () => setAddDate(null) })}
+            onCancel={() => setAddDate(null)}
+            loading={create.isPending}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

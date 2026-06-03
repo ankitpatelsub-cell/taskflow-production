@@ -80,6 +80,16 @@ export function Sidebar() {
         {/* ── Scrollable nav ────────────────────────────────── */}
         <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5 sidebar-scroll">
 
+          {/* Search hint */}
+          <button
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-white/10 hover:text-slate-300 transition-colors mb-1"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <span className="flex-1 text-left text-xs">Search…</span>
+            <kbd className="text-[10px] bg-slate-800 border border-slate-700 rounded px-1 py-0.5 font-mono leading-none">⌘K</kbd>
+          </button>
+
           <SectionLabel>Menu</SectionLabel>
           <NavItem to="/app/dashboard" icon={LayoutDashboard}>Dashboard</NavItem>
           <NavItem to="/app/notifications" icon={Bell} badge={unreadCount}>Notifications</NavItem>

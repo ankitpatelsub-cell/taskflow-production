@@ -123,4 +123,41 @@ router.patch('/:id/password', async (req, res) => {
   }
 });
 
+// GET /api/users/me/tasks — tasks assigned to current user across all projects
+router.get('/me/tasks', async (req, res) => {
+  try {
+    const { status, limit = 50 } = req.query;
+    const conditions = ['t.assignee_id = ?', 'pm.user_id = ?'];
+    const params = [req.user.id, req.user.id];
+
+    if (status) {
+      conditions.push('t.status = ?');
+      params.push(status);
+    } else {
+      conditions.push("t.status != 'done'");
+    }
+
+    const tasks = await queryAll(`
+      SELECT t.*, p.name as project_name, p.color as project_color,
+             u.name as assignee_name
+      FROM tasks t
+      JOIN projects p ON p.id = t.project_id
+      JOIN project_members pm ON pm.project_id = p.id
+      LEFT JOIN users u ON u.id = t.assignee_id
+      WHERE ${conditions.join(' AND ')}
+        AND t.parent_task_id IS NULL
+      ORDER BY
+        CASE WHEN t.deadline IS NOT NULL AND t.deadline::date < CURRENT_DATE THEN 0 ELSE 1 END,
+        t.deadline ASC NULLS LAST,
+        t.created_at DESC
+      LIMIT ?
+    `, [...params, parseInt(limit, 10)]);
+
+    const overdue = tasks.filter((t) => t.deadline && new Date(t.deadline) < new Date(new Date().toDateString()));
+    res.json({ tasks, overdue_count: overdue.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch my tasks' });
+  }
+});
+
 module.exports = router;

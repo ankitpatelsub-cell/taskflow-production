@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useTasks } from '@/hooks/useTasks';
 import { useProject } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Plus, Trash2, Download, CheckSquare } from 'lucide-react';
+import { Calendar, Plus, Trash2, Download, CheckSquare, ArrowUp, ArrowDown, ChevronsUpDown, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useUiStore } from '@/stores/uiStore';
 import { Modal } from '@/components/ui/Modal';
@@ -27,6 +27,41 @@ export function TaskListPage() {
   const [showAdd, setShowAdd]     = useState(false);
   const [selected, setSelected]   = useState(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
+  const [sort, setSort] = useState({ col: null, dir: 'asc' });
+  const [search, setSearch] = useState('');
+
+  const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+  const STATUS_ORDER   = { todo: 0, in_progress: 1, review: 2, done: 3 };
+
+  const sortedTasks = useMemo(() => {
+    const filtered = search
+      ? tasks.filter((t) => t.title.toLowerCase().includes(search.toLowerCase()))
+      : tasks;
+    if (!sort.col) return filtered;
+    return [...tasks].sort((a, b) => {
+      let va, vb;
+      if (sort.col === 'title')    { va = a.title.toLowerCase();  vb = b.title.toLowerCase(); }
+      if (sort.col === 'status')   { va = STATUS_ORDER[a.status] ?? 9;   vb = STATUS_ORDER[b.status] ?? 9; }
+      if (sort.col === 'priority') { va = PRIORITY_ORDER[a.priority] ?? 9; vb = PRIORITY_ORDER[b.priority] ?? 9; }
+      if (sort.col === 'assignee') { va = (a.assignee_name || '').toLowerCase(); vb = (b.assignee_name || '').toLowerCase(); }
+      if (sort.col === 'deadline') {
+        va = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        vb = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      }
+      if (va < vb) return sort.dir === 'asc' ? -1 : 1;
+      if (va > vb) return sort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [tasks, sort, search]);
+
+  function toggleSort(col) {
+    setSort((s) => s.col === col ? { col, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'asc' });
+  }
+
+  function SortIcon({ col }) {
+    if (sort.col !== col) return <ChevronsUpDown size={12} className="text-gray-300 ml-0.5" />;
+    return sort.dir === 'asc' ? <ArrowUp size={12} className="text-indigo-500 ml-0.5" /> : <ArrowDown size={12} className="text-indigo-500 ml-0.5" />;
+  }
   const create = useCreateTask(projectId);
 
   // Members for filter
@@ -102,10 +137,37 @@ export function TaskListPage() {
       <div className="p-6 flex-1 overflow-auto page-fade">
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Search */}
+            <div className="relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search tasks…"
+                className="pl-7 pr-7 py-1.5 text-xs border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 w-40 focus:w-52 transition-all"
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <X size={12} />
+                </button>
+              )}
+            </div>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              <span className="font-bold text-gray-800 dark:text-white">{tasks.length}</span> tasks
+              <span className="font-bold text-gray-800 dark:text-white">{sortedTasks.length}</span> tasks
             </p>
+            {/* Status filter */}
+            <select
+              value={filters.status || ''}
+              onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value || undefined }))}
+              className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="">All statuses</option>
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="review">Review</option>
+              <option value="done">Done</option>
+            </select>
             {/* Assignee filter */}
             <select
               value={filters.assignee || ''}
@@ -183,11 +245,31 @@ export function TaskListPage() {
                       className="rounded accent-indigo-600"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-full">Task</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Priority</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Assignee</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Deadline</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-full">
+                    <button onClick={() => toggleSort('title')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                      Task <SortIcon col="title" />
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                    <button onClick={() => toggleSort('status')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                      Status <SortIcon col="status" />
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                    <button onClick={() => toggleSort('priority')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                      Priority <SortIcon col="priority" />
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                    <button onClick={() => toggleSort('assignee')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                      Assignee <SortIcon col="assignee" />
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                    <button onClick={() => toggleSort('deadline')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                      Deadline <SortIcon col="deadline" />
+                    </button>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-slate-700">
@@ -200,7 +282,7 @@ export function TaskListPage() {
                     </td>
                   </tr>
                 )}
-                {tasks.map((task) => (
+                {sortedTasks.map((task) => (
                   <tr
                     key={task.id}
                     className={cn(
