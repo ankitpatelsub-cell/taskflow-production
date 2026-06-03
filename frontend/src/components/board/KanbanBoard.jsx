@@ -17,6 +17,7 @@ export function KanbanBoard({ projectId, filters = {} }) {
     ...(filters.priority  && { priority:  filters.priority }),
     ...(filters.tag       && { tag:       filters.tag }),
     ...(filters.q         && { q:         filters.q }),
+    ...(filters.to        && { to:        filters.to }),
     limit: 200,
   });
   const tasks = data || [];

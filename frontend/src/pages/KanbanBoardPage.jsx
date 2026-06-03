@@ -24,7 +24,7 @@ export function KanbanBoardPage() {
   useWsEvent('task:deleted',      () => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
   useWsEvent('tasks:bulk_updated',() => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
   useWsEvent('comment:created',   () => queryClient.invalidateQueries({ queryKey: ['task'] }));
-  const [filters, setFilters] = useState({ assignee: '', priority: '', tag: '', q: '' });
+  const [filters, setFilters] = useState({ assignee: '', priority: '', tag: '', q: '', to: '' });
 
   return (
     <div className="h-full flex flex-col">

@@ -7,6 +7,12 @@ import { toast } from '@/components/ui/Toast';
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'];
 
+function dueSoonDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 3);
+  return d.toISOString().slice(0, 10);
+}
+
 export function KanbanFilters({ projectId, filters, onChange }) {
   const [open, setOpen] = useState(false);
   const { data: members = [] } = useQuery({
@@ -22,7 +28,8 @@ export function KanbanFilters({ projectId, filters, onChange }) {
 
   const activeCount = Object.values(filters).filter(Boolean).length;
 
-  function clear() { onChange({ assignee: '', priority: '', tag: '', q: '' }); }
+  function clear() { onChange({ assignee: '', priority: '', tag: '', q: '', to: '' }); }
+  const isDueSoon = filters.to === dueSoonDate();
 
   async function handleExport() {
     try {
@@ -49,6 +56,20 @@ export function KanbanFilters({ projectId, filters, onChange }) {
           placeholder="Search tasks…"
           className="text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-3.5 py-1.5 w-48 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
+
+        {/* Due Soon quick filter */}
+        <button
+          onClick={() => onChange({ ...filters, to: isDueSoon ? '' : dueSoonDate() })}
+          className={cn(
+            'flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors',
+            isDueSoon
+              ? 'bg-amber-500 text-white border-amber-500'
+              : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-700 hover:border-amber-300 hover:text-amber-600'
+          )}
+          title="Show tasks due in the next 3 days"
+        >
+          ⏰ Due soon
+        </button>
 
         <button
           onClick={() => setOpen((o) => !o)}
