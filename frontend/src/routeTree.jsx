@@ -15,6 +15,7 @@ import { ResetPasswordPage }   from './pages/ResetPasswordPage';
 import { VerifyEmailPage }     from './pages/VerifyEmailPage';
 import { PrivacyPolicyPage }   from './pages/PrivacyPolicyPage';
 import { TermsPage }           from './pages/TermsPage';
+import { NotFoundPage }        from './pages/NotFoundPage';
 import { AppShell }            from './components/layout/AppShell';
 
 // ── Lazy-loaded ───────────────────────────────────────────────────────────────
@@ -49,6 +50,7 @@ const resetPasswordRoute  = createRoute({ getParentRoute: () => rootRoute, path:
 const verifyEmailRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/verify-email/$token',     component: VerifyEmailPage });
 const privacyRoute        = createRoute({ getParentRoute: () => rootRoute, path: '/privacy',                 component: PrivacyPolicyPage });
 const termsRoute          = createRoute({ getParentRoute: () => rootRoute, path: '/terms',                   component: TermsPage });
+const notFoundRoute       = createRoute({ getParentRoute: () => rootRoute, path: '*',                        component: NotFoundPage });
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -93,4 +95,5 @@ export const routeTree = rootRoute.addChildren([
   termsRoute,
   indexRoute,
   appRoute.addChildren(routes),
+  notFoundRoute,
 ]);

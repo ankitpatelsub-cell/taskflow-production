@@ -2,14 +2,14 @@ const { z } = require('zod');
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 const loginSchema = z.object({
-  email:    z.string().email('Invalid email'),
+  email:    z.string().email('Invalid email').max(254),
   password: z.string().min(1, 'Password required'),
 });
 
 // ─── Users ───────────────────────────────────────────────────────────────────
 const createUserSchema = z.object({
-  name:     z.string().min(2, 'Name must be at least 2 chars'),
-  email:    z.string().email('Invalid email'),
+  name:     z.string().min(2, 'Name must be at least 2 chars').max(100),
+  email:    z.string().email('Invalid email').max(254),
   password: z.string().min(6, 'Password must be at least 6 chars'),
   role:     z.enum(['super_admin','admin','project_manager','member','viewer']).optional().default('member'),
   timezone: z.string().optional().default('UTC'),

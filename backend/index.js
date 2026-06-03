@@ -92,8 +92,10 @@ const authLimiter = rateLimit({
 });
 
 app.use('/api/', globalLimiter);
-app.use('/api/auth/login',   authLimiter);
-app.use('/api/auth/refresh', authLimiter);
+app.use('/api/auth/login',           authLimiter);
+app.use('/api/auth/refresh',         authLimiter);
+app.use('/api/auth/register',        authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth',                         authRoutes);
@@ -148,6 +150,28 @@ async function init() {
     logger.info(`WebSocket server at ws://localhost:${PORT}/ws`);
   });
 }
+
+// ── Unhandled rejection safety net ────────────────────────────────────────────
+process.on('unhandledRejection', (reason) => {
+  logger.error({ reason }, 'Unhandled promise rejection');
+});
+process.on('uncaughtException', (err) => {
+  logger.error(err, 'Uncaught exception — shutting down');
+  process.exit(1);
+});
+
+// ── Graceful shutdown ──────────────────────────────────────────────────────────
+function shutdown() {
+  logger.info('Shutting down gracefully...');
+  server.close(async () => {
+    const { closePool } = require('./src/config/db');
+    await closePool();
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10000);
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT',  shutdown);
 
 init().catch((err) => {
   logger.error(err, 'Startup failed');

@@ -4,6 +4,7 @@ const { queryOne, queryAll, execute } = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { notifyComment } = require('../services/notificationService');
 const { broadcast } = require('../services/wsService');
+const { validate, createCommentSchema } = require('../config/validate');
 
 const router = express.Router({ mergeParams: true });
 router.use(authenticate);
@@ -23,10 +24,9 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/tasks/:taskId/comments
-router.post('/', async (req, res) => {
+router.post('/', validate(createCommentSchema), async (req, res) => {
   try {
     const { content } = req.body;
-    if (!content) return res.status(400).json({ error: 'content required' });
 
     const id = uuidv4();
     await execute('INSERT INTO comments (id, task_id, user_id, content) VALUES (?, ?, ?, ?)',
@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
 });
 
 // PATCH /api/tasks/:taskId/comments/:commentId
-router.patch('/:commentId', async (req, res) => {
+router.patch('/:commentId', validate(createCommentSchema), async (req, res) => {
   try {
     const { content } = req.body;
     const comment = await queryOne('SELECT * FROM comments WHERE id = ?', [req.params.commentId]);
