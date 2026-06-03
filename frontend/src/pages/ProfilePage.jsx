@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { getGroupedTimezones, getCurrentTimezone } from '@/lib/timezones';
-import { CheckCircle2, User, Globe, Lock } from 'lucide-react';
+import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle } from 'lucide-react';
 
 const grouped = getGroupedTimezones();
 
@@ -34,6 +34,10 @@ export function ProfilePage() {
   const [confPw, setConfPw] = useState('');
   const [pwMsg,  setPwMsg]  = useState('');
 
+  // Account deletion state
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleteError,   setDeleteError]   = useState('');
+
   useEffect(() => {
     setName(user?.name || '');
     setTimezone(user?.timezone || getCurrentTimezone());
@@ -55,23 +59,43 @@ export function ProfilePage() {
       setCurPw(''); setNewPw(''); setConfPw('');
       setTimeout(() => setPwMsg(''), 3000);
     },
-    onError: () => setPwMsg('error'),
+    onError: (err) => setPwMsg(err?.response?.data?.error === 'Current password is incorrect' ? 'wrongcurrent' : 'error'),
+  });
+
+  const deleteAccount = useMutation({
+    mutationFn: () => api.delete('/account', { data: { confirm: 'DELETE' } }),
+    onSuccess: () => useAuthStore.getState().logout(),
+    onError: () => setDeleteError('Failed to delete account. Please try again.'),
   });
 
   function handlePasswordChange(e) {
     e.preventDefault();
+    if (!curPw) { setPwMsg('nocurrent'); return; }
     if (!newPw || !confPw) { setPwMsg('empty'); return; }
     if (newPw !== confPw) { setPwMsg('mismatch'); return; }
     if (newPw.length < 6) { setPwMsg('short'); return; }
-    changePassword.mutate({ password: newPw });
+    changePassword.mutate({ currentPassword: curPw, password: newPw });
+  }
+
+  async function handleExportData() {
+    const res = await fetch('/api/account/data-export', {
+      headers: { Authorization: `Bearer ${useAuthStore.getState().token}` },
+    });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'my-taskflow-data.json'; a.click();
+    URL.revokeObjectURL(url);
   }
 
   const pwMessages = {
-    success:  { text: 'Password changed successfully!', cls: 'text-emerald-600' },
-    mismatch: { text: 'New passwords do not match.',    cls: 'text-red-600' },
-    short:    { text: 'Password must be at least 6 characters.', cls: 'text-red-600' },
-    empty:    { text: 'Please fill in both password fields.', cls: 'text-red-600' },
-    error:    { text: 'Failed to change password.',     cls: 'text-red-600' },
+    success:      { text: 'Password changed successfully!',          cls: 'text-emerald-600' },
+    mismatch:     { text: 'New passwords do not match.',             cls: 'text-red-600' },
+    short:        { text: 'Password must be at least 6 characters.', cls: 'text-red-600' },
+    empty:        { text: 'Please fill in both new password fields.', cls: 'text-red-600' },
+    nocurrent:    { text: 'Please enter your current password.',      cls: 'text-red-600' },
+    wrongcurrent: { text: 'Current password is incorrect.',          cls: 'text-red-600' },
+    error:        { text: 'Failed to change password.',              cls: 'text-red-600' },
   };
 
   return (
@@ -175,6 +199,18 @@ export function ProfilePage() {
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
+              Current Password
+            </label>
+            <Input
+              type="password"
+              value={curPw}
+              onChange={(e) => setCurPw(e.target.value)}
+              placeholder="Your current password"
+              autoComplete="current-password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
               New Password
             </label>
             <Input
@@ -193,7 +229,7 @@ export function ProfilePage() {
               type="password"
               value={confPw}
               onChange={(e) => setConfPw(e.target.value)}
-              placeholder="Repeat password"
+              placeholder="Repeat new password"
               autoComplete="new-password"
             />
           </div>
@@ -211,6 +247,55 @@ export function ProfilePage() {
           </div>
         </form>
       </Section>
+
+      {/* Danger Zone */}
+      <div className="rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
+        <div className="flex items-center gap-2 mb-5 pb-4 border-b border-red-100 dark:border-red-900/30">
+          <AlertTriangle size={18} className="text-red-500" />
+          <h3 className="font-bold text-red-600 dark:text-red-400 text-sm">Danger Zone</h3>
+        </div>
+        <div className="space-y-4">
+
+          {/* Export data */}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-800 dark:text-white">Export My Data</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                Download all your tasks, comments and profile as JSON.
+              </p>
+            </div>
+            <Button variant="secondary" onClick={handleExportData} className="shrink-0 flex items-center gap-1.5">
+              <Download size={14} /> Export
+            </Button>
+          </div>
+
+          {/* Delete account */}
+          <div className="pt-3 border-t border-red-100 dark:border-red-900/30">
+            <p className="text-sm font-semibold text-gray-800 dark:text-white">Delete Account</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 mb-3">
+              Permanently deletes your account and all associated data. This cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={deleteConfirm}
+                onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(''); }}
+                placeholder='Type DELETE to confirm'
+                className="max-w-xs"
+              />
+              <Button
+                variant="danger"
+                disabled={deleteConfirm !== 'DELETE' || deleteAccount.isPending}
+                onClick={() => deleteAccount.mutate()}
+                className="shrink-0 flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 size={14} />
+                {deleteAccount.isPending ? 'Deleting…' : 'Delete Account'}
+              </Button>
+            </div>
+            {deleteError && <p className="text-xs text-red-600 mt-2">{deleteError}</p>}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -276,10 +276,16 @@ async function initSchema() {
   `);
 
   // Indexes for performance
-  await p.query(`CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id)`);
-  await p.query(`CREATE INDEX IF NOT EXISTS idx_tasks_assignee ON tasks(assignee_id)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_tasks_project    ON tasks(project_id)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_tasks_assignee   ON tasks(assignee_id)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_tasks_proj_status ON tasks(project_id, status)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_tasks_status     ON tasks(status)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_project_members_user ON project_members(user_id)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_comments_task    ON comments(task_id)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_task_tags_task   ON task_tags(task_id)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_task_tags_tag    ON task_tags(tag_id)`);
   await p.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read)`);
-  await p.query(`CREATE INDEX IF NOT EXISTS idx_activity_entity ON activity_log(entity_type, entity_id)`);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_activity_entity  ON activity_log(entity_type, entity_id)`);
   await p.query(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)`);
 }
 

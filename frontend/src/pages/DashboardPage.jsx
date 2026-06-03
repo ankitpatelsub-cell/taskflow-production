@@ -1,9 +1,10 @@
 import { useProjects, useUpdateProject } from '@/hooks/useProjects';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from '@tanstack/react-router';
-import { FolderKanban, CheckCircle2, Archive, Users, ArrowRight, ArchiveRestore } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Archive, Users, ArrowRight, ArchiveRestore, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { isAdminOrAbove } from '@/lib/roles';
+import { CreateProjectModal } from '@/components/shared/CreateProjectModal';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -17,6 +18,7 @@ export function DashboardPage() {
   const { data: projects = [] } = useProjects();
   const navigate = useNavigate();
   const [showArchived, setShowArchived] = useState(false);
+  const [showCreateProject, setShowCreateProject] = useState(false);
 
   const totalTasks = projects.reduce((s, p) => s + (p.task_count || 0), 0);
   const activeProjectsCount = projects.filter((p) => p.status === 'active').length;
@@ -102,11 +104,19 @@ export function DashboardPage() {
             <div className="col-span-3 text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
               <FolderKanban size={40} className="mx-auto mb-3 text-gray-200" />
               <p className="font-medium text-gray-500 mb-1">No active projects</p>
-              <p className="text-sm text-gray-400">
-                {isAdminOrAbove(user?.role) ? 'Create one from the sidebar.' : 'Ask an admin to add you to a project.'}
-              </p>
+              {isAdminOrAbove(user?.role) ? (
+                <button
+                  onClick={() => setShowCreateProject(true)}
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  <Plus size={15} /> Create your first project
+                </button>
+              ) : (
+                <p className="text-sm text-gray-400">Ask an admin to add you to a project.</p>
+              )}
             </div>
           )}
+          {showCreateProject && <CreateProjectModal onClose={() => setShowCreateProject(false)} />}
         </div>
       </div>
 

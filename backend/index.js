@@ -135,12 +135,18 @@ async function init() {
   const { v4: uuidv4 } = require('uuid');
   const adminExists = await queryOne("SELECT id FROM users WHERE role IN ('admin','super_admin') LIMIT 1");
   if (!adminExists) {
-    const passwordHash = await hash('admin123');
+    const tempPassword = require('crypto').randomBytes(10).toString('hex'); // 20-char random hex
+    const passwordHash = await hash(tempPassword);
     await execute(
       "INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, 'admin')",
       [uuidv4(), 'Administrator', 'admin@taskflow.local', passwordHash]
     );
-    logger.info('Default admin created: admin@taskflow.local / admin123');
+    logger.warn('═══════════════════════════════════════════════════');
+    logger.warn('  DEFAULT ADMIN CREATED — SAVE THESE CREDENTIALS   ');
+    logger.warn(`  Email:    admin@taskflow.local                    `);
+    logger.warn(`  Password: ${tempPassword}                         `);
+    logger.warn('  Change this password immediately after first login');
+    logger.warn('═══════════════════════════════════════════════════');
   }
 
   startCronJobs();

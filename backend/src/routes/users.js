@@ -1,7 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { queryOne, queryAll, execute } = require('../config/db');
-const { hash } = require('../utils/password');
+const { hash, compare } = require('../utils/password');
 const { authenticate, requireMinRole, hasMinRole } = require('../middleware/auth');
 
 const ASSIGNABLE_ROLES = ['super_admin', 'admin', 'project_manager', 'member', 'viewer'];
@@ -97,11 +97,24 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// PATCH /api/users/:id/password
-router.patch('/:id/password', requireMinRole('admin'), async (req, res) => {
+// PATCH /api/users/:id/password — admin can set anyone's; self-service requires currentPassword
+router.patch('/:id/password', async (req, res) => {
   try {
-    const { password } = req.body;
+    const isSelf = req.params.id === req.user.id;
+    const isAdmin = hasMinRole(req.user.role, 'admin');
+    if (!isSelf && !isAdmin) return res.status(403).json({ error: 'Forbidden' });
+
+    const { password, currentPassword } = req.body;
     if (!password) return res.status(400).json({ error: 'password required' });
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+    if (isSelf && !isAdmin) {
+      if (!currentPassword) return res.status(400).json({ error: 'currentPassword required' });
+      const user = await queryOne('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+      const valid = user?.password_hash && await compare(currentPassword, user.password_hash);
+      if (!valid) return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
     const password_hash = await hash(password);
     await execute('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash, req.params.id]);
     res.json({ message: 'Password updated' });

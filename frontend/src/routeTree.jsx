@@ -16,6 +16,7 @@ import { VerifyEmailPage }     from './pages/VerifyEmailPage';
 import { PrivacyPolicyPage }   from './pages/PrivacyPolicyPage';
 import { TermsPage }           from './pages/TermsPage';
 import { NotFoundPage }        from './pages/NotFoundPage';
+import { LandingPage }         from './pages/LandingPage';
 import { AppShell }            from './components/layout/AppShell';
 
 // ── Lazy-loaded ───────────────────────────────────────────────────────────────
@@ -55,7 +56,10 @@ const notFoundRoute       = createRoute({ getParentRoute: () => rootRoute, path:
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  beforeLoad: () => { throw redirect({ to: '/app/dashboard' }); },
+  component: LandingPage,
+  beforeLoad: () => {
+    if (useAuthStore.getState().isAuthenticated) throw redirect({ to: '/app/dashboard' });
+  },
 });
 
 const appRoute = createRoute({
