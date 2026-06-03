@@ -5,7 +5,7 @@ import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2 } from 'lucide-react';
+import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check } from 'lucide-react';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { TimeTracker } from './TimeTracker';
@@ -30,7 +30,10 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
   const del = useDeleteTask(projectId);
   const [tab, setTab] = useState('details');
   const [editing, setEditing] = useState(false);
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [descDraft, setDescDraft] = useState('');
   const [newSubtask, setNewSubtask] = useState('');
+  const [togglingSubtask, setTogglingSubtask] = useState(null);
 
   if (isLoading) {
     return (
@@ -50,6 +53,28 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
   function handleDelete() {
     if (!confirm(`Delete "${task.title}"? This cannot be undone.`)) return;
     del.mutate(taskId, { onSuccess: onClose });
+  }
+
+  function startEditDesc() {
+    setDescDraft(task.description || '');
+    setEditingDesc(true);
+  }
+
+  function saveDesc() {
+    update.mutate({ description: descDraft }, { onSuccess: () => setEditingDesc(false) });
+  }
+
+  function cancelDesc() {
+    setEditingDesc(false);
+    setDescDraft('');
+  }
+
+  async function toggleSubtask(subtask) {
+    setTogglingSubtask(subtask.id);
+    const newStatus = subtask.status === 'done' ? 'todo' : 'done';
+    await api.patch(`/projects/${projectId}/tasks/${subtask.id}`, { status: newStatus });
+    queryClient.invalidateQueries({ queryKey: ['tasks', projectId, taskId] });
+    setTogglingSubtask(null);
   }
 
   async function addSubtask() {
@@ -165,13 +190,63 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   </div>
                 </div>
 
-                {/* Description */}
-                {task.description && (
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Description</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{task.description}</p>
+                {/* Description — inline editable */}
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 dark:bg-slate-700/50 dark:border-slate-600">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide">Description</p>
+                    {!editingDesc && (
+                      <button
+                        onClick={startEditDesc}
+                        className="text-xs text-gray-400 hover:text-indigo-600 transition-colors flex items-center gap-0.5"
+                      >
+                        <Edit3 size={11} /> Edit
+                      </button>
+                    )}
                   </div>
-                )}
+                  {editingDesc ? (
+                    <div>
+                      <textarea
+                        autoFocus
+                        value={descDraft}
+                        onChange={(e) => setDescDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') cancelDesc();
+                          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) saveDesc();
+                        }}
+                        rows={4}
+                        placeholder="Add a description…"
+                        className="w-full text-sm text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-indigo-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-relaxed"
+                      />
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={saveDesc}
+                          disabled={update.isPending}
+                          className="flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                        >
+                          <Check size={11} /> Save
+                        </button>
+                        <button onClick={cancelDesc} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                          Cancel
+                        </button>
+                        <span className="text-xs text-gray-300 ml-auto">⌘↵ to save · Esc to cancel</span>
+                      </div>
+                    </div>
+                  ) : task.description ? (
+                    <p
+                      className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed cursor-text"
+                      onClick={startEditDesc}
+                    >
+                      {task.description}
+                    </p>
+                  ) : (
+                    <p
+                      className="text-sm text-gray-400 dark:text-slate-500 italic cursor-pointer hover:text-indigo-500 transition-colors"
+                      onClick={startEditDesc}
+                    >
+                      Click to add a description…
+                    </p>
+                  )}
+                </div>
 
                 {/* Tags */}
                 {task.tags?.length > 0 && (
@@ -279,13 +354,21 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   {tab === 'subtasks' && (
                     <div className="space-y-2">
                       {task.subtasks?.map((s) => (
-                        <div key={s.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                          <div className={cn('w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
-                            s.status === 'done' ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300'
-                          )}>
-                            {s.status === 'done' && <span className="text-white text-xs">✓</span>}
-                          </div>
-                          <span className={cn('text-sm flex-1', s.status === 'done' ? 'line-through text-gray-400' : 'text-gray-800')}>
+                        <div key={s.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-slate-600">
+                          <button
+                            onClick={() => toggleSubtask(s)}
+                            disabled={togglingSubtask === s.id}
+                            className={cn(
+                              'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all',
+                              s.status === 'done'
+                                ? 'bg-emerald-500 border-emerald-500 hover:bg-emerald-600'
+                                : 'border-gray-300 dark:border-slate-500 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                            )}
+                            title={s.status === 'done' ? 'Mark incomplete' : 'Mark done'}
+                          >
+                            {s.status === 'done' && <Check size={10} className="text-white" />}
+                          </button>
+                          <span className={cn('text-sm flex-1 dark:text-slate-200', s.status === 'done' ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-800')}>
                             {s.title}
                           </span>
                           <PriorityBadge priority={s.priority} />

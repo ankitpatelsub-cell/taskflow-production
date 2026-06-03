@@ -47,6 +47,23 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
         </div>
       )}
 
+      {/* Subtask progress */}
+      {task.subtasks?.length > 0 && (() => {
+        const done = task.subtasks.filter(s => s.status === 'done').length;
+        const pct = Math.round((done / task.subtasks.length) * 100);
+        return (
+          <div className="mb-2.5">
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[10px] text-gray-400">{done}/{task.subtasks.length} subtasks</span>
+              <span className="text-[10px] text-gray-400">{pct}%</span>
+            </div>
+            <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Footer row */}
       <div className="flex items-center justify-between gap-2 mt-2.5">
         <div className="flex items-center gap-1.5">
