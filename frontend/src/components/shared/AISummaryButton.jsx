@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +19,13 @@ export function AISummaryButton({ projectId }) {
     mutationFn: () => api.post(`/projects/${projectId}/ai-summary`).then(r => r.data),
     onSuccess: (data) => setResult(data),
   });
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e) { if (e.key === 'Escape') setOpen(false); }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   function handleOpen() {
     setOpen(true);
