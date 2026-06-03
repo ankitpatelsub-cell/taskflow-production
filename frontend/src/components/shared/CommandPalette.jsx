@@ -4,7 +4,8 @@ import { useProjects } from '@/hooks/useProjects';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Search, FolderKanban, CheckSquare, LayoutGrid, Users, Settings, BarChart2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
+import { useUiStore } from '@/stores/uiStore';
 
 function useDebouncedValue(value, delay = 200) {
   const [debounced, setDebounced] = useState(value);
@@ -19,6 +20,7 @@ export function CommandPalette({ open, onClose }) {
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
   const navigate = useNavigate();
+  const { openTaskDrawer, setActiveProject } = useUiStore();
   const inputRef = useRef(null);
   const listRef = useRef(null);
   const dq = useDebouncedValue(query, 150);
@@ -70,7 +72,11 @@ export function CommandPalette({ open, onClose }) {
     sublabel: t.project_name,
     icon: CheckSquare,
     group: 'Tasks',
-    action: () => navigate({ to: `/app/projects/${t.project_id}/board` }),
+    status: t.status,
+    action: () => {
+      setActiveProject(t.project_id);
+      openTaskDrawer(t.id);
+    },
   }));
 
   // Reset cursor when options change
@@ -168,8 +174,13 @@ export function CommandPalette({ open, onClose }) {
                     <span className="block text-xs text-gray-400 dark:text-slate-500 truncate">{g.opt.sublabel}</span>
                   )}
                 </span>
+                {g.opt.status && (
+                  <span className={cn('shrink-0 text-xs px-1.5 py-0.5 rounded-full font-medium', STATUS_COLORS[g.opt.status])}>
+                    {STATUS_LABELS[g.opt.status]}
+                  </span>
+                )}
                 {cursor === g.idx && (
-                  <kbd className="shrink-0 text-xs text-indigo-400 font-mono">↵</kbd>
+                  <kbd className="shrink-0 text-xs text-indigo-400 font-mono ml-1">↵</kbd>
                 )}
               </button>
             )

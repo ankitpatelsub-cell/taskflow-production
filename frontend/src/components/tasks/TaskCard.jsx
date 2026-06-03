@@ -1,7 +1,7 @@
 import { Calendar, MessageSquare, Paperclip, AlertTriangle, RefreshCw } from 'lucide-react';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
-import { cn, formatDate, isOverdue } from '@/lib/utils';
+import { cn, formatDate, isOverdue, isDueSoon } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
 
 export function TaskCard({ task, projectId, dragHandleProps = {} }) {
@@ -12,7 +12,8 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
     openTaskDrawer(task.id);
   }
 
-  const overdue = task.deadline && isOverdue(task.deadline) && task.status !== 'done';
+  const overdue  = task.deadline && isOverdue(task.deadline) && task.status !== 'done';
+  const dueSoon  = task.deadline && isDueSoon(task.deadline) && task.status !== 'done' && !overdue;
   const done = task.status === 'done';
   const incomplete = !done && (!task.assignee_id || !task.deadline);
 
@@ -105,9 +106,9 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
           {task.deadline && (
             <span className={cn(
               'flex items-center gap-1 text-xs rounded-md px-1.5 py-0.5',
-              overdue
-                ? 'bg-red-50 text-red-600 font-semibold'
-                : 'text-gray-400'
+              overdue  ? 'bg-red-50 text-red-600 font-semibold' :
+              dueSoon  ? 'bg-amber-50 text-amber-600 font-medium' :
+              'text-gray-400'
             )}>
               <Calendar size={11} />
               {formatDate(task.deadline)}

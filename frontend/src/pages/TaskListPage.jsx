@@ -4,7 +4,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProject } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
-import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
+import { cn, formatDate, isOverdue, isDueSoon, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
 import { Calendar, Plus, Trash2, Download, CheckSquare, ArrowUp, ArrowDown, ChevronsUpDown, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useUiStore } from '@/stores/uiStore';
@@ -342,8 +342,16 @@ export function TaskListPage() {
                     </td>
                     <td className="px-4 py-3" onClick={() => openTask(task.id)}>
                       {task.deadline ? (
-                        <span className={cn('flex items-center gap-1 text-xs', isOverdue(task.deadline) && task.status !== 'done' ? 'text-red-500 font-semibold' : 'text-gray-400 dark:text-slate-500')}>
+                        <span className={cn(
+                          'flex items-center gap-1 text-xs',
+                          isOverdue(task.deadline) && task.status !== 'done' ? 'text-red-500 font-semibold' :
+                          isDueSoon(task.deadline) && task.status !== 'done' ? 'text-amber-500 font-medium' :
+                          'text-gray-400 dark:text-slate-500'
+                        )}>
                           <Calendar size={12} />{formatDate(task.deadline)}
+                          {isDueSoon(task.deadline) && task.status !== 'done' && !isOverdue(task.deadline) && (
+                            <span className="text-[10px] bg-amber-50 text-amber-600 px-1 rounded-full font-bold">soon</span>
+                          )}
                         </span>
                       ) : <span className="text-gray-300 dark:text-slate-600">—</span>}
                     </td>

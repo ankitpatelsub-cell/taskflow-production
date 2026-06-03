@@ -15,6 +15,15 @@ export function isOverdue(dateStr) {
   return new Date(dateStr) < new Date(new Date().toDateString());
 }
 
+export function isDueSoon(dateStr) {
+  if (!dateStr) return false;
+  const deadline = new Date(dateStr);
+  const today = new Date(new Date().toDateString());
+  const soon = new Date(today);
+  soon.setDate(soon.getDate() + 3);
+  return deadline >= today && deadline <= soon;
+}
+
 export const PRIORITY_COLORS = {
   low: 'bg-green-100 text-green-700 border-green-200',
   medium: 'bg-blue-100 text-blue-700 border-blue-200',
