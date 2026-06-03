@@ -1,4 +1,15 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+
+// Sentry must be initialised before any other imports
+if (process.env.SENTRY_DSN) {
+  const Sentry = require('@sentry/node');
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 0.2,
+  });
+}
+
 const http = require('http');
 const express = require('express');
 const cors = require('cors');
@@ -28,6 +39,7 @@ const attachmentRoutes   = require('./src/routes/attachments');
 const adminRoutes        = require('./src/routes/admin');
 const invitationRoutes   = require('./src/routes/invitations');
 const billingRoutes      = require('./src/routes/billing');
+const accountRoutes      = require('./src/routes/account');
 
 const app = express();
 const server = http.createServer(app);
@@ -96,6 +108,8 @@ app.use('/api/notifications',                notificationRoutes);
 app.use('/api/admin',                        adminRoutes);
 app.use('/api/invitations',                  invitationRoutes);
 app.use('/api/billing',                      billingRoutes);
+app.use('/api/auth',                         accountRoutes);
+app.use('/api',                              accountRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

@@ -95,4 +95,30 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
   });
 }
 
-module.exports = { sendInviteEmail, sendPasswordResetEmail };
+async function sendWelcomeEmail({ to, name, verifyUrl }) {
+  return getTransporter().sendMail({
+    from: EMAIL_FROM,
+    to,
+    subject: 'Welcome to TaskFlow!',
+    text: `Hi ${name},\n\nWelcome to TaskFlow! ${verifyUrl ? `Please verify your email: ${verifyUrl}` : ''}\n\nGet started: ${APP_URL}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<body style="font-family:sans-serif;max-width:480px;margin:40px auto;color:#1e293b">
+  <div style="background:#6366f1;padding:24px;border-radius:12px 12px 0 0;text-align:center">
+    <h1 style="color:#fff;margin:0;font-size:22px">Welcome to TaskFlow!</h1>
+  </div>
+  <div style="background:#f8fafc;padding:32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px">
+    <h2 style="margin-top:0">Hi ${name}!</h2>
+    <p>Your account is ready. Start managing projects and tasks with your team.</p>
+    ${verifyUrl ? `<p><strong>Please verify your email to unlock all features:</strong></p>
+    <a href="${verifyUrl}" style="display:inline-block;background:#6366f1;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">Verify Email</a>` : ''}
+    <a href="${APP_URL}/app/dashboard" style="display:inline-block;background:#0f172a;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px">Go to Dashboard</a>
+    <p style="color:#64748b;font-size:13px;margin-top:24px">Need help? Reply to this email.</p>
+  </div>
+</body>
+</html>`.trim(),
+  });
+}
+
+module.exports = { sendInviteEmail, sendPasswordResetEmail, sendWelcomeEmail };

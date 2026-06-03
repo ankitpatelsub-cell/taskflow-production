@@ -7,6 +7,7 @@ const { queryOne, execute } = require('../config/db');
 const { hash, compare } = require('../utils/password');
 const { signAccess, signRefresh, verifyRefresh } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
+const { sendWelcomeEmail } = require('../services/emailService');
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL, NODE_ENV } = require('../config/env');
 
 const router = express.Router();
@@ -124,6 +125,20 @@ router.post('/register', async (req, res) => {
     const { accessToken, refreshToken } = issueTokens(user);
     await storeRefreshToken(user.id, refreshToken);
     setRefreshCookie(res, refreshToken);
+
+    // Send welcome + verification email (non-blocking)
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    execute(
+      'INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)',
+      [uuidv4(), id, hashToken(verifyToken), verifyExpires]
+    ).then(() =>
+      sendWelcomeEmail({
+        to: user.email,
+        name: user.name,
+        verifyUrl: `${APP_URL}/verify-email/${verifyToken}`,
+      })
+    ).catch((e) => console.error('[Welcome email]', e.message));
 
     res.status(201).json({
       accessToken,

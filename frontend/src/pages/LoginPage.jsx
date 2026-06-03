@@ -97,14 +97,26 @@ export function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
           </div>
-          <Button type="submit" className="w-full" size="lg" disabled={login.isPending}>
-            {login.isPending ? 'Signing in…' : 'Sign in'}
-          </Button>
+          <div className="flex items-center justify-between">
+            <Button type="submit" size="lg" disabled={login.isPending} className="flex-1">
+              {login.isPending ? 'Signing in…' : 'Sign in'}
+            </Button>
+          </div>
+          <div className="text-center">
+            <Link to="/forgot-password" className="text-xs text-gray-500 hover:text-indigo-600 transition-colors">
+              Forgot password?
+            </Link>
+          </div>
         </form>
 
         <p className="text-center text-sm text-indigo-200/60 mt-5">
           Don't have an account?{' '}
           <Link to="/register" className="text-indigo-300 hover:text-white font-medium transition-colors">Sign up</Link>
+        </p>
+        <p className="text-center text-xs text-indigo-200/30 mt-3">
+          <Link to="/privacy" className="hover:text-indigo-200/60 transition-colors">Privacy Policy</Link>
+          {' · '}
+          <Link to="/terms" className="hover:text-indigo-200/60 transition-colors">Terms of Service</Link>
         </p>
 
         <div className="text-center mt-3">

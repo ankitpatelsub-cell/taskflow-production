@@ -6,11 +6,16 @@ import { useAuthStore } from './stores/authStore';
 import { BoardSkeleton, TableSkeleton } from './components/ui/Skeleton';
 
 // ── Eager-loaded ──────────────────────────────────────────────────────────────
-import { LoginPage }          from './pages/LoginPage';
-import { RegisterPage }       from './pages/RegisterPage';
-import { AcceptInvitePage }   from './pages/AcceptInvitePage';
-import { OAuthCallbackPage }  from './pages/OAuthCallbackPage';
-import { AppShell }           from './components/layout/AppShell';
+import { LoginPage }           from './pages/LoginPage';
+import { RegisterPage }        from './pages/RegisterPage';
+import { AcceptInvitePage }    from './pages/AcceptInvitePage';
+import { OAuthCallbackPage }   from './pages/OAuthCallbackPage';
+import { ForgotPasswordPage }  from './pages/ForgotPasswordPage';
+import { ResetPasswordPage }   from './pages/ResetPasswordPage';
+import { VerifyEmailPage }     from './pages/VerifyEmailPage';
+import { PrivacyPolicyPage }   from './pages/PrivacyPolicyPage';
+import { TermsPage }           from './pages/TermsPage';
+import { AppShell }            from './components/layout/AppShell';
 
 // ── Lazy-loaded ───────────────────────────────────────────────────────────────
 const DashboardPage       = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
@@ -35,10 +40,15 @@ const S = (Component, Loader = PageLoader) => (props) => (
 // ── Route tree ────────────────────────────────────────────────────────────────
 const rootRoute = createRootRoute({ component: Outlet });
 
-const loginRoute         = createRoute({ getParentRoute: () => rootRoute, path: '/login',         component: LoginPage });
-const registerRoute      = createRoute({ getParentRoute: () => rootRoute, path: '/register',      component: RegisterPage });
-const authCallbackRoute  = createRoute({ getParentRoute: () => rootRoute, path: '/auth/callback', component: OAuthCallbackPage });
-const inviteRoute        = createRoute({ getParentRoute: () => rootRoute, path: '/invite/$token', component: AcceptInvitePage });
+const loginRoute          = createRoute({ getParentRoute: () => rootRoute, path: '/login',                   component: LoginPage });
+const registerRoute       = createRoute({ getParentRoute: () => rootRoute, path: '/register',                component: RegisterPage });
+const authCallbackRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/auth/callback',           component: OAuthCallbackPage });
+const inviteRoute         = createRoute({ getParentRoute: () => rootRoute, path: '/invite/$token',           component: AcceptInvitePage });
+const forgotPasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: '/forgot-password',         component: ForgotPasswordPage });
+const resetPasswordRoute  = createRoute({ getParentRoute: () => rootRoute, path: '/reset-password/$token',  component: ResetPasswordPage });
+const verifyEmailRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/verify-email/$token',     component: VerifyEmailPage });
+const privacyRoute        = createRoute({ getParentRoute: () => rootRoute, path: '/privacy',                 component: PrivacyPolicyPage });
+const termsRoute          = createRoute({ getParentRoute: () => rootRoute, path: '/terms',                   component: TermsPage });
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -76,6 +86,11 @@ export const routeTree = rootRoute.addChildren([
   registerRoute,
   authCallbackRoute,
   inviteRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
+  verifyEmailRoute,
+  privacyRoute,
+  termsRoute,
   indexRoute,
   appRoute.addChildren(routes),
 ]);

@@ -70,18 +70,19 @@ async function initSchema() {
 
   await p.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id            TEXT PRIMARY KEY,
-      name          TEXT NOT NULL,
-      email         TEXT NOT NULL UNIQUE,
-      password_hash TEXT,
+      id             TEXT PRIMARY KEY,
+      name           TEXT NOT NULL,
+      email          TEXT NOT NULL UNIQUE,
+      password_hash  TEXT,
       oauth_provider TEXT,
-      oauth_id      TEXT,
-      role          TEXT NOT NULL DEFAULT 'member'
-                    CHECK(role IN ('super_admin','admin','project_manager','member','viewer')),
-      avatar_url    TEXT,
-      timezone      TEXT DEFAULT 'UTC',
-      is_active     INTEGER NOT NULL DEFAULT 1,
-      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      oauth_id       TEXT,
+      role           TEXT NOT NULL DEFAULT 'member'
+                     CHECK(role IN ('super_admin','admin','project_manager','member','viewer')),
+      avatar_url     TEXT,
+      timezone       TEXT DEFAULT 'UTC',
+      is_active      INTEGER NOT NULL DEFAULT 1,
+      email_verified INTEGER NOT NULL DEFAULT 0,
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       UNIQUE(oauth_provider, oauth_id)
     )
   `);
@@ -246,6 +247,28 @@ async function initSchema() {
       project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
       invited_by TEXT REFERENCES users(id),
       role       TEXT NOT NULL DEFAULT 'member',
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at    TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id         TEXT PRIMARY KEY,
+      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at    TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS email_verification_tokens (
+      id         TEXT PRIMARY KEY,
+      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
       expires_at TIMESTAMPTZ NOT NULL,
       used_at    TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
