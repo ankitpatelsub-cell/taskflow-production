@@ -5,10 +5,11 @@ import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer } from 'lucide-react';
+import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2 } from 'lucide-react';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { TimeTracker } from './TimeTracker';
+import { TaskLinks } from './TaskLinks';
 import { TaskForm } from './TaskForm';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
@@ -18,6 +19,7 @@ const TABS = [
   { id: 'subtasks', label: 'Subtasks' },
   { id: 'comments', label: 'Comments' },
   { id: 'time',     label: 'Time' },
+  { id: 'links',    label: 'Links' },
   { id: 'activity', label: 'Activity' },
   { id: 'files',    label: 'Files' },
 ];
@@ -267,6 +269,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
 
                   {tab === 'comments' && <CommentThread taskId={taskId} />}
                   {tab === 'time'     && <TimeTracker taskId={taskId} />}
+                  {tab === 'links'    && <TaskLinks taskId={taskId} />}
                   {tab === 'activity' && <ActivityFeed items={task.activity || []} />}
 
                   {tab === 'files' && (

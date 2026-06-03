@@ -1,15 +1,18 @@
 import { Link } from '@tanstack/react-router';
-import { LayoutGrid, List, Calendar, CalendarDays, Users, Settings } from 'lucide-react';
+import { LayoutGrid, List, Calendar, CalendarDays, Users, Settings, BarChart2, Zap } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { AISummaryButton } from '@/components/shared/AISummaryButton';
 
 export function ProjectNav({ projectId, project }) {
   const { user } = useAuthStore();
   const tabs = [
-    { to: `/app/projects/${projectId}/board`,    icon: LayoutGrid,  label: 'Board' },
-    { to: `/app/projects/${projectId}/list`,     icon: List,        label: 'List' },
-    { to: `/app/projects/${projectId}/calendar`, icon: CalendarDays,label: 'Calendar' },
-    { to: `/app/projects/${projectId}/standup`,  icon: Calendar,    label: 'Standup' },
-    { to: `/app/projects/${projectId}/members`,  icon: Users,       label: 'Members' },
+    { to: `/app/projects/${projectId}/board`,       icon: LayoutGrid,  label: 'Board' },
+    { to: `/app/projects/${projectId}/list`,        icon: List,        label: 'List' },
+    { to: `/app/projects/${projectId}/calendar`,    icon: CalendarDays,label: 'Calendar' },
+    { to: `/app/projects/${projectId}/standup`,     icon: Calendar,    label: 'Standup' },
+    { to: `/app/projects/${projectId}/workload`,    icon: BarChart2,   label: 'Workload' },
+    { to: `/app/projects/${projectId}/automations`, icon: Zap,         label: 'Automations' },
+    { to: `/app/projects/${projectId}/members`,     icon: Users,       label: 'Members' },
     ...(user?.role === 'admin'
       ? [{ to: `/app/projects/${projectId}/settings`, icon: Settings, label: 'Settings' }]
       : []),
@@ -29,7 +32,7 @@ export function ProjectNav({ projectId, project }) {
       </div>
 
       {/* Tabs — icon + label on the SAME line via flex-row */}
-      <nav className="flex flex-row items-center">
+      <nav className="flex flex-row items-center flex-1 overflow-x-auto">
         {tabs.map(({ to, icon: Icon, label }) => (
           <Link
             key={to}
@@ -42,6 +45,13 @@ export function ProjectNav({ projectId, project }) {
           </Link>
         ))}
       </nav>
+
+      {/* AI Summary button — right side */}
+      {projectId && (
+        <div className="shrink-0 pl-2">
+          <AISummaryButton projectId={projectId} />
+        </div>
+      )}
     </div>
   );
 }

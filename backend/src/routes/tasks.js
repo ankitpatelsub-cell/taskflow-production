@@ -5,6 +5,7 @@ const { authenticate, requireProjectAccess, requireWriteAccess } = require('../m
 const { logActivity, notifyTaskAssigned } = require('../services/notificationService');
 const { broadcast } = require('../services/wsService');
 const { validate, createTaskSchema, updateTaskSchema } = require('../config/validate');
+const { runAutomations } = require('../services/automationService');
 
 // ─── Recurrence helper ────────────────────────────────────────────────────────
 function calcNextDate(deadline, rule, interval = 1, days = null) {
@@ -269,6 +270,7 @@ router.post('/', requireWriteAccess, validate(createTaskSchema), async (req, res
 
     const task = await queryOne('SELECT * FROM tasks WHERE id = ?', [id]);
     broadcast(req.params.projectId, { type: 'task:created', payload: task });
+    runAutomations('task_created', task, null, req.user).catch(() => {});
     res.status(201).json(task);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create task' });
@@ -338,6 +340,13 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
 
     const updated = await queryOne('SELECT * FROM tasks WHERE id = ?', [req.params.taskId]);
     broadcast(req.params.projectId, { type: 'task:updated', payload: updated });
+
+    // Fire automations (non-blocking)
+    const triggers = [];
+    if (status !== undefined && status !== old.status) triggers.push('task_status_changed');
+    if (assignee_id !== undefined && assignee_id !== old.assignee_id) triggers.push('task_assigned');
+    for (const t of triggers) runAutomations(t, updated, old, req.user).catch(() => {});
+
     res.json({ message: 'Updated', nextTaskId });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update task' });

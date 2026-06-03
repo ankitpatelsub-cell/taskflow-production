@@ -279,6 +279,35 @@ async function initSchema() {
   await p.query(`CREATE INDEX IF NOT EXISTS idx_time_logs_user ON time_logs(user_id)`);
 
   await p.query(`
+    CREATE TABLE IF NOT EXISTS automations (
+      id            TEXT PRIMARY KEY,
+      project_id    TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      name          TEXT NOT NULL,
+      trigger_type  TEXT NOT NULL,
+      trigger_value TEXT,
+      action_type   TEXT NOT NULL,
+      action_value  TEXT,
+      is_active     INTEGER NOT NULL DEFAULT 1,
+      created_by    TEXT REFERENCES users(id) ON DELETE SET NULL,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_automations_project ON automations(project_id)`);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS task_links (
+      id          TEXT PRIMARY KEY,
+      task_id     TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+      url         TEXT NOT NULL,
+      title       TEXT,
+      link_type   TEXT NOT NULL DEFAULT 'url',
+      created_by  TEXT REFERENCES users(id) ON DELETE SET NULL,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await p.query(`CREATE INDEX IF NOT EXISTS idx_task_links_task ON task_links(task_id)`);
+
+  await p.query(`
     CREATE TABLE IF NOT EXISTS email_verification_tokens (
       id         TEXT PRIMARY KEY,
       user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

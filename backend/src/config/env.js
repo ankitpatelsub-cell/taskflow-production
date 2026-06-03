@@ -42,4 +42,6 @@ module.exports = {
   // OAuth
   GOOGLE_CLIENT_ID:       process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET:   process.env.GOOGLE_CLIENT_SECRET,
+  // AI (optional — leave blank to use rule-based fallback)
+  ANTHROPIC_API_KEY:      process.env.ANTHROPIC_API_KEY,
 };

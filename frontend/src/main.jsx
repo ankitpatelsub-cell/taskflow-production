@@ -22,6 +22,12 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 
 useThemeStore.getState().initTheme();
 
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 const router = createRouter({ routeTree, defaultPreload: 'intent' });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
