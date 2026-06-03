@@ -8,6 +8,7 @@ import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/u
 import { Calendar, Plus, Trash2, Download, CheckSquare, ArrowUp, ArrowDown, ChevronsUpDown, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useUiStore } from '@/stores/uiStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Modal } from '@/components/ui/Modal';
 import { TaskForm } from '@/components/tasks/TaskForm';
 import { useCreateTask } from '@/hooks/useTasks';
@@ -24,6 +25,7 @@ export function TaskListPage() {
   const { data: tasks = [], isLoading } = useTasks(projectId, { ...filters, limit: 200 });
   const { data: project } = useProject(projectId);
   const { openTaskDrawer, setActiveProject } = useUiStore();
+  const { user } = useAuthStore();
   const [showAdd, setShowAdd]     = useState(false);
   const [selected, setSelected]   = useState(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
@@ -38,7 +40,7 @@ export function TaskListPage() {
       ? tasks.filter((t) => t.title.toLowerCase().includes(search.toLowerCase()))
       : tasks;
     if (!sort.col) return filtered;
-    return [...tasks].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let va, vb;
       if (sort.col === 'title')    { va = a.title.toLowerCase();  vb = b.title.toLowerCase(); }
       if (sort.col === 'status')   { va = STATUS_ORDER[a.status] ?? 9;   vb = STATUS_ORDER[b.status] ?? 9; }
@@ -156,6 +158,18 @@ export function TaskListPage() {
             <p className="text-sm text-gray-500 dark:text-slate-400">
               <span className="font-bold text-gray-800 dark:text-white">{sortedTasks.length}</span> tasks
             </p>
+            {/* My Tasks quick filter */}
+            <button
+              onClick={() => setFilters((f) => ({ ...f, assignee: f.assignee === user?.id ? undefined : user?.id }))}
+              className={cn(
+                'text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors',
+                filters.assignee === user?.id
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-700 hover:border-indigo-300'
+              )}
+            >
+              My Tasks
+            </button>
             {/* Status filter */}
             <select
               value={filters.status || ''}

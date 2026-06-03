@@ -184,6 +184,24 @@ export function DashboardPage() {
                     : <span className="text-gray-300 dark:text-slate-600 italic">No description added</span>
                   }
                 </p>
+                {/* Completion progress */}
+                {p.task_count > 0 && (() => {
+                  const pct = Math.round(((p.done_count || 0) / p.task_count) * 100);
+                  return (
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-gray-400 dark:text-slate-500">{p.done_count || 0}/{p.task_count} done</span>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">{pct}%</span>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${pct}%`, backgroundColor: p.color }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="flex items-center justify-between text-xs text-gray-400 dark:text-slate-500 pt-3 border-t border-gray-50 dark:border-slate-700">
                   <span className="flex items-center gap-1">
                     <CheckCircle2 size={11} /> {p.task_count} tasks
