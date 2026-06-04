@@ -61,6 +61,7 @@ const createTaskSchema = z.object({
   ),
   recurrence_days:     z.string().optional().nullable(),   // JSON array e.g. "[1,3,5]"
   recurrence_ends_at:  z.preprocess(emptyToNull, z.string().optional().nullable()),
+  reminder_at:         z.preprocess(emptyToNull, z.string().datetime({ offset: true }).optional().nullable()),
 });
 
 const updateTaskSchema = createTaskSchema.partial();

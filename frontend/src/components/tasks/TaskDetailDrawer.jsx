@@ -6,7 +6,8 @@ import { useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check } from 'lucide-react';
+import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell } from 'lucide-react';
+import { format } from 'date-fns';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { TimeTracker } from './TimeTracker';
@@ -230,6 +231,58 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                         <Calendar size={14} />
                         {formatDate(task.deadline)}
                         {overdue && <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-bold">{t('task.overdue')}</span>}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400 dark:text-slate-500">{t('task.notSet')}</span>
+                    )}
+                  </div>
+
+                  {/* Reminder — click to edit */}
+                  <div
+                    className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3.5 border border-gray-100 dark:border-slate-600 cursor-pointer hover:border-indigo-300 transition-colors"
+                    onClick={() => editingField !== 'reminder' && setEditingField('reminder')}
+                    title={t('task.setReminder')}
+                  >
+                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-2">{t('task.reminder')}</p>
+                    {editingField === 'reminder' ? (
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="datetime-local"
+                          autoFocus
+                          key={task.reminder_at?.slice(0, 16) ?? 'empty'}
+                          defaultValue={task.reminder_at ? new Date(task.reminder_at).toISOString().slice(0, 16) : ''}
+                          min={new Date().toISOString().slice(0, 16)}
+                          onBlur={(e) => {
+                            const newVal = e.target.value ? new Date(e.target.value).toISOString() : null;
+                            const oldVal = task.reminder_at ?? null;
+                            if (newVal !== oldVal) update.mutate({ reminder_at: newVal });
+                            setEditingField(null);
+                          }}
+                          className="flex-1 text-sm border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        {task.reminder_at && (
+                          <button
+                            onClick={() => { update.mutate({ reminder_at: null }); setEditingField(null); }}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                            title={t('task.clearReminder')}
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
+                    ) : task.reminder_at ? (
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                          <Bell size={13} />
+                          {format(new Date(task.reminder_at), 'MMM d, h:mm a')}
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); update.mutate({ reminder_at: null }); }}
+                          className="text-gray-300 hover:text-red-500 transition-colors p-0.5 shrink-0"
+                          title={t('task.clearReminder')}
+                        >
+                          <X size={11} />
+                        </button>
                       </div>
                     ) : (
                       <span className="text-sm text-gray-400 dark:text-slate-500">{t('task.notSet')}</span>

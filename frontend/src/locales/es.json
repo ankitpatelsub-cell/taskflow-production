@@ -88,7 +88,10 @@
     "estimate": "Estimación",
     "created": "Creada",
     "recurring": "Tarea recurrente",
-    "repeats": "Se repite"
+    "repeats": "Se repite",
+    "reminder": "Recordatorio",
+    "setReminder": "Haz clic para establecer un recordatorio",
+    "clearReminder": "Eliminar recordatorio"
   },
   "dashboard": {
     "title": "Panel",

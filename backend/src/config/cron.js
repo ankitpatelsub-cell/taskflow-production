@@ -1,7 +1,8 @@
 const cron = require('node-cron');
 const { BACKUP_CRON } = require('./env');
 const { createBackup } = require('../services/backupService');
-const { execute } = require('./db');
+const { execute, queryAll } = require('./db');
+const { createNotification } = require('../services/notificationService');
 
 function startCronJobs() {
   cron.schedule(BACKUP_CRON, async () => {
@@ -22,6 +23,36 @@ function startCronJobs() {
       await execute("DELETE FROM invite_tokens WHERE expires_at < NOW()");
     } catch (err) {
       console.error('[Cron] Token cleanup failed:', err.message);
+    }
+  });
+
+  // Fire task reminders every minute
+  cron.schedule('* * * * *', async () => {
+    try {
+      const due = await queryAll(
+        `SELECT id, title, assignee_id, created_by
+         FROM tasks
+         WHERE reminder_at IS NOT NULL
+           AND reminder_at <= NOW()
+           AND reminder_at > NOW() - INTERVAL '2 minutes'`,
+        []
+      );
+      for (const task of due) {
+        const recipientId = task.assignee_id || task.created_by;
+        if (recipientId) {
+          await createNotification(
+            recipientId,
+            'task_reminder',
+            `Reminder: "${task.title}"`,
+            'task',
+            task.id
+          );
+        }
+        // Clear the reminder so it doesn't re-fire on the next tick
+        await execute('UPDATE tasks SET reminder_at = NULL WHERE id = ?', [task.id]);
+      }
+    } catch (err) {
+      console.error('[Cron] Reminder check failed:', err.message);
     }
   });
 

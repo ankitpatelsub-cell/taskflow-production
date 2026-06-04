@@ -146,6 +146,9 @@ async function initSchema() {
     )
   `);
 
+  // Idempotent migration — add reminder_at if it doesn't exist yet
+  await p.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS reminder_at TIMESTAMPTZ`);
+
   await p.query(`
     CREATE TABLE IF NOT EXISTS tags (
       id         TEXT PRIMARY KEY,

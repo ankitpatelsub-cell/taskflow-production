@@ -88,7 +88,10 @@
     "estimate": "見積もり",
     "created": "作成日",
     "recurring": "繰り返しタスク",
-    "repeats": "繰り返し"
+    "repeats": "繰り返し",
+    "reminder": "リマインダー",
+    "setReminder": "クリックしてリマインダーを設定",
+    "clearReminder": "リマインダーを削除"
   },
   "dashboard": {
     "title": "ダッシュボード",

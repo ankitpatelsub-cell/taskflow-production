@@ -296,7 +296,7 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
 
     const {
       title, description, status, priority, assignee_id, deadline, estimated_hours, tag_ids,
-      recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at,
+      recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at, reminder_at,
     } = req.body;
 
     const sets = ['updated_at = NOW()'];
@@ -313,6 +313,7 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
     if (recurrence_interval !== undefined) { sets.push('recurrence_interval = ?'); vals.push(recurrence_interval); }
     if (recurrence_days !== undefined) { sets.push('recurrence_days = ?');    vals.push(recurrence_days || null); }
     if (recurrence_ends_at !== undefined) { sets.push('recurrence_ends_at = ?'); vals.push(recurrence_ends_at || null); }
+    if (reminder_at !== undefined)     { sets.push('reminder_at = ?');        vals.push(reminder_at || null); }
 
     vals.push(req.params.taskId);
     await execute(`UPDATE tasks SET ${sets.join(', ')} WHERE id = ?`, vals);

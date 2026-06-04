@@ -88,7 +88,10 @@
     "estimate": "Schätzung",
     "created": "Erstellt",
     "recurring": "Wiederkehrende Aufgabe",
-    "repeats": "Wiederholt sich"
+    "repeats": "Wiederholt sich",
+    "reminder": "Erinnerung",
+    "setReminder": "Klicken um eine Erinnerung zu setzen",
+    "clearReminder": "Erinnerung löschen"
   },
   "dashboard": {
     "title": "Dashboard",
