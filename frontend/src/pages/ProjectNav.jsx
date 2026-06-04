@@ -2,20 +2,22 @@ import { Link } from '@tanstack/react-router';
 import { LayoutGrid, List, Calendar, CalendarDays, Users, Settings, BarChart2, Zap, Clock } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { AISummaryButton } from '@/components/shared/AISummaryButton';
+import { useTranslation } from 'react-i18next';
 
 export function ProjectNav({ projectId, project }) {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const tabs = [
-    { to: `/app/projects/${projectId}/board`,       icon: LayoutGrid,  label: 'Board' },
-    { to: `/app/projects/${projectId}/list`,        icon: List,        label: 'List' },
-    { to: `/app/projects/${projectId}/calendar`,    icon: CalendarDays,label: 'Calendar' },
-    { to: `/app/projects/${projectId}/standup`,     icon: Calendar,    label: 'Standup' },
-    { to: `/app/projects/${projectId}/workload`,    icon: BarChart2,   label: 'Workload' },
-    { to: `/app/projects/${projectId}/automations`, icon: Zap,         label: 'Automations' },
-    { to: `/app/projects/${projectId}/time-report`, icon: Clock,       label: 'Time' },
-    { to: `/app/projects/${projectId}/members`,     icon: Users,       label: 'Members' },
+    { to: `/app/projects/${projectId}/board`,       icon: LayoutGrid,  label: t('tabs.board') },
+    { to: `/app/projects/${projectId}/list`,        icon: List,        label: t('tabs.list') },
+    { to: `/app/projects/${projectId}/calendar`,    icon: CalendarDays,label: t('tabs.calendar') },
+    { to: `/app/projects/${projectId}/standup`,     icon: Calendar,    label: t('tabs.standup') },
+    { to: `/app/projects/${projectId}/workload`,    icon: BarChart2,   label: t('tabs.workload') },
+    { to: `/app/projects/${projectId}/automations`, icon: Zap,         label: t('tabs.automations') },
+    { to: `/app/projects/${projectId}/time-report`, icon: Clock,       label: t('tabs.time') },
+    { to: `/app/projects/${projectId}/members`,     icon: Users,       label: t('tabs.members') },
     ...(user?.role === 'admin'
-      ? [{ to: `/app/projects/${projectId}/settings`, icon: Settings, label: 'Settings' }]
+      ? [{ to: `/app/projects/${projectId}/settings`, icon: Settings, label: t('tabs.settings') }]
       : []),
   ];
 

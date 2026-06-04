@@ -13,6 +13,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { ToastProvider } from '@/components/ui/Toast';
 import { useThemeStore } from '@/stores/themeStore';
 import { connectWebSocket, disconnectWebSocket } from '@/hooks/useWebSocket';
+import { useDesktopNotifications } from '@/hooks/useDesktopNotifications';
 
 export function AppShell() {
   const { isAuthenticated, accessToken } = useAuthStore();
@@ -42,6 +43,7 @@ export function AppShell() {
   }, [location.pathname]);
 
   useKeyboardShortcuts();
+  useDesktopNotifications();
 
   useEffect(() => {
     if (!isAuthenticated) navigate({ to: '/login' });

@@ -6,6 +6,7 @@ import { queryClient } from './lib/queryClient';
 import { routeTree } from './routeTree';
 import { useThemeStore } from './stores/themeStore';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
+import './lib/i18n';
 import './index.css';
 
 // Sentry frontend error tracking

@@ -6,7 +6,14 @@ import { Button } from '@/components/ui/Button';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { getGroupedTimezones, getCurrentTimezone } from '@/lib/timezones';
-import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { setLanguage, SUPPORTED_LANGUAGES, LANG_KEY } from '@/lib/i18n';
+import {
+  getDesktopNotifEnabled,
+  requestDesktopNotifPermission,
+  disableDesktopNotifs,
+} from '@/hooks/useDesktopNotifications';
 
 const grouped = getGroupedTimezones();
 
@@ -24,9 +31,16 @@ function Section({ title, icon: Icon, children }) {
 
 export function ProfilePage() {
   const { user, updateUser } = useAuthStore();
+  const { t, i18n } = useTranslation();
   const [name, setName]         = useState(user?.name || '');
   const [timezone, setTimezone] = useState(user?.timezone || getCurrentTimezone());
   const [saved, setSaved]       = useState(false);
+  const [lang, setLang]         = useState(localStorage.getItem(LANG_KEY) || i18n.language || 'en');
+  const [desktopNotif, setDesktopNotif] = useState(getDesktopNotifEnabled());
+  const [notifStatus, setNotifStatus]   = useState(
+    !('Notification' in window) ? 'unsupported' :
+    Notification.permission === 'denied' ? 'denied' : null
+  );
 
   // Password change state
   const [curPw,  setCurPw]  = useState('');
@@ -101,8 +115,8 @@ export function ProfilePage() {
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-5 page-fade">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">My Profile</h2>
-        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage your account details and preferences</p>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('profile.title')}</h2>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{t('profile.subtitle')}</p>
       </div>
 
       {/* Avatar card */}
@@ -120,11 +134,11 @@ export function ProfilePage() {
       </div>
 
       {/* Profile details */}
-      <Section title="Profile Details" icon={User}>
+      <Section title={t('profile.profileDetails')} icon={User}>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Display Name
+              {t('profile.displayName')}
             </label>
             <Input
               value={name}
@@ -152,18 +166,19 @@ export function ProfilePage() {
               onClick={() => updateProfile.mutate({ name, timezone })}
               disabled={updateProfile.isPending || !name.trim()}
             >
-              {updateProfile.isPending ? 'Saving…' : 'Save Changes'}
+              {updateProfile.isPending ? t('common.loading') : t('common.saveChanges')}
             </Button>
           </div>
         </div>
       </Section>
 
       {/* Timezone */}
-      <Section title="Timezone & Locale" icon={Globe}>
-        <div className="space-y-4">
+      <Section title={t('profile.timezoneLocale')} icon={Globe}>
+        <div className="space-y-5">
+          {/* Timezone */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Timezone
+              {t('profile.timezone')}
             </label>
             <select
               value={timezone}
@@ -179,8 +194,31 @@ export function ProfilePage() {
               ))}
             </select>
             <p className="text-xs text-gray-400 mt-1.5">
-              Current system timezone: <strong>{getCurrentTimezone()}</strong>
+              {t('profile.currentTimezone')}: <strong>{getCurrentTimezone()}</strong>
             </p>
+          </div>
+
+          {/* Language */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
+              {t('profile.language')}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {SUPPORTED_LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => { setLang(l.code); setLanguage(l.code); }}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+                    lang === l.code
+                      ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                      : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-indigo-300 hover:bg-indigo-50/50 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <span className="text-base leading-none">{l.flag}</span>
+                  <span>{l.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-end pt-1">
@@ -188,14 +226,52 @@ export function ProfilePage() {
               onClick={() => updateProfile.mutate({ name, timezone })}
               disabled={updateProfile.isPending}
             >
-              Save Timezone
+              {t('common.saveChanges')}
             </Button>
           </div>
         </div>
       </Section>
 
+      {/* Desktop notifications */}
+      <Section title={t('notifications.desktop')} icon={Bell}>
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500 dark:text-slate-400">{t('notifications.desktopDesc')}</p>
+          <div className="flex items-center gap-4">
+            {notifStatus === 'unsupported' ? (
+              <p className="text-sm text-amber-600 dark:text-amber-400">{t('notifications.notSupported')}</p>
+            ) : notifStatus === 'denied' ? (
+              <p className="text-sm text-red-500">{t('notifications.denied')}</p>
+            ) : desktopNotif ? (
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 size={15} /> {t('notifications.enabled')}
+                </span>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => { disableDesktopNotifs(); setDesktopNotif(false); }}
+                >
+                  {t('common.disable')}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                onClick={async () => {
+                  const result = await requestDesktopNotifPermission();
+                  if (result === 'granted') setDesktopNotif(true);
+                  else setNotifStatus(result);
+                }}
+              >
+                <Bell size={13} /> {t('notifications.enable')}
+              </Button>
+            )}
+          </div>
+        </div>
+      </Section>
+
       {/* Change password */}
-      <Section title="Change Password" icon={Lock}>
+      <Section title={t('profile.changePassword')} icon={Lock}>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
