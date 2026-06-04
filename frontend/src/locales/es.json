@@ -138,7 +138,14 @@
     "dangerZone": "Zona de Peligro",
     "exportData": "Exportar Mis Datos",
     "deleteAccount": "Eliminar Cuenta",
-    "saved": "¡Guardado!"
+    "saved": "¡Guardado!",
+    "appearance": "Apariencia",
+    "themeSystem": "Sistema",
+    "themeSystemDesc": "Sigue la configuración del SO",
+    "themeLight": "Claro",
+    "themeLightDesc": "Siempre modo claro",
+    "themeDark": "Oscuro",
+    "themeDarkDesc": "Siempre modo oscuro"
   },
   "auth": {
     "signIn": "Iniciar sesión",

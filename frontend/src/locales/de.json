@@ -138,7 +138,14 @@
     "dangerZone": "Gefahrenzone",
     "exportData": "Meine Daten exportieren",
     "deleteAccount": "Konto löschen",
-    "saved": "Gespeichert!"
+    "saved": "Gespeichert!",
+    "appearance": "Erscheinungsbild",
+    "themeSystem": "System",
+    "themeSystemDesc": "Folgt den OS-Einstellungen",
+    "themeLight": "Hell",
+    "themeLightDesc": "Immer heller Modus",
+    "themeDark": "Dunkel",
+    "themeDarkDesc": "Immer dunkler Modus"
   },
   "auth": {
     "signIn": "Anmelden",

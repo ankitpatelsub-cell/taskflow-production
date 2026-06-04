@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { getGroupedTimezones, getCurrentTimezone } from '@/lib/timezones';
-import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell } from 'lucide-react';
+import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell, Palette, Monitor, Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import {
@@ -14,6 +14,7 @@ import {
   requestDesktopNotifPermission,
   disableDesktopNotifs,
 } from '@/hooks/useDesktopNotifications';
+import { useThemeStore } from '@/stores/themeStore';
 
 const grouped = getGroupedTimezones();
 
@@ -32,6 +33,7 @@ function Section({ title, icon: Icon, children }) {
 export function ProfilePage() {
   const { user, updateUser } = useAuthStore();
   const { t, i18n } = useTranslation();
+  const { theme, setTheme } = useThemeStore();
   const [name, setName]         = useState(user?.name || '');
   const [timezone, setTimezone] = useState(user?.timezone || getCurrentTimezone());
   const [saved, setSaved]       = useState(false);
@@ -228,6 +230,36 @@ export function ProfilePage() {
               {t('common.saveChanges')}
             </Button>
           </div>
+        </div>
+      </Section>
+
+      {/* Appearance */}
+      <Section title={t('profile.appearance')} icon={Palette}>
+        <div className="flex gap-3">
+          {[
+            { value: 'system', Icon: Monitor, label: t('profile.themeSystem'), desc: t('profile.themeSystemDesc') },
+            { value: 'light',  Icon: Sun,     label: t('profile.themeLight'),  desc: t('profile.themeLightDesc')  },
+            { value: 'dark',   Icon: Moon,    label: t('profile.themeDark'),   desc: t('profile.themeDarkDesc')   },
+          ].map(({ value, Icon, label, desc }) => (
+            <button
+              key={value}
+              onClick={() => setTheme(value)}
+              className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center ${
+                theme === value
+                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                  : 'border-gray-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-gray-50 dark:hover:bg-slate-700/50'
+              }`}
+            >
+              <Icon
+                size={20}
+                className={theme === value ? 'text-indigo-500' : 'text-gray-400 dark:text-slate-400'}
+              />
+              <span className={`text-sm font-semibold leading-tight ${theme === value ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-slate-300'}`}>
+                {label}
+              </span>
+              <span className="text-xs text-gray-400 dark:text-slate-500 leading-tight">{desc}</span>
+            </button>
+          ))}
         </div>
       </Section>
 

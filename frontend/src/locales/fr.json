@@ -138,7 +138,14 @@
     "dangerZone": "Zone Dangereuse",
     "exportData": "Exporter mes données",
     "deleteAccount": "Supprimer le compte",
-    "saved": "Enregistré !"
+    "saved": "Enregistré !",
+    "appearance": "Apparence",
+    "themeSystem": "Système",
+    "themeSystemDesc": "Suit les paramètres OS",
+    "themeLight": "Clair",
+    "themeLightDesc": "Toujours en mode clair",
+    "themeDark": "Sombre",
+    "themeDarkDesc": "Toujours en mode sombre"
   },
   "auth": {
     "signIn": "Se connecter",

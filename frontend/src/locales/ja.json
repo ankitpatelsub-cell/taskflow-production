@@ -138,7 +138,14 @@
     "dangerZone": "危険な操作",
     "exportData": "データをエクスポート",
     "deleteAccount": "アカウントを削除",
-    "saved": "保存しました！"
+    "saved": "保存しました！",
+    "appearance": "外観",
+    "themeSystem": "システム",
+    "themeSystemDesc": "OSの設定に従う",
+    "themeLight": "ライト",
+    "themeLightDesc": "常にライトモード",
+    "themeDark": "ダーク",
+    "themeDarkDesc": "常にダークモード"
   },
   "auth": {
     "signIn": "サインイン",
