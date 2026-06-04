@@ -35,7 +35,7 @@ export function ProfilePage() {
   const [name, setName]         = useState(user?.name || '');
   const [timezone, setTimezone] = useState(user?.timezone || getCurrentTimezone());
   const [saved, setSaved]       = useState(false);
-  const [desktopNotif, setDesktopNotif] = useState(getDesktopNotifEnabled());
+  const [desktopNotif, setDesktopNotif] = useState(() => getDesktopNotifEnabled());
   const [notifStatus, setNotifStatus]   = useState(
     !('Notification' in window) ? 'unsupported' :
     Notification.permission === 'denied' ? 'denied' : null

@@ -30,18 +30,27 @@ export function disableDesktopNotifs() {
 
 export function useDesktopNotifications() {
   const { data: notifData } = useNotifications();
-  const notifications = notifData?.notifications ?? [];
+  // Stable ref to the notifications array — avoids creating a new [] on every render
+  // when notifData is undefined, which would cause the effect to re-run spuriously.
+  const notificationsRef = useRef([]);
+  const notifications = notifData?.notifications ?? notificationsRef.current;
+  if (notifData?.notifications) notificationsRef.current = notifData.notifications;
+
   const seenIds = useRef(new Set());
+  // Tracks whether we have processed the first non-empty fetch.
+  // We seed seenIds on first load (including when the list starts empty and later
+  // gets items) to avoid firing OS alerts for pre-existing notifications.
   const seeded = useRef(false);
 
   useEffect(() => {
-    if (notifications.length === 0) return;
-
-    // On the first non-empty load, seed all existing IDs so we never fire for pre-existing notifications.
-    // This prevents a burst of OS alerts on every page refresh.
     if (!seeded.current) {
+      // Seed on first fetch regardless of whether the list is empty or not.
+      // An empty list on first fetch means we haven't seen any notifications yet —
+      // we still mark as seeded so the NEXT poll with real items fires normally.
       notifications.forEach((n) => seenIds.current.add(n.id));
-      seeded.current = true;
+      // Only mark seeded once we've received a response (notifData is defined),
+      // not when we're still on the initial [] fallback before the query resolves.
+      if (notifData !== undefined) seeded.current = true;
       return;
     }
 
@@ -71,5 +80,5 @@ export function useDesktopNotifications() {
         // Notifications blocked or unsupported — silently ignore
       }
     });
-  }, [notifications]);
+  }, [notifications, notifData]);
 }

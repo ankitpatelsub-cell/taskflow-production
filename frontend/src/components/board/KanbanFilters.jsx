@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useProjectMembers } from '@/hooks/useProjects';
 import { Filter, X, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/Toast';
@@ -15,11 +16,7 @@ function dueSoonDate() {
 
 export function KanbanFilters({ projectId, filters, onChange }) {
   const [open, setOpen] = useState(false);
-  const { data: members = [] } = useQuery({
-    queryKey: ['project-members', projectId],
-    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members ?? []),
-    enabled: !!projectId,
-  });
+  const { data: members = [] } = useProjectMembers(projectId);
   const { data: tags = [] } = useQuery({
     queryKey: ['tags', projectId],
     queryFn: () => api.get(`/projects/${projectId}/tags`).then((r) => Array.isArray(r.data) ? r.data : []),

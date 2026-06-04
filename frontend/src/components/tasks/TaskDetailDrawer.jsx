@@ -78,10 +78,13 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
 
   async function toggleSubtask(subtask) {
     setTogglingSubtask(subtask.id);
-    const newStatus = subtask.status === 'done' ? 'todo' : 'done';
-    await api.patch(`/projects/${projectId}/tasks/${subtask.id}`, { status: newStatus });
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId, taskId] });
-    setTogglingSubtask(null);
+    try {
+      const newStatus = subtask.status === 'done' ? 'todo' : 'done';
+      await api.patch(`/projects/${projectId}/tasks/${subtask.id}`, { status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, taskId] });
+    } finally {
+      setTogglingSubtask(null);
+    }
   }
 
   async function addSubtask() {
@@ -211,9 +214,10 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                       <input
                         type="date"
                         autoFocus
-                        defaultValue={task.deadline?.slice(0, 10) || ''}
+                        defaultValue={task.deadline?.slice(0, 10) ?? ''}
+                        key={task.deadline?.slice(0, 10) ?? ''}
                         onBlur={(e) => {
-                          if (e.target.value !== (task.deadline?.slice(0, 10) || '')) {
+                          if (e.target.value !== (task.deadline?.slice(0, 10) ?? '')) {
                             update.mutate({ deadline: e.target.value || null });
                           }
                           setEditingField(null);

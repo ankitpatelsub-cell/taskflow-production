@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useTasks } from '@/hooks/useTasks';
-import { useProject } from '@/hooks/useProjects';
+import { useProject, useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, isDueSoon, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
@@ -16,7 +16,6 @@ import { ProjectNav } from './ProjectNav';
 import { TableSkeleton } from '@/components/ui/Skeleton';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
-import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/components/ui/Toast';
 
 export function TaskListPage() {
@@ -68,12 +67,7 @@ export function TaskListPage() {
   }
   const create = useCreateTask(projectId);
 
-  // Members for filter
-  const { data: members = [] } = useQuery({
-    queryKey: ['project-members', projectId],
-    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members ?? []),
-    enabled: !!projectId,
-  });
+  const { data: members = [] } = useProjectMembers(projectId);
 
   function openTask(id) { setActiveProject(projectId); openTaskDrawer(id); }
   function handleCreate(data) { create.mutate(data, { onSuccess: () => setShowAdd(false) }); }

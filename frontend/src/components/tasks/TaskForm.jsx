@@ -2,8 +2,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/api';
+import { useProjectMembers } from '@/hooks/useProjects';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,11 +34,7 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
     try { return JSON.parse(defaultValues.recurrence_days || '[]'); } catch { return []; }
   })();
 
-  const { data: members = [] } = useQuery({
-    queryKey: ['project-members', projectId],
-    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members ?? []),
-    enabled: !!projectId,
-  });
+  const { data: members = [] } = useProjectMembers(projectId);
 
   function handleDayToggle(day, checked, currentVal) {
     const current = (() => { try { return JSON.parse(currentVal || '[]'); } catch { return []; } })();

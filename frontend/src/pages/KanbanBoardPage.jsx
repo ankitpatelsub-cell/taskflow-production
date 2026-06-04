@@ -7,6 +7,8 @@ import { ProjectNav } from './ProjectNav';
 import { subscribeProject, unsubscribeProject, useWsEvent } from '@/hooks/useWebSocket';
 import { queryClient } from '@/lib/queryClient';
 
+const EMPTY_FILTERS = { assignee: '', priority: '', tag: '', q: '', to: '' };
+
 export function KanbanBoardPage() {
   const { projectId } = useParams({ strict: false });
   const { data: project } = useProject(projectId);
@@ -25,20 +27,22 @@ export function KanbanBoardPage() {
   useWsEvent('tasks:bulk_updated',() => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }));
   useWsEvent('comment:created',   () => queryClient.invalidateQueries({ queryKey: ['task'] }));
 
-  const EMPTY_FILTERS = { assignee: '', priority: '', tag: '', q: '', to: '' };
-  const filterKey = `kf_${projectId}`;
+  const filterKey = projectId ? `kf_${projectId}` : null;
   const [filters, setFilters] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(`kf_${projectId}`)) || EMPTY_FILTERS; }
+    if (!filterKey) return EMPTY_FILTERS;
+    try { return JSON.parse(localStorage.getItem(filterKey)) || EMPTY_FILTERS; }
     catch { return EMPTY_FILTERS; }
   });
 
   // Router re-uses this component instance on project navigation — reload persisted filters for the new project
   useEffect(() => {
-    try { setFilters(JSON.parse(localStorage.getItem(`kf_${projectId}`)) || EMPTY_FILTERS); }
+    if (!filterKey) { setFilters(EMPTY_FILTERS); return; }
+    try { setFilters(JSON.parse(localStorage.getItem(filterKey)) || EMPTY_FILTERS); }
     catch { setFilters(EMPTY_FILTERS); }
-  }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (!filterKey) return;
     try { localStorage.setItem(filterKey, JSON.stringify(filters)); } catch {}
   }, [filters, filterKey]);
 
