@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { CheckSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const GOOGLE_OAUTH_ENABLED = import.meta.env.VITE_GOOGLE_OAUTH === 'true';
 
@@ -16,15 +17,15 @@ export function LoginPage() {
   const login = useLogin();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isAuthenticated) navigate({ to: '/app/dashboard' });
   }, [isAuthenticated]);
 
-  // Check for OAuth error in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('error') === 'oauth') setError('OAuth login failed. Please try again.');
+    if (params.get('error') === 'oauth') setError(t('auth.oauthFailed'));
   }, []);
 
   async function handleSubmit(e) {
@@ -34,7 +35,7 @@ export function LoginPage() {
       { email, password },
       {
         onSuccess: () => navigate({ to: '/app/dashboard' }),
-        onError: (err) => setError(err.response?.data?.error || 'Login failed'),
+        onError: (err) => setError(err.response?.data?.error || t('auth.loginFailed')),
       }
     );
   }
@@ -54,7 +55,7 @@ export function LoginPage() {
             <CheckSquare size={28} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">TaskFlow</h1>
-          <p className="text-indigo-200/60 text-sm mt-2">Sign in to your workspace</p>
+          <p className="text-indigo-200/60 text-sm mt-2">{t('auth.signInSubtitle')}</p>
         </div>
 
         <form
@@ -80,38 +81,38 @@ export function LoginPage() {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Continue with Google
+                {t('auth.continueGoogle')}
               </button>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-                <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">or</div>
+                <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">{t('auth.or')}</div>
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.emailAddress')}</label>
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required autoFocus />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.password')}</label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
           </div>
           <div className="flex items-center justify-between">
             <Button type="submit" size="lg" disabled={login.isPending} className="flex-1">
-              {login.isPending ? 'Signing in…' : 'Sign in'}
+              {login.isPending ? t('auth.signingIn') : t('auth.signIn')}
             </Button>
           </div>
           <div className="text-center">
             <Link to="/forgot-password" className="text-xs text-gray-500 hover:text-indigo-600 transition-colors">
-              Forgot password?
+              {t('auth.forgotPassword')}
             </Link>
           </div>
         </form>
 
         <p className="text-center text-sm text-indigo-200/60 mt-5">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-indigo-300 hover:text-white font-medium transition-colors">Sign up</Link>
+          {t('auth.noAccount')}{' '}
+          <Link to="/register" className="text-indigo-300 hover:text-white font-medium transition-colors">{t('auth.signUp')}</Link>
         </p>
         <p className="text-center text-xs text-indigo-200/30 mt-3">
           <Link to="/privacy" className="hover:text-indigo-200/60 transition-colors">Privacy Policy</Link>

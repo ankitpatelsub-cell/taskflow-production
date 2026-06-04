@@ -71,7 +71,7 @@ export function Sidebar() {
           </div>
           <div className="min-w-0">
             <p className="font-bold text-white text-sm leading-tight">TaskFlow</p>
-            <p className="text-[11px] text-slate-500 leading-tight">Workspace</p>
+            <p className="text-[11px] text-slate-500 leading-tight">{t('nav.workspace')}</p>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export function Sidebar() {
             <kbd className="text-[10px] bg-slate-800 border border-slate-700 rounded px-1 py-0.5 font-mono leading-none">⌘K</kbd>
           </button>
 
-          <SectionLabel>Menu</SectionLabel>
+          <SectionLabel>{t('nav.menu')}</SectionLabel>
           <NavItem to="/app/dashboard" icon={LayoutDashboard}>{t('nav.dashboard')}</NavItem>
           <NavItem to="/app/notifications" icon={Bell} badge={unreadCount}>{t('nav.notifications')}</NavItem>
           <NavItem to="/app/profile" icon={User}>{t('nav.profile')}</NavItem>
@@ -152,7 +152,7 @@ export function Sidebar() {
           {/* ── Admin ──── */}
           {isAdminOrAbove(user?.role) && (
             <div className="pt-1 border-t border-slate-800 mt-2">
-              <SectionLabel>Admin</SectionLabel>
+              <SectionLabel>{t('nav.admin')}</SectionLabel>
               <NavItem to="/app/admin/users" icon={Shield}>{t('nav.userManagement')}</NavItem>
               {isSuperAdmin(user?.role) && (
                 <NavItem to="/app/admin/backups" icon={Database}>{t('nav.backups')}</NavItem>

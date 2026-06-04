@@ -80,7 +80,7 @@ export function ProfilePage() {
   const deleteAccount = useMutation({
     mutationFn: () => api.delete('/account', { data: { confirm: 'DELETE' } }),
     onSuccess: () => useAuthStore.getState().logout(),
-    onError: () => setDeleteError('Failed to delete account. Please try again.'),
+    onError: () => setDeleteError(t('profile.deleteError')),
   });
 
   function handlePasswordChange(e) {
@@ -104,13 +104,13 @@ export function ProfilePage() {
   }
 
   const pwMessages = {
-    success:      { text: 'Password changed successfully!',          cls: 'text-emerald-600' },
-    mismatch:     { text: 'New passwords do not match.',             cls: 'text-red-600' },
-    short:        { text: 'Password must be at least 6 characters.', cls: 'text-red-600' },
-    empty:        { text: 'Please fill in both new password fields.', cls: 'text-red-600' },
-    nocurrent:    { text: 'Please enter your current password.',      cls: 'text-red-600' },
-    wrongcurrent: { text: 'Current password is incorrect.',          cls: 'text-red-600' },
-    error:        { text: 'Failed to change password.',              cls: 'text-red-600' },
+    success:      { text: t('profile.pwChanged'),      cls: 'text-emerald-600' },
+    mismatch:     { text: t('profile.pwMismatch'),     cls: 'text-red-600' },
+    short:        { text: t('profile.pwTooShort'),     cls: 'text-red-600' },
+    empty:        { text: t('profile.pwEmpty'),        cls: 'text-red-600' },
+    nocurrent:    { text: t('profile.pwNoCurrent'),    cls: 'text-red-600' },
+    wrongcurrent: { text: t('profile.pwWrongCurrent'), cls: 'text-red-600' },
+    error:        { text: t('profile.pwError'),        cls: 'text-red-600' },
   };
 
   return (
@@ -150,16 +150,16 @@ export function ProfilePage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Email Address
+              {t('profile.emailAddress')}
             </label>
             <Input value={user?.email || ''} disabled className="opacity-60 cursor-not-allowed" />
-            <p className="text-xs text-gray-400 mt-1">Email cannot be changed. Contact admin.</p>
+            <p className="text-xs text-gray-400 mt-1">{t('profile.emailNote')}</p>
           </div>
 
           <div className="flex justify-between items-center pt-2">
             {saved && (
               <span className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
-                <CheckCircle2 size={15} /> Saved!
+                <CheckCircle2 size={15} /> {t('profile.saved')}
               </span>
             )}
             {!saved && <div />}
@@ -306,7 +306,7 @@ export function ProfilePage() {
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Current Password
+              {t('profile.currentPassword')}
             </label>
             <Input
               type="password"
@@ -318,7 +318,7 @@ export function ProfilePage() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              New Password
+              {t('profile.newPassword')}
             </label>
             <Input
               type="password"
@@ -330,7 +330,7 @@ export function ProfilePage() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Confirm New Password
+              {t('profile.confirmPassword')}
             </label>
             <Input
               type="password"
@@ -349,7 +349,7 @@ export function ProfilePage() {
 
           <div className="flex justify-end pt-1">
             <Button type="submit" disabled={changePassword.isPending}>
-              {changePassword.isPending ? 'Changing…' : 'Change Password'}
+              {changePassword.isPending ? t('profile.changing') : t('profile.changePasswordBtn')}
             </Button>
           </div>
         </form>
@@ -359,29 +359,25 @@ export function ProfilePage() {
       <div className="rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
         <div className="flex items-center gap-2 mb-5 pb-4 border-b border-red-100 dark:border-red-900/30">
           <AlertTriangle size={18} className="text-red-500" />
-          <h3 className="font-bold text-red-600 dark:text-red-400 text-sm">Danger Zone</h3>
+          <h3 className="font-bold text-red-600 dark:text-red-400 text-sm">{t('profile.dangerZone')}</h3>
         </div>
         <div className="space-y-4">
 
           {/* Export data */}
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-white">Export My Data</p>
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                Download all your tasks, comments and profile as JSON.
-              </p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-white">{t('profile.exportData')}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t('profile.exportDesc')}</p>
             </div>
             <Button variant="secondary" onClick={handleExportData} className="shrink-0 flex items-center gap-1.5">
-              <Download size={14} /> Export
+              <Download size={14} /> {t('common.export')}
             </Button>
           </div>
 
           {/* Delete account */}
           <div className="pt-3 border-t border-red-100 dark:border-red-900/30">
-            <p className="text-sm font-semibold text-gray-800 dark:text-white">Delete Account</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 mb-3">
-              Permanently deletes your account and all associated data. This cannot be undone.
-            </p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-white">{t('profile.deleteAccount')}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 mb-3">{t('profile.deleteDesc')}</p>
             <div className="flex gap-2">
               <Input
                 value={deleteConfirm}
@@ -396,7 +392,7 @@ export function ProfilePage() {
                 className="shrink-0 flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white"
               >
                 <Trash2 size={14} />
-                {deleteAccount.isPending ? 'Deleting…' : 'Delete Account'}
+                {deleteAccount.isPending ? t('profile.deleting') : t('profile.deleteAccount')}
               </Button>
             </div>
             {deleteError && <p className="text-xs text-red-600 mt-2">{deleteError}</p>}
