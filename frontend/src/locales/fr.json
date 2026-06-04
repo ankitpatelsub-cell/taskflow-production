@@ -80,6 +80,8 @@
     "newTask": "Nouvelle tâche",
     "addTask": "Ajouter une tâche",
     "noTasksYet": "Aucune tâche",
+    "emptyBoardHint": "Cliquez sur le bouton + Ajouter une tâche dans n'importe quelle colonne pour commencer.",
+    "dragHint": "Faites glisser les cartes entre les colonnes pour mettre à jour le statut.",
     "createFirst": "Cliquez sur \"Ajouter une tâche\" pour commencer.",
     "overdue": "EN RETARD",
     "soon": "bientôt",
@@ -99,6 +101,7 @@
     "noOverdue": "Aucune tâche en retard",
     "viewAll": "Tout voir",
     "noProjects": "Aucun projet actif",
+    "noProjectsAssigned": "Aucun projet assigné",
     "createProject": "Créer votre premier projet",
     "completion": "Avancement"
   },

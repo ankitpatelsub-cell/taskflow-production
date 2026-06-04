@@ -142,7 +142,7 @@ export function Sidebar() {
                 })}
                 {activeProjects.length === 0 && (
                   <p className="px-3 py-2 text-xs text-slate-600 italic">
-                    {isAdminOrAbove(user?.role) ? t('dashboard.noProjects') : 'No projects assigned'}
+                    {isAdminOrAbove(user?.role) ? t('dashboard.noProjects') : t('dashboard.noProjectsAssigned')}
                   </p>
                 )}
               </div>

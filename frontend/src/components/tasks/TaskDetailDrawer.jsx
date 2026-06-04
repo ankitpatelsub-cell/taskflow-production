@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Drawer } from '@/components/ui/Drawer';
 import { Button } from '@/components/ui/Button';
 import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
+import { useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
@@ -14,6 +14,7 @@ import { TaskLinks } from './TaskLinks';
 import { TaskForm } from './TaskForm';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
+import { useTranslation } from 'react-i18next';
 
 const TABS = [
   { id: 'details',  label: 'Details' },
@@ -26,6 +27,7 @@ const TABS = [
 ];
 
 export function TaskDetailDrawer({ projectId, taskId, onClose }) {
+  const { t } = useTranslation();
   const { data: task, isLoading } = useTask(projectId, taskId);
   const update = useUpdateTask(projectId, taskId);
   const del = useDeleteTask(projectId);
@@ -35,15 +37,10 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
   const [descDraft, setDescDraft] = useState('');
   const [newSubtask, setNewSubtask] = useState('');
   const [togglingSubtask, setTogglingSubtask] = useState(null);
-  const [editingPriority, setEditingPriority] = useState(false);
-  const [editingAssignee, setEditingAssignee] = useState(false);
-  const [editingDeadline, setEditingDeadline] = useState(false);
+  // Single field tracks which meta card is being edited (prevents simultaneous open editors)
+  const [editingField, setEditingField] = useState(null); // 'priority' | 'assignee' | 'deadline'
 
-  const { data: members = [] } = useQuery({
-    queryKey: ['project-members', projectId],
-    queryFn: () => api.get(`/projects/${projectId}`).then(r => r.data.members ?? []),
-    enabled: !!projectId,
-  });
+  const { data: members = [] } = useProjectMembers(projectId);
 
   if (isLoading) {
     return (
@@ -139,18 +136,18 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   </button>
                 ))}
               </div>
-              {editingPriority ? (
+              {editingField === 'priority' ? (
                 <select
                   autoFocus
-                  defaultValue={task.priority || 'medium'}
-                  onBlur={() => setEditingPriority(false)}
-                  onChange={(e) => { update.mutate({ priority: e.target.value }); setEditingPriority(false); }}
+                  value={task.priority || 'medium'}
+                  onBlur={() => setEditingField(null)}
+                  onChange={(e) => { update.mutate({ priority: e.target.value }); setEditingField(null); }}
                   className="text-xs border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
                 >
-                  {['low','medium','high','critical'].map(p => <option key={p} value={p}>{p}</option>)}
+                  {['low','medium','high','critical'].map(p => <option key={p} value={p}>{t(`priority.${p}`)}</option>)}
                 </select>
               ) : (
-                <button onClick={() => setEditingPriority(true)} title="Click to change priority" className="hover:scale-105 transition-transform">
+                <button onClick={() => setEditingField('priority')} title="Click to change priority" className="hover:scale-105 transition-transform">
                   <PriorityBadge priority={task.priority} />
                 </button>
               )}
@@ -172,23 +169,23 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   {/* Assignee — click to edit */}
                   <div
                     className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3.5 border border-gray-100 dark:border-slate-600 cursor-pointer hover:border-indigo-300 transition-colors"
-                    onClick={() => !editingAssignee && setEditingAssignee(true)}
+                    onClick={() => editingField !== 'assignee' && setEditingField('assignee')}
                     title="Click to change assignee"
                   >
-                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-2">Assignee</p>
-                    {editingAssignee ? (
+                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-2">{t('task.assignee')}</p>
+                    {editingField === 'assignee' ? (
                       <select
                         autoFocus
-                        defaultValue={task.assignee_id || ''}
-                        onBlur={() => setEditingAssignee(false)}
+                        value={task.assignee_id || ''}
+                        onBlur={() => setEditingField(null)}
                         onChange={(e) => {
                           update.mutate({ assignee_id: e.target.value || null });
-                          setEditingAssignee(false);
+                          setEditingField(null);
                         }}
                         onClick={(e) => e.stopPropagation()}
                         className="w-full text-sm border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       >
-                        <option value="">Unassigned</option>
+                        <option value="">{t('task.unassigned')}</option>
                         {members.map(m => (
                           <option key={m.id} value={m.id}>{m.name}</option>
                         ))}
@@ -199,18 +196,18 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                         <span className="text-sm font-medium text-gray-800 dark:text-slate-200">{task.assignee_name}</span>
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400 dark:text-slate-500">Unassigned</span>
+                      <span className="text-sm text-gray-400 dark:text-slate-500">{t('task.unassigned')}</span>
                     )}
                   </div>
 
                   {/* Deadline — click to edit */}
                   <div
                     className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3.5 border border-gray-100 dark:border-slate-600 cursor-pointer hover:border-indigo-300 transition-colors"
-                    onClick={() => !editingDeadline && setEditingDeadline(true)}
+                    onClick={() => editingField !== 'deadline' && setEditingField('deadline')}
                     title="Click to change deadline"
                   >
-                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-2">Deadline</p>
-                    {editingDeadline ? (
+                    <p className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide mb-2">{t('task.deadline')}</p>
+                    {editingField === 'deadline' ? (
                       <input
                         type="date"
                         autoFocus
@@ -219,7 +216,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                           if (e.target.value !== (task.deadline?.slice(0, 10) || '')) {
                             update.mutate({ deadline: e.target.value || null });
                           }
-                          setEditingDeadline(false);
+                          setEditingField(null);
                         }}
                         onClick={(e) => e.stopPropagation()}
                         className="w-full text-sm border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -228,10 +225,10 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                       <div className={cn('flex items-center gap-1.5 text-sm font-medium', overdue ? 'text-red-600' : 'text-gray-800 dark:text-slate-200')}>
                         <Calendar size={14} />
                         {formatDate(task.deadline)}
-                        {overdue && <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-bold">OVERDUE</span>}
+                        {overdue && <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-bold">{t('task.overdue')}</span>}
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400 dark:text-slate-500">Not set</span>
+                      <span className="text-sm text-gray-400 dark:text-slate-500">{t('task.notSet')}</span>
                     )}
                   </div>
 

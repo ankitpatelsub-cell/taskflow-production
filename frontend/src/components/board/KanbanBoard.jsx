@@ -8,10 +8,12 @@ import { TaskCard } from '@/components/tasks/TaskCard';
 import { useTasks, useMoveTask } from '@/hooks/useTasks';
 import { STATUS_LABELS } from '@/lib/utils';
 import { BoardSkeleton } from '@/components/ui/Skeleton';
+import { useTranslation } from 'react-i18next';
 
 const COLUMNS = ['todo', 'in_progress', 'review', 'done'];
 
 export function KanbanBoard({ projectId, filters = {} }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useTasks(projectId, {
     ...(filters.assignee  && { assignee:  filters.assignee }),
     ...(filters.priority  && { priority:  filters.priority }),
@@ -49,12 +51,12 @@ export function KanbanBoard({ projectId, filters = {} }) {
       <div className="flex items-center justify-center h-full">
         <div className="text-center max-w-sm px-6">
           <div className="text-6xl mb-4">🚀</div>
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">No tasks yet</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{t('task.noTasksYet')}</h3>
           <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">
-            Click the <strong>+ Add task</strong> button in any column to get started.
+            {t('task.emptyBoardHint')}
           </p>
           <p className="text-xs text-gray-400 dark:text-slate-500">
-            Drag cards between columns to update status.
+            {t('task.dragHint')}
           </p>
         </div>
       </div>

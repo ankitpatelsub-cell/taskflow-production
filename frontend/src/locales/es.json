@@ -80,6 +80,8 @@
     "newTask": "Nueva tarea",
     "addTask": "Agregar tarea",
     "noTasksYet": "Sin tareas aún",
+    "emptyBoardHint": "Haz clic en el botón + Agregar tarea en cualquier columna para comenzar.",
+    "dragHint": "Arrastra tarjetas entre columnas para actualizar el estado.",
     "createFirst": "Haz clic en \"Agregar tarea\" para crear tu primera tarea.",
     "overdue": "VENCIDA",
     "soon": "pronto",
@@ -99,6 +101,7 @@
     "noOverdue": "Sin tareas vencidas",
     "viewAll": "Ver todo",
     "noProjects": "Sin proyectos activos",
+    "noProjectsAssigned": "Sin proyectos asignados",
     "createProject": "Crea tu primer proyecto",
     "completion": "Completado"
   },

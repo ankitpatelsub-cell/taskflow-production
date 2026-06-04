@@ -1,7 +1,7 @@
-import { Component } from 'react';
+import { Component, Fragment } from 'react';
 
 export class ErrorBoundary extends Component {
-  state = { error: null };
+  state = { error: null, resetKey: 0 };
 
   static getDerivedStateFromError(err) {
     return { error: err };
@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component {
               {this.state.error.message || 'An unexpected error occurred'}
             </p>
             <button
-              onClick={() => this.setState({ error: null })}
+              onClick={() => this.setState((s) => ({ error: null, resetKey: s.resetKey + 1 }))}
               className="px-5 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors"
             >
               Try again
@@ -31,6 +31,7 @@ export class ErrorBoundary extends Component {
         </div>
       );
     }
-    return this.props.children;
+    // Changing key forces React to unmount and remount the entire child tree on retry
+    return <Fragment key={this.state.resetKey}>{this.props.children}</Fragment>;
   }
 }

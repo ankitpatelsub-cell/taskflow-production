@@ -80,6 +80,8 @@
     "newTask": "Neue Aufgabe",
     "addTask": "Aufgabe hinzufügen",
     "noTasksYet": "Noch keine Aufgaben",
+    "emptyBoardHint": "Klicken Sie auf die Schaltfläche + Aufgabe hinzufügen in einer Spalte.",
+    "dragHint": "Ziehen Sie Karten zwischen Spalten, um den Status zu aktualisieren.",
     "createFirst": "Klicken Sie auf \"Aufgabe hinzufügen\" um zu beginnen.",
     "overdue": "ÜBERFÄLLIG",
     "soon": "bald",
@@ -99,6 +101,7 @@
     "noOverdue": "Keine überfälligen Aufgaben",
     "viewAll": "Alle anzeigen",
     "noProjects": "Noch keine aktiven Projekte",
+    "noProjectsAssigned": "Keine Projekte zugewiesen",
     "createProject": "Erstes Projekt erstellen",
     "completion": "Fortschritt"
   },

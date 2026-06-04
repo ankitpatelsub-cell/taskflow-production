@@ -8,7 +8,7 @@ import api from '@/lib/api';
 import { getGroupedTimezones, getCurrentTimezone } from '@/lib/timezones';
 import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { setLanguage, SUPPORTED_LANGUAGES, LANG_KEY } from '@/lib/i18n';
+import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import {
   getDesktopNotifEnabled,
   requestDesktopNotifPermission,
@@ -35,7 +35,6 @@ export function ProfilePage() {
   const [name, setName]         = useState(user?.name || '');
   const [timezone, setTimezone] = useState(user?.timezone || getCurrentTimezone());
   const [saved, setSaved]       = useState(false);
-  const [lang, setLang]         = useState(localStorage.getItem(LANG_KEY) || i18n.language || 'en');
   const [desktopNotif, setDesktopNotif] = useState(getDesktopNotifEnabled());
   const [notifStatus, setNotifStatus]   = useState(
     !('Notification' in window) ? 'unsupported' :
@@ -207,9 +206,9 @@ export function ProfilePage() {
               {SUPPORTED_LANGUAGES.map((l) => (
                 <button
                   key={l.code}
-                  onClick={() => { setLang(l.code); setLanguage(l.code); }}
+                  onClick={() => setLanguage(l.code)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
-                    lang === l.code
+                    i18n.language === l.code
                       ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-sm'
                       : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-indigo-300 hover:bg-indigo-50/50 dark:hover:bg-slate-700'
                   }`}

@@ -111,7 +111,7 @@ export function TaskListPage() {
     try {
       await api.patch(`/projects/${projectId}/tasks/bulk/update`, {
         taskIds: [...selected],
-        updates: { assignee_id: bulkAssignee || null },
+        updates: { assignee_id: bulkAssignee === '__unassign__' ? null : bulkAssignee || null },
       });
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
       toast.success(`Reassigned ${selected.size} task(s)`);
@@ -275,7 +275,7 @@ export function TaskListPage() {
                 className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
               >
                 <option value="">Assign to…</option>
-                <option value="">Unassign</option>
+                <option value="__unassign__">Unassign</option>
                 {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
               {bulkAssignee !== '' && (

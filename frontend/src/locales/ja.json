@@ -80,6 +80,8 @@
     "newTask": "新しいタスク",
     "addTask": "タスクを追加",
     "noTasksYet": "タスクがありません",
+    "emptyBoardHint": "任意のカラムの「＋ タスクを追加」ボタンをクリックして始めましょう。",
+    "dragHint": "カードをカラム間でドラッグしてステータスを更新できます。",
     "createFirst": "「タスクを追加」をクリックして最初のタスクを作成してください。",
     "overdue": "期限超過",
     "soon": "もうすぐ",
@@ -99,6 +101,7 @@
     "noOverdue": "期限超過のタスクはありません",
     "viewAll": "すべて表示",
     "noProjects": "アクティブなプロジェクトなし",
+    "noProjectsAssigned": "割り当てられたプロジェクトはありません",
     "createProject": "最初のプロジェクトを作成",
     "completion": "進捗"
   },

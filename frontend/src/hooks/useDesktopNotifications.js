@@ -31,11 +31,20 @@ export function disableDesktopNotifs() {
 export function useDesktopNotifications() {
   const { data: notifData } = useNotifications();
   const notifications = notifData?.notifications ?? [];
-  const seenIds = useRef(new Set(
-    notifications.map(n => n.id)
-  ));
+  const seenIds = useRef(new Set());
+  const seeded = useRef(false);
 
   useEffect(() => {
+    if (notifications.length === 0) return;
+
+    // On the first non-empty load, seed all existing IDs so we never fire for pre-existing notifications.
+    // This prevents a burst of OS alerts on every page refresh.
+    if (!seeded.current) {
+      notifications.forEach((n) => seenIds.current.add(n.id));
+      seeded.current = true;
+      return;
+    }
+
     if (!getDesktopNotifEnabled()) return;
 
     notifications.forEach((n) => {

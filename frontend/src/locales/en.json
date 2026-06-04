@@ -80,6 +80,8 @@
     "newTask": "New task",
     "addTask": "Add task",
     "noTasksYet": "No tasks yet",
+    "emptyBoardHint": "Click the + Add task button in any column to get started.",
+    "dragHint": "Drag cards between columns to update status.",
     "createFirst": "Click \"Add task\" to create your first task.",
     "overdue": "OVERDUE",
     "soon": "soon",
@@ -99,6 +101,7 @@
     "noOverdue": "No overdue tasks",
     "viewAll": "View all",
     "noProjects": "No active projects yet",
+    "noProjectsAssigned": "No projects assigned",
     "createProject": "Create your first project",
     "completion": "Completion"
   },

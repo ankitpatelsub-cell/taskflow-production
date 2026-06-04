@@ -24,6 +24,15 @@ export function useProject(id) {
   });
 }
 
+export function useProjectMembers(id) {
+  return useQuery({
+    queryKey: projectKeys.detail(id),
+    queryFn: () => api.get(`/projects/${id}`).then((r) => r.data),
+    enabled: !!id,
+    select: (data) => data.members ?? [],
+  });
+}
+
 export function useCreateProject() {
   return useMutation({
     mutationFn: (data) => api.post('/projects', data).then((r) => r.data),
