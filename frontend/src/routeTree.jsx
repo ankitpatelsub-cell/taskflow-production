@@ -45,6 +45,7 @@ const CalendarPage        = lazy(() => import('./pages/CalendarPage').then((m) =
 const WorkloadPage        = lazy(() => import('./pages/WorkloadPage').then((m) => ({ default: m.WorkloadPage })));
 const AutomationsPage     = lazy(() => import('./pages/AutomationsPage').then((m) => ({ default: m.AutomationsPage })));
 const TimeReportPage      = lazy(() => import('./pages/TimeReportPage').then((m) => ({ default: m.TimeReportPage })));
+const GanttPage           = lazy(() => import('./pages/GanttPage').then((m) => ({ default: m.GanttPage })));
 
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 const PageLoader  = () => <div className="p-6 space-y-4"><TableSkeleton rows={8} /></div>;
@@ -94,6 +95,7 @@ const routes = [
   { path: '/projects/$projectId/automations',   Component: S(AutomationsPage) },
   { path: '/projects/$projectId/standup',       Component: S(StandupPage) },
   { path: '/projects/$projectId/time-report',   Component: S(TimeReportPage) },
+  { path: '/projects/$projectId/gantt',         Component: S(GanttPage) },
   { path: '/projects/$projectId/members',       Component: S(MembersPage) },
   { path: '/projects/$projectId/settings',      Component: S(ProjectSettingsPage) },
   { path: '/profile',                           Component: S(ProfilePage) },

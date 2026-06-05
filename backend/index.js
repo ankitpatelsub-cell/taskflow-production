@@ -45,6 +45,7 @@ const workloadRoutes     = require('./src/routes/workload');
 const automationRoutes   = require('./src/routes/automations');
 const aiSummaryRoutes    = require('./src/routes/aiSummary');
 const taskLinkRoutes     = require('./src/routes/taskLinks');
+const dependencyRoutes   = require('./src/routes/taskDependencies');
 
 const app = express();
 const server = http.createServer(app);
@@ -113,6 +114,7 @@ app.use('/api/tasks/:taskId/comments',           commentRoutes);
 app.use('/api/tasks/:taskId/attachments',        attachmentRoutes);
 app.use('/api/tasks/:taskId/time-logs',          timeLogRoutes);
 app.use('/api/tasks/:taskId/links',              taskLinkRoutes);
+app.use('/api/tasks/:taskId/dependencies',       dependencyRoutes);
 app.use('/api/projects/:projectId/workload',     workloadRoutes);
 app.use('/api/projects/:projectId/automations',  automationRoutes);
 app.use('/api/projects/:projectId/ai-summary',   aiSummaryRoutes);
@@ -166,7 +168,7 @@ async function init() {
   startCronJobs();
 
   server.listen(PORT, () => {
-    logger.info(`TaskFlow API running on http://localhost:${PORT} [${NODE_ENV}]`);
+    logger.info(`Stride API running on http://localhost:${PORT} [${NODE_ENV}]`);
     logger.info(`WebSocket server at ws://localhost:${PORT}/ws`);
   });
 }

@@ -57,7 +57,7 @@ export function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-950/80 backdrop-blur border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <span className="font-black text-lg tracking-tight text-indigo-600">TaskFlow</span>
+          <span className="font-black text-lg tracking-tight text-indigo-600">Stride</span>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 transition-colors">
               Sign in
@@ -82,7 +82,7 @@ export function LandingPage() {
           <span className="text-indigo-600">Together.</span>
         </h1>
         <p className="mt-5 text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
-          TaskFlow keeps your team aligned with real-time kanban boards, AI project summaries,
+          Stride keeps your team aligned with real-time kanban boards, AI project summaries,
           smart automations, and daily standups — all in one place.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -129,7 +129,7 @@ export function LandingPage() {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-black mb-3">Everything your team needs</h2>
           <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
-            From AI-powered insights to simple automations — TaskFlow grows with your team.
+            From AI-powered insights to simple automations — Stride grows with your team.
           </p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -223,8 +223,8 @@ export function LandingPage() {
       <footer className="border-t border-gray-100 dark:border-gray-800 py-10">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span className="font-black text-indigo-600 text-lg">TaskFlow</span>
-            <p className="text-sm text-gray-400">© {new Date().getFullYear()} TaskFlow. All rights reserved.</p>
+            <span className="font-black text-indigo-600 text-lg">Stride</span>
+            <p className="text-sm text-gray-400">© {new Date().getFullYear()} Stride. All rights reserved.</p>
             <div className="flex gap-4 text-sm text-gray-400">
               <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-indigo-600 transition-colors">Terms</Link>

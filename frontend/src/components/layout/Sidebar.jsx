@@ -67,10 +67,10 @@ export function Sidebar() {
         {/* ── Logo ─────────────────────────────────────────── */}
         <div className="flex items-center gap-2.5 px-4 py-4 shrink-0">
           <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-            <span className="text-white text-xs font-black">TF</span>
+            <span className="text-white text-xs font-black">S</span>
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-white text-sm leading-tight">TaskFlow</p>
+            <p className="font-bold text-white text-sm leading-tight">Stride</p>
             <p className="text-[11px] text-slate-500 leading-tight">{t('nav.workspace')}</p>
           </div>
         </div>

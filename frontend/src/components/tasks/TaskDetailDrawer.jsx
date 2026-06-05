@@ -6,25 +6,27 @@ import { useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell } from 'lucide-react';
+import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell, GitBranch } from 'lucide-react';
 import { format } from 'date-fns';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import { TimeTracker } from './TimeTracker';
 import { TaskLinks } from './TaskLinks';
 import { TaskForm } from './TaskForm';
+import { TaskDependencies } from './TaskDependencies';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useTranslation } from 'react-i18next';
 
 const TABS = [
-  { id: 'details',  label: 'Details' },
-  { id: 'subtasks', label: 'Subtasks' },
-  { id: 'comments', label: 'Comments' },
-  { id: 'time',     label: 'Time' },
-  { id: 'links',    label: 'Links' },
-  { id: 'activity', label: 'Activity' },
-  { id: 'files',    label: 'Files' },
+  { id: 'details',      label: 'Details' },
+  { id: 'subtasks',     label: 'Subtasks' },
+  { id: 'dependencies', label: 'Dependencies' },
+  { id: 'comments',     label: 'Comments' },
+  { id: 'time',         label: 'Time' },
+  { id: 'links',        label: 'Links' },
+  { id: 'activity',     label: 'Activity' },
+  { id: 'files',        label: 'Files' },
 ];
 
 export function TaskDetailDrawer({ projectId, taskId, onClose }) {
@@ -504,6 +506,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                     </div>
                   )}
 
+                  {tab === 'dependencies' && <TaskDependencies taskId={taskId} projectId={projectId} />}
                   {tab === 'comments' && <CommentThread taskId={taskId} />}
                   {tab === 'time'     && <TimeTracker taskId={taskId} />}
                   {tab === 'links'    && <TaskLinks taskId={taskId} />}
