@@ -161,6 +161,11 @@ export function Sidebar() {
           )}
         </nav>
 
+        {/* ── Version ──────────────────────────────────────── */}
+        <div className="px-4 pb-1 shrink-0">
+          <p className="text-[10px] text-slate-700 select-none">v1.0.0</p>
+        </div>
+
         {/* ── Bottom user card ──────────────────────────────── */}
         <div className="shrink-0 p-3 border-t border-slate-800">
           <div

@@ -123,6 +123,10 @@ app.use('/api/billing',                      billingRoutes);
 app.use('/api/auth',                         accountRoutes);
 app.use('/api',                              accountRoutes);
 
+app.get('/api/version', (req, res) => {
+  res.json({ version: require('./package.json').version });
+});
+
 app.get('/api/health', async (req, res) => {
   try {
     const row = await queryOne('SELECT COUNT(*) as c FROM users');
