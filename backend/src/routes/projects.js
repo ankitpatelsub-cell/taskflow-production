@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const { queryOne, queryAll, execute } = require('../config/db');
 const { authenticate, requireMinRole, requireProjectAccess, requireProjectManage } = require('../middleware/auth');
 const { logActivity } = require('../services/notificationService');
+// req.log (pino-http) used for request-scoped logging
 
 const router = express.Router();
 router.use(authenticate);
@@ -53,8 +54,10 @@ router.post('/', requireMinRole('admin'), async (req, res) => {
       [uuidv4(), id, req.user.id]
     );
     await logActivity('project', id, req.user.id, 'created', null, { name });
+    req.log.info({ projectId: id, name, userId: req.user.id }, 'project.created');
     res.status(201).json({ id, name, description, color });
   } catch (err) {
+    req.log.error({ userId: req.user.id, err: err.message }, 'project.create_failed');
     res.status(500).json({ error: 'Failed to create project' });
   }
 });
@@ -87,8 +90,10 @@ router.patch('/:projectId', requireProjectManage, async (req, res) => {
     if (status !== undefined)      { sets.push('status = ?');      vals.push(status); }
     vals.push(req.params.projectId);
     await execute(`UPDATE projects SET ${sets.join(', ')} WHERE id = ?`, vals);
+    req.log.info({ projectId: req.params.projectId, userId: req.user.id, fields: Object.keys(req.body) }, 'project.updated');
     res.json({ message: 'Updated' });
   } catch (err) {
+    req.log.error({ projectId: req.params.projectId, userId: req.user.id, err: err.message }, 'project.update_failed');
     res.status(500).json({ error: 'Failed to update project' });
   }
 });
@@ -100,8 +105,10 @@ router.delete('/:projectId', requireProjectManage, async (req, res) => {
       "UPDATE projects SET status = 'archived', updated_at = NOW() WHERE id = ?",
       [req.params.projectId]
     );
+    req.log.info({ projectId: req.params.projectId, userId: req.user.id }, 'project.archived');
     res.json({ message: 'Archived' });
   } catch (err) {
+    req.log.error({ projectId: req.params.projectId, userId: req.user.id, err: err.message }, 'project.archive_failed');
     res.status(500).json({ error: 'Failed to archive project' });
   }
 });
@@ -120,8 +127,10 @@ router.post('/:projectId/members', requireProjectManage, async (req, res) => {
       'INSERT INTO project_members (id, project_id, user_id) VALUES (?, ?, ?)',
       [uuidv4(), req.params.projectId, userId]
     );
+    req.log.info({ projectId: req.params.projectId, addedUserId: userId, byUserId: req.user.id }, 'project.member_added');
     res.status(201).json({ message: 'Member added' });
   } catch (err) {
+    req.log.error({ projectId: req.params.projectId, userId: req.user.id, err: err.message }, 'project.member_add_failed');
     res.status(500).json({ error: 'Failed to add member' });
   }
 });
@@ -133,8 +142,10 @@ router.delete('/:projectId/members/:userId', requireProjectManage, async (req, r
       'DELETE FROM project_members WHERE project_id = ? AND user_id = ?',
       [req.params.projectId, req.params.userId]
     );
+    req.log.info({ projectId: req.params.projectId, removedUserId: req.params.userId, byUserId: req.user.id }, 'project.member_removed');
     res.json({ message: 'Member removed' });
   } catch (err) {
+    req.log.error({ projectId: req.params.projectId, userId: req.user.id, err: err.message }, 'project.member_remove_failed');
     res.status(500).json({ error: 'Failed to remove member' });
   }
 });

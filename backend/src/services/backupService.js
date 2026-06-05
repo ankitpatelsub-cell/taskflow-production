@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { getPool, queryAll, execute } = require('../config/db');
 const { BACKUP_ENCRYPTION_KEY, BACKUP_RETENTION_DAYS } = require('../config/env');
 const { v4: uuidv4 } = require('uuid');
+const logger = require('../config/logger');
 
 const BACKUP_DIR = path.join(__dirname, '../../data/backups');
 
@@ -42,7 +43,8 @@ async function createBackup(userId = null, notes = 'Scheduled backup') {
   const filename = `backup_${timestamp}.json.enc`;
   const destPath = path.join(BACKUP_DIR, filename);
 
-  // Dump all tables to JSON
+  logger.info({ filename, triggeredBy: userId || 'cron' }, 'backup.starting');
+
   const dump = {};
   for (const table of TABLES) {
     try {
@@ -63,7 +65,7 @@ async function createBackup(userId = null, notes = 'Scheduled backup') {
   );
 
   await cleanOldBackups();
-  console.log(`[Backup] Created: ${filename} (${(size / 1024).toFixed(1)} KB)`);
+  logger.info({ filename, sizeKb: (size / 1024).toFixed(1) }, 'backup.created');
   return { filename, size };
 }
 
@@ -73,13 +75,16 @@ async function cleanOldBackups() {
     .map((f) => ({ name: f, mtime: fs.statSync(path.join(BACKUP_DIR, f)).mtime }))
     .sort((a, b) => b.mtime - a.mtime);
 
-  files.slice(BACKUP_RETENTION_DAYS).forEach((f) => {
+  const toRemove = files.slice(BACKUP_RETENTION_DAYS);
+  for (const f of toRemove) {
     fs.unlinkSync(path.join(BACKUP_DIR, f.name));
-    console.log(`[Backup] Removed old backup: ${f.name}`);
-  });
+    logger.info({ filename: f.name }, 'backup.pruned');
+  }
 }
 
 async function restoreBackup(encryptedFilePath) {
+  logger.warn({ file: encryptedFilePath }, 'backup.restore_started');
+
   const encrypted = fs.readFileSync(encryptedFilePath);
   const decrypted = decryptBuffer(encrypted);
   const data = JSON.parse(decrypted.toString('utf8'));
@@ -93,14 +98,13 @@ async function restoreBackup(encryptedFilePath) {
   try {
     await client.query('BEGIN');
 
-    // Delete in reverse order to respect FK constraints
     for (const table of [...TABLES].reverse()) {
       try {
         await client.query(`DELETE FROM ${table}`);
       } catch { /* table may not exist */ }
     }
 
-    // Reinsert
+    let rowsRestored = 0;
     for (const table of TABLES) {
       const rows = data.tables[table] || [];
       for (const row of rows) {
@@ -111,13 +115,15 @@ async function restoreBackup(encryptedFilePath) {
           `INSERT INTO ${table} (${cols.join(', ')}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`,
           vals
         );
+        rowsRestored++;
       }
     }
 
     await client.query('COMMIT');
-    console.log('[Backup] Database restored successfully');
+    logger.warn({ file: encryptedFilePath, rowsRestored }, 'backup.restore_complete');
   } catch (err) {
     await client.query('ROLLBACK');
+    logger.error({ file: encryptedFilePath, err: err.message }, 'backup.restore_failed');
     throw err;
   } finally {
     client.release();

@@ -6,6 +6,7 @@ const { logActivity, notifyTaskAssigned } = require('../services/notificationSer
 const { broadcast } = require('../services/wsService');
 const { validate, createTaskSchema, updateTaskSchema } = require('../config/validate');
 const { runAutomations } = require('../services/automationService');
+// req.log (pino-http) used for request-scoped logging
 
 // ─── Recurrence helper ────────────────────────────────────────────────────────
 function calcNextDate(deadline, rule, interval = 1, days = null) {
@@ -271,8 +272,11 @@ router.post('/', requireWriteAccess, validate(createTaskSchema), async (req, res
     const task = await queryOne('SELECT * FROM tasks WHERE id = ?', [id]);
     broadcast(req.params.projectId, { type: 'task:created', payload: task });
     runAutomations('task_created', task, null, req.user).catch(() => {});
+
+    req.log.info({ taskId: id, title, projectId: req.params.projectId, userId: req.user.id }, 'task.created');
     res.status(201).json(task);
   } catch (err) {
+    req.log.error({ projectId: req.params.projectId, userId: req.user.id, err: err.message }, 'task.create_failed');
     res.status(500).json({ error: 'Failed to create task' });
   }
 });
@@ -342,14 +346,20 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
     const updated = await queryOne('SELECT * FROM tasks WHERE id = ?', [req.params.taskId]);
     broadcast(req.params.projectId, { type: 'task:updated', payload: updated });
 
-    // Fire automations (non-blocking)
     const triggers = [];
     if (status !== undefined && status !== old.status) triggers.push('task_status_changed');
     if (assignee_id !== undefined && assignee_id !== old.assignee_id) triggers.push('task_assigned');
     for (const t of triggers) runAutomations(t, updated, old, req.user).catch(() => {});
 
+    req.log.info({
+      taskId: req.params.taskId,
+      projectId: req.params.projectId,
+      userId: req.user.id,
+      fields: Object.keys(req.body),
+    }, 'task.updated');
     res.json({ message: 'Updated', nextTaskId });
   } catch (err) {
+    req.log.error({ taskId: req.params.taskId, projectId: req.params.projectId, userId: req.user.id, err: err.message }, 'task.update_failed');
     res.status(500).json({ error: 'Failed to update task' });
   }
 });
@@ -361,8 +371,10 @@ router.delete('/:taskId', requireWriteAccess, async (req, res) => {
     if (!t) return res.status(404).json({ error: 'Task not found' });
     await execute('DELETE FROM tasks WHERE id = ?', [req.params.taskId]);
     broadcast(req.params.projectId, { type: 'task:deleted', payload: { id: req.params.taskId } });
+    req.log.info({ taskId: req.params.taskId, projectId: req.params.projectId, userId: req.user.id }, 'task.deleted');
     res.json({ message: 'Deleted' });
   } catch (err) {
+    req.log.error({ taskId: req.params.taskId, projectId: req.params.projectId, userId: req.user.id, err: err.message }, 'task.delete_failed');
     res.status(500).json({ error: 'Failed to delete task' });
   }
 });
@@ -388,8 +400,10 @@ router.patch('/:taskId/position', requireWriteAccess, async (req, res) => {
 
     const updated = await queryOne('SELECT * FROM tasks WHERE id = ?', [req.params.taskId]);
     broadcast(req.params.projectId, { type: 'task:updated', payload: updated });
+    req.log.info({ taskId: req.params.taskId, projectId: req.params.projectId, userId: req.user.id, status, position }, 'task.moved');
     res.json({ message: 'Updated', nextTaskId });
   } catch (err) {
+    req.log.error({ taskId: req.params.taskId, projectId: req.params.projectId, err: err.message }, 'task.move_failed');
     res.status(500).json({ error: 'Failed to update position' });
   }
 });
@@ -417,8 +431,10 @@ router.patch('/bulk/update', requireWriteAccess, async (req, res) => {
       await logActivity('task', id, req.user.id, 'bulk updated', null, updates);
     }
     broadcast(req.params.projectId, { type: 'tasks:bulk_updated', payload: { taskIds, updates } });
+    req.log.info({ count: taskIds.length, projectId: req.params.projectId, userId: req.user.id, updates }, 'tasks.bulk_updated');
     res.json({ message: `Updated ${taskIds.length} tasks` });
   } catch (err) {
+    req.log.error({ projectId: req.params.projectId, userId: req.user.id, err: err.message }, 'tasks.bulk_update_failed');
     res.status(500).json({ error: 'Bulk update failed' });
   }
 });

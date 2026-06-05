@@ -3,26 +3,36 @@ const { BACKUP_CRON } = require('./env');
 const { createBackup } = require('../services/backupService');
 const { execute, queryAll } = require('./db');
 const { createNotification } = require('../services/notificationService');
+const logger = require('./logger');
 
 function startCronJobs() {
   cron.schedule(BACKUP_CRON, async () => {
-    console.log('[Cron] Running scheduled backup...');
+    logger.info('[cron] scheduled backup starting');
     try {
-      await createBackup(null, 'Scheduled backup');
+      const result = await createBackup(null, 'Scheduled backup');
+      logger.info({ filename: result.filename, sizeKb: (result.size / 1024).toFixed(1) }, '[cron] backup complete');
     } catch (err) {
-      console.error('[Cron] Backup failed:', err.message);
+      logger.error({ err: err.message }, '[cron] backup failed');
     }
   });
 
   // Purge expired tokens daily at 3 AM
   cron.schedule('0 3 * * *', async () => {
     try {
-      await execute("DELETE FROM password_reset_tokens WHERE expires_at < NOW()");
-      await execute("DELETE FROM email_verification_tokens WHERE expires_at < NOW()");
-      await execute("DELETE FROM refresh_tokens WHERE expires_at < NOW()");
-      await execute("DELETE FROM invite_tokens WHERE expires_at < NOW()");
+      const [pw, ev, rt, it] = await Promise.all([
+        execute("DELETE FROM password_reset_tokens WHERE expires_at < NOW()"),
+        execute("DELETE FROM email_verification_tokens WHERE expires_at < NOW()"),
+        execute("DELETE FROM refresh_tokens WHERE expires_at < NOW()"),
+        execute("DELETE FROM invite_tokens WHERE expires_at < NOW()"),
+      ]);
+      logger.info({
+        password_reset: pw.rowCount,
+        email_verify: ev.rowCount,
+        refresh: rt.rowCount,
+        invite: it.rowCount,
+      }, '[cron] expired tokens purged');
     } catch (err) {
-      console.error('[Cron] Token cleanup failed:', err.message);
+      logger.error({ err: err.message }, '[cron] token cleanup failed');
     }
   });
 
@@ -47,16 +57,16 @@ function startCronJobs() {
             'task',
             task.id
           );
+          logger.debug({ taskId: task.id, recipientId }, '[cron] task reminder sent');
         }
-        // Clear the reminder so it doesn't re-fire on the next tick
         await execute('UPDATE tasks SET reminder_at = NULL WHERE id = ?', [task.id]);
       }
     } catch (err) {
-      console.error('[Cron] Reminder check failed:', err.message);
+      logger.error({ err: err.message }, '[cron] reminder check failed');
     }
   });
 
-  console.log(`[Cron] Backup scheduled: ${BACKUP_CRON}`);
+  logger.info({ schedule: BACKUP_CRON }, '[cron] jobs scheduled');
 }
 
 module.exports = { startCronJobs };

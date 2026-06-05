@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const { execute, queryOne } = require('../config/db');
 const { broadcastToUser } = require('./wsService');
+const logger = require('../config/logger');
 
 async function logActivity(entityType, entityId, userId, action, oldValue, newValue) {
   try {
@@ -14,7 +15,7 @@ async function logActivity(entityType, entityId, userId, action, oldValue, newVa
       ]
     );
   } catch (err) {
-    console.error('[Activity]', err.message);
+    logger.error({ entityType, entityId, userId, action, err: err.message }, 'activity_log.write_failed');
   }
 }
 
@@ -28,7 +29,7 @@ async function createNotification(userId, type, message, entityType, entityId) {
     );
     broadcastToUser(userId, { type: 'notification:new', payload: { id, type, message, entityType, entityId } });
   } catch (err) {
-    console.error('[Notification]', err.message);
+    logger.error({ userId, type, entityType, entityId, err: err.message }, 'notification.create_failed');
   }
 }
 

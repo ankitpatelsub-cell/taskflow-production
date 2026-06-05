@@ -1,4 +1,5 @@
 const { queryAll, queryOne } = require('../config/db');
+const logger = require('../config/logger');
 
 async function createNotification(userId, type, message, entityType, entityId) {
   const { execute } = require('../config/db');
@@ -12,7 +13,7 @@ async function createNotification(userId, type, message, entityType, entityId) {
     );
     broadcastToUser(userId, { type: 'notification:new', payload: { id, type, message, entityType, entityId } });
   } catch (err) {
-    console.error('[AutomationService] notify error:', err.message);
+    logger.error({ userId, type, err: err.message }, 'automation.notify_failed');
   }
 }
 
@@ -30,17 +31,17 @@ async function runAutomations(triggerType, task, old, actor) {
       [task.project_id, triggerType]
     );
 
+    if (!automations.length) return;
+
     for (const a of automations) {
-      // Check trigger_value filter
       if (triggerType === 'task_status_changed') {
         if (a.trigger_value && task.status !== a.trigger_value) continue;
-        if (old && old.status === task.status) continue; // no actual change
+        if (old && old.status === task.status) continue;
       }
       if (triggerType === 'task_assigned') {
         if (old && old.assignee_id === task.assignee_id) continue;
       }
 
-      // Execute action
       if (a.action_type === 'notify_assignee' && task.assignee_id) {
         await createNotification(
           task.assignee_id,
@@ -48,6 +49,7 @@ async function runAutomations(triggerType, task, old, actor) {
           `[${a.name}] Task "${task.title}" — ${triggerType.replace(/_/g, ' ')}`,
           'task', task.id
         );
+        logger.debug({ automationId: a.id, taskId: task.id, action: a.action_type }, 'automation.fired');
       }
 
       if (a.action_type === 'notify_members') {
@@ -56,7 +58,7 @@ async function runAutomations(triggerType, task, old, actor) {
           [task.project_id]
         );
         for (const m of members) {
-          if (m.user_id === actor?.id) continue; // don't notify the person who triggered it
+          if (m.user_id === actor?.id) continue;
           await createNotification(
             m.user_id,
             'automation',
@@ -64,6 +66,7 @@ async function runAutomations(triggerType, task, old, actor) {
             'task', task.id
           );
         }
+        logger.debug({ automationId: a.id, taskId: task.id, notified: members.length }, 'automation.fired');
       }
 
       if (a.action_type === 'change_status' && a.action_value) {
@@ -72,10 +75,11 @@ async function runAutomations(triggerType, task, old, actor) {
           'UPDATE tasks SET status = ?, updated_at = NOW() WHERE id = ?',
           [a.action_value, task.id]
         );
+        logger.info({ automationId: a.id, taskId: task.id, newStatus: a.action_value }, 'automation.status_changed');
       }
     }
   } catch (err) {
-    console.error('[AutomationService] error:', err.message);
+    logger.error({ triggerType, taskId: task.id, projectId: task.project_id, err: err.message }, 'automation.run_failed');
   }
 }
 

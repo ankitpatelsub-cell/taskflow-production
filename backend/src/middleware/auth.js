@@ -1,5 +1,6 @@
 const { verifyAccess } = require('../utils/jwt');
 const { queryOne } = require('../config/db');
+const logger = require('../config/logger');
 
 const ROLE_WEIGHTS = {
   super_admin:     5,
@@ -23,13 +24,17 @@ function authenticate(req, res, next) {
     req.user = payload;
     next();
   } catch {
+    logger.warn({ method: req.method, url: req.url, ip: req.ip }, 'auth.token_invalid');
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 
 function requireRole(role) {
   return (req, res, next) => {
-    if (!hasMinRole(req.user.role, role)) return res.status(403).json({ error: 'Forbidden' });
+    if (!hasMinRole(req.user.role, role)) {
+      logger.warn({ userId: req.user.id, userRole: req.user.role, required: role, url: req.url }, 'auth.forbidden');
+      return res.status(403).json({ error: 'Forbidden' });
+    }
     next();
   };
 }
@@ -37,6 +42,7 @@ function requireRole(role) {
 function requireMinRole(minRole) {
   return (req, res, next) => {
     if (!hasMinRole(req.user.role, minRole)) {
+      logger.warn({ userId: req.user.id, userRole: req.user.role, required: minRole, url: req.url }, 'auth.forbidden');
       return res.status(403).json({ error: `Requires ${minRole} or above` });
     }
     next();
@@ -50,7 +56,10 @@ function requireProjectAccess(req, res, next) {
     'SELECT id FROM project_members WHERE project_id = ? AND user_id = ?',
     [projectId, req.user.id]
   ).then((member) => {
-    if (!member) return res.status(403).json({ error: 'Not a project member' });
+    if (!member) {
+      logger.warn({ userId: req.user.id, projectId, url: req.url }, 'auth.not_project_member');
+      return res.status(403).json({ error: 'Not a project member' });
+    }
     next();
   }).catch(next);
 }
@@ -64,15 +73,18 @@ function requireProjectManage(req, res, next) {
       [projectId, req.user.id]
     ).then((member) => {
       if (member) return next();
+      logger.warn({ userId: req.user.id, projectId, url: req.url }, 'auth.not_project_manager');
       return res.status(403).json({ error: 'Project manager or admin required' });
     }).catch(next);
   } else {
+    logger.warn({ userId: req.user.id, userRole: req.user.role, projectId, url: req.url }, 'auth.forbidden');
     res.status(403).json({ error: 'Project manager or admin required' });
   }
 }
 
 function requireWriteAccess(req, res, next) {
   if (req.user.role === 'viewer') {
+    logger.warn({ userId: req.user.id, url: req.url }, 'auth.viewer_write_denied');
     return res.status(403).json({ error: 'Viewers have read-only access' });
   }
   next();

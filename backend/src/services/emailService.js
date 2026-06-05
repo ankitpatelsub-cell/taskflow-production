@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM, APP_URL } = require('../config/env');
+const logger = require('../config/logger');
 
 let transporter;
 
@@ -13,11 +14,11 @@ function getTransporter() {
         auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
       });
     } else {
-      // Log-only fallback for development
+      // Dev fallback — log email instead of sending
       transporter = {
         sendMail: async (opts) => {
-          console.log(`[Email DEV] To: ${opts.to} | Subject: ${opts.subject}`);
-          if (opts.text) console.log(`[Email DEV] ${opts.text}`);
+          logger.info({ to: opts.to, subject: opts.subject }, 'email.dev_mode');
+          if (opts.text) logger.debug({ body: opts.text.slice(0, 200) }, 'email.dev_body');
           return { messageId: 'dev-mode' };
         },
       };
@@ -26,8 +27,19 @@ function getTransporter() {
   return transporter;
 }
 
+async function sendEmail(opts) {
+  try {
+    const result = await getTransporter().sendMail(opts);
+    logger.info({ to: opts.to, subject: opts.subject, messageId: result.messageId }, 'email.sent');
+    return result;
+  } catch (err) {
+    logger.error({ to: opts.to, subject: opts.subject, err: err.message }, 'email.send_failed');
+    throw err;
+  }
+}
+
 async function sendInviteEmail({ to, inviterName, projectName, acceptUrl }) {
-  return getTransporter().sendMail({
+  return sendEmail({
     from: EMAIL_FROM,
     to,
     subject: `${inviterName} invited you to join ${projectName} on TaskFlow`,
@@ -67,7 +79,7 @@ This invitation expires in 7 days.
 }
 
 async function sendPasswordResetEmail({ to, resetUrl }) {
-  return getTransporter().sendMail({
+  return sendEmail({
     from: EMAIL_FROM,
     to,
     subject: 'Reset your TaskFlow password',
@@ -96,7 +108,7 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
 }
 
 async function sendWelcomeEmail({ to, name, verifyUrl }) {
-  return getTransporter().sendMail({
+  return sendEmail({
     from: EMAIL_FROM,
     to,
     subject: 'Welcome to TaskFlow!',
