@@ -5,12 +5,13 @@ import { useProject, useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, isDueSoon, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Plus, Trash2, Download, CheckSquare, ArrowUp, ArrowDown, ChevronsUpDown, Search, X } from 'lucide-react';
+import { Calendar, Plus, Trash2, Download, Upload, CheckSquare, ArrowUp, ArrowDown, ChevronsUpDown, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useUiStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
 import { Modal } from '@/components/ui/Modal';
 import { TaskForm } from '@/components/tasks/TaskForm';
+import { CsvImportModal } from '@/components/tasks/CsvImportModal';
 import { useCreateTask } from '@/hooks/useTasks';
 import { ProjectNav } from './ProjectNav';
 import { TableSkeleton } from '@/components/ui/Skeleton';
@@ -26,6 +27,7 @@ export function TaskListPage() {
   const { openTaskDrawer, setActiveProject } = useUiStore();
   const { user } = useAuthStore();
   const [showAdd, setShowAdd]     = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [selected, setSelected]   = useState(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
   const [bulkAssignee, setBulkAssignee] = useState('');
@@ -230,8 +232,11 @@ export function TaskListPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="secondary" onClick={() => setShowImport(true)}>
+              <Upload size={14} /> Import
+            </Button>
             <Button size="sm" variant="secondary" onClick={handleExport}>
-              <Download size={14} /> CSV
+              <Download size={14} /> Export
             </Button>
             <Button size="sm" onClick={() => setShowAdd(true)}>
               <Plus size={14} /> Add Task
@@ -427,6 +432,10 @@ export function TaskListPage() {
             loading={create.isPending}
           />
         </Modal>
+      )}
+
+      {showImport && (
+        <CsvImportModal projectId={projectId} onClose={() => setShowImport(false)} />
       )}
     </div>
   );

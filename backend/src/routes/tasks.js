@@ -1,5 +1,6 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
 const { queryOne, queryAll, execute } = require('../config/db');
 const { authenticate, requireProjectAccess, requireWriteAccess } = require('../middleware/auth');
 const { logActivity, notifyTaskAssigned } = require('../services/notificationService');
@@ -7,6 +8,76 @@ const { broadcast } = require('../services/wsService');
 const { validate, createTaskSchema, updateTaskSchema } = require('../config/validate');
 const { runAutomations } = require('../services/automationService');
 // req.log (pino-http) used for request-scoped logging
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+// ─── CSV helpers ──────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const result = [];
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const row = [];
+    let field = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"' && line[i + 1] === '"') { field += '"'; i++; }
+        else if (ch === '"') { inQuotes = false; }
+        else { field += ch; }
+      } else {
+        if (ch === '"') { inQuotes = true; }
+        else if (ch === ',') { row.push(field.trim()); field = ''; }
+        else { field += ch; }
+      }
+    }
+    row.push(field.trim());
+    result.push(row);
+  }
+  return result;
+}
+
+const HEADER_MAP = {
+  title: ['title', 'name', 'task', 'task name', 'summary'],
+  description: ['description', 'desc', 'notes', 'body', 'details'],
+  status: ['status', 'state'],
+  priority: ['priority', 'importance'],
+  deadline: ['deadline', 'due date', 'due', 'due_date', 'end date'],
+  assignee: ['assignee', 'assigned to', 'owner', 'assigned_to'],
+  estimated_hours: ['estimated hours', 'estimate', 'hours', 'estimated_hours', 'est hours'],
+};
+
+function normalizeStatus(v) {
+  const s = (v || '').toLowerCase().trim().replace(/\s+/g, '_');
+  if (['todo', 'to_do', 'to do', 'open', 'not started', 'backlog'].includes(s)) return 'todo';
+  if (['in_progress', 'in progress', 'doing', 'wip', 'active'].includes(s)) return 'in_progress';
+  if (['review', 'in review', 'in_review', 'testing'].includes(s)) return 'review';
+  if (['done', 'complete', 'completed', 'closed', 'finished'].includes(s)) return 'done';
+  return 'todo';
+}
+
+function normalizePriority(v) {
+  const p = (v || '').toLowerCase().trim();
+  if (['critical', 'urgent', 'blocker', 'highest'].includes(p)) return 'critical';
+  if (['high', 'important', 'major'].includes(p)) return 'high';
+  if (['low', 'minor', 'lowest', 'trivial'].includes(p)) return 'low';
+  return 'medium';
+}
+
+function normalizeDate(v) {
+  if (!v) return null;
+  const s = v.trim();
+  // Accept YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const parts = s.split(/[/\-\.]/);
+  if (parts.length === 3) {
+    const [a, b, c] = parts;
+    if (a.length === 4) return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`;
+    if (c.length === 4) return `${c}-${a.padStart(2,'0')}-${b.padStart(2,'0')}`;
+  }
+  return null;
+}
 
 // ─── Recurrence helper ────────────────────────────────────────────────────────
 function calcNextDate(deadline, rule, interval = 1, days = null) {
@@ -225,6 +296,94 @@ router.get('/export.csv', async (req, res) => {
     res.send(csv);
   } catch (err) {
     res.status(500).json({ error: 'Export failed' });
+  }
+});
+
+// POST /tasks/import  — CSV bulk import
+router.post('/import', requireWriteAccess, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const text = req.file.buffer.toString('utf-8');
+    const rows = parseCSV(text);
+    if (rows.length < 2) return res.status(400).json({ error: 'CSV must have a header row and at least one data row' });
+
+    // Map header columns
+    const rawHeaders = rows[0].map((h) => h.toLowerCase().trim());
+    const colIndex = {};
+    for (const [field, aliases] of Object.entries(HEADER_MAP)) {
+      const idx = rawHeaders.findIndex((h) => aliases.includes(h));
+      if (idx !== -1) colIndex[field] = idx;
+    }
+
+    if (colIndex.title === undefined) {
+      return res.status(400).json({ error: 'CSV must have a "Title" column' });
+    }
+
+    // Load project members for assignee resolution (by name or email)
+    const members = await queryAll(`
+      SELECT u.id, u.name, u.email
+      FROM project_members pm JOIN users u ON u.id = pm.user_id
+      WHERE pm.project_id = ?
+    `, [req.params.projectId]);
+
+    function resolveAssignee(val) {
+      if (!val) return null;
+      const v = val.toLowerCase().trim();
+      const m = members.find((u) => u.email.toLowerCase() === v || u.name.toLowerCase() === v);
+      return m ? m.id : null;
+    }
+
+    const maxPosRow = await queryOne(
+      "SELECT COALESCE(MAX(position),0) as pos FROM tasks WHERE project_id = ? AND status = 'todo'",
+      [req.params.projectId]
+    );
+    let nextPos = (parseInt(maxPosRow.pos, 10) || 0) + 1;
+
+    const created = [];
+    const failed = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row.every((c) => !c)) continue; // skip blank rows
+
+      const title = colIndex.title !== undefined ? row[colIndex.title] : '';
+      if (!title.trim()) { failed.push({ row: i + 1, error: 'Missing title' }); continue; }
+
+      const description   = colIndex.description    !== undefined ? row[colIndex.description]    || null : null;
+      const rawStatus     = colIndex.status         !== undefined ? row[colIndex.status]                : '';
+      const rawPriority   = colIndex.priority       !== undefined ? row[colIndex.priority]              : '';
+      const rawDeadline   = colIndex.deadline        !== undefined ? row[colIndex.deadline]              : '';
+      const rawAssignee   = colIndex.assignee       !== undefined ? row[colIndex.assignee]              : '';
+      const rawEstimate   = colIndex.estimated_hours !== undefined ? row[colIndex.estimated_hours]       : '';
+
+      const status      = normalizeStatus(rawStatus);
+      const priority    = normalizePriority(rawPriority);
+      const deadline    = normalizeDate(rawDeadline);
+      const assignee_id = resolveAssignee(rawAssignee);
+      const estimated_hours = rawEstimate ? parseFloat(rawEstimate) || null : null;
+
+      try {
+        const id = uuidv4();
+        await execute(`
+          INSERT INTO tasks (id, project_id, title, description, status, priority,
+                             assignee_id, created_by, deadline, estimated_hours, position)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        `, [id, req.params.projectId, title.trim(), description, status, priority,
+            assignee_id, req.user.id, deadline, estimated_hours, nextPos++]);
+
+        await logActivity('task', id, req.user.id, 'created', null, { title, source: 'csv_import' });
+        created.push(id);
+      } catch (err) {
+        failed.push({ row: i + 1, title: title.trim(), error: err.message });
+      }
+    }
+
+    req.log.info({ projectId: req.params.projectId, userId: req.user.id, created: created.length, failed: failed.length }, 'tasks.import');
+    res.json({ created: created.length, failed });
+  } catch (err) {
+    req.log.error({ projectId: req.params.projectId, err: err.message }, 'tasks.import_failed');
+    res.status(500).json({ error: 'Import failed' });
   }
 });
 
