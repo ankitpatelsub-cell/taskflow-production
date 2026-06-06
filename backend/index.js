@@ -54,6 +54,7 @@ const reactionRoutes     = require('./src/routes/reactions');
 const { shareApiRouter, publicShareRouter } = require('./src/routes/share');
 const twoFactorRoutes    = require('./src/routes/twoFactor');
 const aiTaskRoutes       = require('./src/routes/aiTasks');
+const workspaceRoutes    = require('./src/routes/workspaces');
 
 const app = express();
 const server = http.createServer(app);
@@ -116,6 +117,7 @@ app.use('/api/auth/forgot-password', authLimiter);
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth',                         authRoutes);
+app.use('/api/workspaces',                   workspaceRoutes);
 app.use('/api/users',                        userRoutes);
 app.use('/api/projects',                     projectRoutes);
 app.use('/api/projects/:projectId/tasks',    taskRoutes);

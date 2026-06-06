@@ -9,10 +9,31 @@ const router = express.Router();
 router.use(authenticate);
 
 // GET /api/projects
+// Optional query param: workspace_id — scopes results to that workspace (caller must be a member)
 router.get('/', async (req, res) => {
   try {
+    const { workspace_id } = req.query;
     let projects;
-    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+
+    if (workspace_id) {
+      // Verify caller is a workspace member
+      const isMember = await queryOne(
+        'SELECT 1 FROM workspace_members WHERE workspace_id = ? AND user_id = ?',
+        [workspace_id, req.user.id]
+      );
+      if (!isMember && req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+        return res.status(403).json({ error: 'Not a workspace member' });
+      }
+      projects = await queryAll(`
+        SELECT p.*, u.name as creator_name,
+          (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL) as task_count,
+          (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL AND status = 'done') as done_count,
+          (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
+        FROM projects p JOIN users u ON p.created_by = u.id
+        WHERE p.workspace_id = ?
+        ORDER BY p.created_at DESC
+      `, [workspace_id]);
+    } else if (req.user.role === 'admin' || req.user.role === 'super_admin') {
       projects = await queryAll(`
         SELECT p.*, u.name as creator_name,
           (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL) as task_count,
@@ -40,22 +61,35 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/projects
-router.post('/', requireMinRole('admin'), async (req, res) => {
+// workspace_id is required. Caller must be a workspace admin/owner (or global admin).
+router.post('/', async (req, res) => {
   try {
-    const { name, description, color = '#6366f1' } = req.body;
+    const { name, description, color = '#6366f1', workspace_id } = req.body;
     if (!name) return res.status(400).json({ error: 'name required' });
+    if (!workspace_id) return res.status(400).json({ error: 'workspace_id required' });
+
+    // Verify caller has admin/owner role in the workspace (or is global admin)
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      const wsMember = await queryOne(
+        'SELECT role FROM workspace_members WHERE workspace_id = ? AND user_id = ?',
+        [workspace_id, req.user.id]
+      );
+      if (!wsMember) return res.status(403).json({ error: 'Not a workspace member' });
+      if (wsMember.role === 'member') return res.status(403).json({ error: 'Workspace admin access required to create projects' });
+    }
+
     const id = uuidv4();
     await execute(
-      'INSERT INTO projects (id, name, description, color, created_by) VALUES (?, ?, ?, ?, ?)',
-      [id, name, description || null, color, req.user.id]
+      'INSERT INTO projects (id, name, description, color, created_by, workspace_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, name, description || null, color, req.user.id, workspace_id]
     );
     await execute(
       'INSERT INTO project_members (id, project_id, user_id) VALUES (?, ?, ?)',
       [uuidv4(), id, req.user.id]
     );
     await logActivity('project', id, req.user.id, 'created', null, { name });
-    req.log.info({ projectId: id, name, userId: req.user.id }, 'project.created');
-    res.status(201).json({ id, name, description, color });
+    req.log.info({ projectId: id, name, userId: req.user.id, workspace_id }, 'project.created');
+    res.status(201).json({ id, name, description, color, workspace_id });
   } catch (err) {
     req.log.error({ userId: req.user.id, err: err.message }, 'project.create_failed');
     res.status(500).json({ error: 'Failed to create project' });

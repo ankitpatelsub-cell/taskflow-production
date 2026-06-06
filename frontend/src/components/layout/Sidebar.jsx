@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   LayoutDashboard, Bell, User, Shield, Plus, ChevronDown,
-  ChevronRight, Database, LogOut, CreditCard,
+  ChevronRight, Database, LogOut, CreditCard, Settings,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjects } from '@/hooks/useProjects';
@@ -13,6 +13,9 @@ import { useState } from 'react';
 import { CreateProjectModal } from '@/components/shared/CreateProjectModal';
 import { useLogout } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useWorkspaces } from '@/hooks/useWorkspaces';
 
 // ─── Single nav item (icon + label on ONE row) ────────────────────────────────
 function NavItem({ to, icon: Icon, children, badge }) {
@@ -53,10 +56,16 @@ export function Sidebar() {
   const logout = useLogout();
   const router = useRouterState();
   const { t } = useTranslation();
+  const { currentWorkspaceId } = useWorkspaceStore();
+  const { data: workspaces = [] } = useWorkspaces();
 
   if (!sidebarOpen) return null;
 
   const activeProjects = projects.filter((p) => p.status === 'active');
+  const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
+  const canCreateProject = currentWorkspace &&
+    (currentWorkspace.member_role === 'owner' || currentWorkspace.member_role === 'admin' ||
+     isAdminOrAbove(user?.role));
   const unreadCount = notifData?.unread_count || 0;
   const currentPath = router.location.pathname;
 
@@ -64,15 +73,24 @@ export function Sidebar() {
     <>
       <aside className="sidebar-width shrink-0 h-full flex flex-col overflow-hidden bg-slate-900">
 
-        {/* ── Logo ─────────────────────────────────────────── */}
-        <div className="flex items-center gap-2.5 px-4 py-4 shrink-0">
-          <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-            <span className="text-white text-xs font-black">T</span>
+        {/* ── Workspace Switcher ────────────────────────────── */}
+        <div className="px-3 pt-3 pb-2 shrink-0">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-md flex items-center justify-center shadow shrink-0">
+              <span className="text-white text-[10px] font-black">T</span>
+            </div>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tick</span>
+            {currentWorkspaceId && (
+              <button
+                onClick={() => navigate({ to: `/app/workspaces/${currentWorkspaceId}/settings` })}
+                className="ml-auto text-slate-600 hover:text-slate-400 transition-colors p-0.5 rounded"
+                title="Workspace settings"
+              >
+                <Settings size={12} />
+              </button>
+            )}
           </div>
-          <div className="min-w-0">
-            <p className="font-bold text-white text-sm leading-tight">Tick</p>
-            <p className="text-[11px] text-slate-500 leading-tight">{t('nav.workspace')}</p>
-          </div>
+          <WorkspaceSwitcher />
         </div>
 
         <div className="mx-4 border-t border-slate-800 shrink-0" />
@@ -106,7 +124,7 @@ export function Sidebar() {
             >
               <span>{t('nav.projects')}</span>
               <span className="flex items-center gap-1">
-                {isAdminOrAbove(user?.role) && (
+                {canCreateProject && (
                   <span
                     onClick={(e) => { e.stopPropagation(); setShowCreateProject(true); }}
                     className="hover:text-indigo-400 cursor-pointer p-0.5 rounded hover:bg-white/10"
