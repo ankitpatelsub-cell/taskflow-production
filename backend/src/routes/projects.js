@@ -173,29 +173,50 @@ router.delete('/:projectId/members/:userId', requireProjectManage, async (req, r
 });
 
 // GET /api/projects/:projectId/time-report — aggregate time per task and per user
+// Accepts optional query params: from=YYYY-MM-DD and to=YYYY-MM-DD to filter by started_at
 router.get('/:projectId/time-report', requireProjectAccess, async (req, res) => {
   try {
+    const { from, to } = req.query;
+
+    // Build optional date-range filter fragments for time_logs.started_at
+    const dateConditions = [];
+    const dateParams = [];
+    if (from) {
+      dateConditions.push('tl.started_at >= ?');
+      dateParams.push(from);
+    }
+    if (to) {
+      // Include the full "to" day by going up to end-of-day
+      dateConditions.push('tl.started_at <= ?');
+      dateParams.push(`${to} 23:59:59`);
+    }
+    const dateFilter = dateConditions.length > 0
+      ? 'AND ' + dateConditions.join(' AND ')
+      : '';
+
     const byTask = await queryAll(`
       SELECT t.id, t.title, t.status,
              COALESCE(SUM(tl.duration_minutes), 0) AS total_minutes
       FROM tasks t
-      LEFT JOIN time_logs tl ON tl.task_id = t.id
+      LEFT JOIN time_logs tl ON tl.task_id = t.id ${dateFilter}
       WHERE t.project_id = ?
       GROUP BY t.id, t.title, t.status
       ORDER BY total_minutes DESC
-    `, [req.params.projectId]);
+    `, [...dateParams, req.params.projectId]);
 
     const byUser = await queryAll(`
       SELECT u.id, u.name, u.avatar_url,
-             COALESCE(SUM(tl.duration_minutes), 0) AS total_minutes
+             COALESCE(SUM(tl.duration_minutes), 0) AS total_minutes,
+             COUNT(DISTINCT CASE WHEN tl.id IS NOT NULL THEN tl.task_id END) AS task_count
       FROM project_members pm
       JOIN users u ON u.id = pm.user_id
       LEFT JOIN time_logs tl ON tl.user_id = u.id
         AND tl.task_id IN (SELECT id FROM tasks WHERE project_id = ?)
+        ${dateFilter}
       WHERE pm.project_id = ?
       GROUP BY u.id, u.name, u.avatar_url
       ORDER BY total_minutes DESC
-    `, [req.params.projectId, req.params.projectId]);
+    `, [req.params.projectId, ...dateParams, req.params.projectId]);
 
     res.json({ byTask, byUser });
   } catch (err) {

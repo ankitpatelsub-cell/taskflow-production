@@ -47,7 +47,7 @@ export function ProjectNav({ projectId, project }) {
             activeProps={{ className: 'border-indigo-600 !text-indigo-700' }}
           >
             <Icon size={14} className="shrink-0" />
-            {label}
+            <span className="text-xs sm:text-sm">{label}</span>
           </Link>
         ))}
       </nav>

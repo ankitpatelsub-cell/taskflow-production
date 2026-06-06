@@ -183,6 +183,12 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // If TOTP is enabled, return a partial response — client must complete /auth/2fa/verify
+    if (user.totp_enabled) {
+      req.log.info({ userId: user.id, email: user.email }, 'auth.login_totp_required');
+      return res.json({ requiresTwoFactor: true, userId: user.id });
+    }
+
     const { accessToken, refreshToken } = issueTokens(user);
     await storeRefreshToken(user.id, refreshToken);
     setRefreshCookie(res, refreshToken);

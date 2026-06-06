@@ -50,6 +50,40 @@ router.post('/', requireWriteAccess, async (req, res) => {
   }
 });
 
+// ─── GET /api/projects/:projectId/sprints/velocity ───────────────────────────
+router.get('/velocity', async (req, res) => {
+  try {
+    const rows = await queryAll(`
+      SELECT s.id, s.name, s.end_date,
+        COUNT(t.id) AS total_tasks,
+        COUNT(CASE WHEN t.status = 'done' THEN 1 END) AS done_tasks
+      FROM sprints s
+      LEFT JOIN tasks t ON t.sprint_id = s.id
+      WHERE s.project_id = ? AND s.status = 'completed'
+      GROUP BY s.id, s.name, s.end_date
+      ORDER BY s.end_date DESC
+      LIMIT 10
+    `, [req.params.projectId]);
+
+    const velocity = rows.reverse().map((r) => ({
+      id:             r.id,
+      name:           r.name,
+      end_date:       r.end_date,
+      total_tasks:    Number(r.total_tasks),
+      done_tasks:     Number(r.done_tasks),
+      completion_pct: r.total_tasks > 0
+        ? Math.round((Number(r.done_tasks) / Number(r.total_tasks)) * 100)
+        : 0,
+    }));
+
+    req.log.info({ projectId: req.params.projectId, count: velocity.length }, 'sprint.velocity_fetched');
+    res.json(velocity);
+  } catch (err) {
+    req.log.error({ projectId: req.params.projectId, err: err.message }, 'sprint.velocity_failed');
+    res.status(500).json({ error: 'Failed to fetch sprint velocity' });
+  }
+});
+
 // ─── GET /api/projects/:projectId/sprints/:sprintId ───────────────────────────
 router.get('/:sprintId', async (req, res) => {
   try {

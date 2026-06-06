@@ -209,7 +209,7 @@ function CreateSprintModal({ projectId, onClose }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1">Start Date</label>
           <input
@@ -286,7 +286,7 @@ export function SprintsPage() {
       <div className="flex-1 overflow-auto bg-gray-50">
         <div className="p-6 max-w-5xl mx-auto">
           {/* Page toolbar */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
             <div>
               <h1 className="text-xl font-black text-gray-900">Sprints</h1>
               <p className="text-sm text-gray-500 mt-0.5">
@@ -294,7 +294,7 @@ export function SprintsPage() {
               </p>
             </div>
             {canWrite && (
-              <Button onClick={() => setShowCreate(true)}>
+              <Button onClick={() => setShowCreate(true)} className="self-start sm:self-auto">
                 <Plus size={15} /> Create Sprint
               </Button>
             )}
