@@ -45,7 +45,7 @@ router.post('/', requireWriteAccess, async (req, res) => {
     const id = uuidv4();
     await execute(`
       INSERT INTO epics (id, project_id, title, description, color, status, start_date, end_date, created_by)
-      VALUES (?, ?, ?, ?, ?, 'open', ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?)
     `, [
       id, req.params.projectId, title.trim(),
       description || null, color || null,

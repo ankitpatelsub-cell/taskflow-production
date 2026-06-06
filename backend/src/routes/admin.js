@@ -19,7 +19,8 @@ router.get('/activity', async (req, res) => {
     const where = type ? 'WHERE al.entity_type = ?' : '';
     const params = type ? [type, limit, offset] : [limit, offset];
     const rows = await queryAll(`
-      SELECT al.id, al.action, al.entity_type, al.entity_id, al.metadata,
+      SELECT al.id, al.action, al.entity_type, al.entity_id,
+             al.old_value, al.new_value,
              al.created_at, u.name AS user_name, u.avatar_url
       FROM activity_log al
       LEFT JOIN users u ON al.user_id = u.id

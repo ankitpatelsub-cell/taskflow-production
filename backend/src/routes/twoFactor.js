@@ -1,7 +1,8 @@
 'use strict';
 
 const express = require('express');
-const { authenticator } = require('otplib');
+const { TOTP, NobleCryptoPlugin, ScureBase32Plugin } = require('otplib');
+const authenticator = new TOTP({ crypto: new NobleCryptoPlugin(), base32: new ScureBase32Plugin() });
 const qrcode = require('qrcode');
 const { queryOne, execute } = require('../config/db');
 const { authenticate } = require('../middleware/auth');
@@ -72,7 +73,7 @@ router.post('/verify-setup', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'secret and token are required' });
     }
 
-    const isValid = authenticator.verify({ token: String(token), secret });
+    const isValid = await authenticator.verify(String(token), { secret });
     if (!isValid) {
       req.log.warn({ userId: req.user.id }, '2fa.verify_setup_invalid_code');
       return res.status(400).json({ error: 'Invalid TOTP code — please try again' });
@@ -112,7 +113,7 @@ router.post('/disable', authenticate, async (req, res) => {
       return res.status(400).json({ error: '2FA is not currently enabled' });
     }
 
-    const isValid = authenticator.verify({ token: String(token), secret: user.totp_secret });
+    const isValid = await authenticator.verify(String(token), { secret: user.totp_secret });
     if (!isValid) {
       req.log.warn({ userId: req.user.id }, '2fa.disable_invalid_code');
       return res.status(400).json({ error: 'Invalid TOTP code' });
@@ -159,7 +160,7 @@ router.post('/verify', async (req, res) => {
       return res.status(400).json({ error: '2FA is not enabled for this account' });
     }
 
-    const isValid = authenticator.verify({ token: String(token), secret: user.totp_secret });
+    const isValid = await authenticator.verify(String(token), { secret: user.totp_secret });
     if (!isValid) {
       req.log.warn({ userId, ip: req.ip }, '2fa.verify_invalid_code');
       return res.status(401).json({ error: 'Invalid TOTP code' });

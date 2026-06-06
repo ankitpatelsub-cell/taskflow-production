@@ -182,12 +182,12 @@ router.get('/:projectId/time-report', requireProjectAccess, async (req, res) => 
     const dateConditions = [];
     const dateParams = [];
     if (from) {
-      dateConditions.push('tl.started_at >= ?');
+      dateConditions.push('tl.logged_at >= ?');
       dateParams.push(from);
     }
     if (to) {
       // Include the full "to" day by going up to end-of-day
-      dateConditions.push('tl.started_at <= ?');
+      dateConditions.push('tl.logged_at <= ?');
       dateParams.push(`${to} 23:59:59`);
     }
     const dateFilter = dateConditions.length > 0

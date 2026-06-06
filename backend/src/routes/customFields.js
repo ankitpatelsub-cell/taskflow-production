@@ -45,11 +45,16 @@ fieldDefsRouter.post('/', requireWriteAccess, async (req, res) => {
 
     const id = uuidv4();
     const resolvedOptions = options !== undefined ? JSON.stringify(options) : null;
+    const countRow = await queryOne(
+      'SELECT COUNT(*) as c FROM custom_field_definitions WHERE project_id = ?',
+      [req.params.projectId]
+    );
+    const autoPosition = position ?? (parseInt(countRow.c, 10) + 1);
 
     await execute(
       `INSERT INTO custom_field_definitions (id, project_id, name, type, options, position)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, req.params.projectId, name.trim(), type, resolvedOptions, position ?? null]
+      [id, req.params.projectId, name.trim(), type, resolvedOptions, autoPosition]
     );
 
     const field = await queryOne(
