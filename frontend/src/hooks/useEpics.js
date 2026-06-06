@@ -38,13 +38,20 @@ export function useCreateEpic(projectId) {
   });
 }
 
+/**
+ * Pass { epicId, ...data } to mutate() when epicId is not known at hook-call time,
+ * or pre-bind epicId by passing it to the hook for single-epic edit flows.
+ */
 export function useUpdateEpic(projectId, epicId) {
   return useMutation({
-    mutationFn: (data) =>
-      api.patch(`/projects/${projectId}/epics/${epicId}`, data).then((r) => r.data),
-    onSuccess: () => {
+    mutationFn: ({ epicId: dynId, ...data } = {}) => {
+      const id = dynId ?? epicId;
+      return api.patch(`/projects/${projectId}/epics/${id}`, data).then((r) => r.data);
+    },
+    onSuccess: (_, { epicId: dynId } = {}) => {
+      const id = dynId ?? epicId;
       queryClient.invalidateQueries({ queryKey: epicKeys.list(projectId) });
-      queryClient.invalidateQueries({ queryKey: epicKeys.detail(projectId, epicId) });
+      if (id) queryClient.invalidateQueries({ queryKey: epicKeys.detail(projectId, id) });
       toast.success('Epic updated');
     },
     onError: (err) => toast.error(err.response?.data?.error || 'Failed to update epic'),
