@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useTasks } from '@/hooks/useTasks';
 import { useProject, useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, isDueSoon, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Plus, Trash2, Download, Upload, CheckSquare, ArrowUp, ArrowDown, ChevronsUpDown, Search, X } from 'lucide-react';
+import { Calendar, Plus, Trash2, Download, Upload, CheckSquare, ArrowUp, ArrowDown, ChevronsUpDown, Search, X, ClipboardList } from 'lucide-react';
+import { MeetingNotesModal } from '@/components/shared/MeetingNotesModal';
 import { Button } from '@/components/ui/Button';
 import { useUiStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -34,6 +35,8 @@ export function TaskListPage() {
   const [bulkPriority, setBulkPriority] = useState('');
   const [sort, setSort] = useState({ col: null, dir: 'asc' });
   const [search, setSearch] = useState('');
+  const [showMeetingNotes, setShowMeetingNotes] = useState(false);
+  const [focusedIdx, setFocusedIdx] = useState(-1);
 
   const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
   const STATUS_ORDER   = { todo: 0, in_progress: 1, review: 2, done: 3 };
@@ -73,6 +76,17 @@ export function TaskListPage() {
 
   function openTask(id) { setActiveProject(projectId); openTaskDrawer(id); }
   function handleCreate(data) { create.mutate(data, { onSuccess: () => setShowAdd(false) }); }
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+      if (e.key === 'j') setFocusedIdx((i) => Math.min(i + 1, sortedTasks.length - 1));
+      else if (e.key === 'k') setFocusedIdx((i) => Math.max(i - 1, 0));
+      else if (e.key === 'Enter' && focusedIdx >= 0) openTask(sortedTasks[focusedIdx]?.id);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [focusedIdx, sortedTasks]);
 
   function toggleSelect(id) {
     setSelected((prev) => {
@@ -232,6 +246,9 @@ export function TaskListPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="secondary" onClick={() => setShowMeetingNotes(true)} title="Extract tasks from meeting notes">
+              <ClipboardList size={14} /> Meeting Notes
+            </Button>
             <Button size="sm" variant="secondary" onClick={() => setShowImport(true)}>
               <Upload size={14} /> Import
             </Button>
@@ -355,13 +372,15 @@ export function TaskListPage() {
                     </td>
                   </tr>
                 )}
-                {sortedTasks.map((task) => (
+                {sortedTasks.map((task, idx) => (
                   <tr
                     key={task.id}
                     className={cn(
                       'hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 cursor-pointer transition-colors',
-                      selected.has(task.id) && 'bg-indigo-50/50 dark:bg-indigo-900/20'
+                      selected.has(task.id) && 'bg-indigo-50/50 dark:bg-indigo-900/20',
+                      focusedIdx === idx && 'ring-1 ring-inset ring-indigo-400 bg-indigo-50/40 dark:bg-indigo-900/20'
                     )}
+                    onMouseEnter={() => setFocusedIdx(idx)}
                   >
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <input
@@ -436,6 +455,9 @@ export function TaskListPage() {
 
       {showImport && (
         <CsvImportModal projectId={projectId} onClose={() => setShowImport(false)} />
+      )}
+      {showMeetingNotes && (
+        <MeetingNotesModal projectId={projectId} onClose={() => setShowMeetingNotes(false)} />
       )}
     </div>
   );
