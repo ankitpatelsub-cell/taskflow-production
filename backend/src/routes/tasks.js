@@ -5,6 +5,7 @@ const { queryOne, queryAll, execute } = require('../config/db');
 const { authenticate, requireProjectAccess, requireWriteAccess } = require('../middleware/auth');
 const { logActivity, notifyTaskAssigned } = require('../services/notificationService');
 const { broadcast } = require('../services/wsService');
+const { notifySlack } = require('../services/slackService');
 const { validate, createTaskSchema, updateTaskSchema } = require('../config/validate');
 const { runAutomations } = require('../services/automationService');
 // req.log (pino-http) used for request-scoped logging
@@ -431,6 +432,7 @@ router.post('/', requireWriteAccess, validate(createTaskSchema), async (req, res
     const task = await queryOne('SELECT * FROM tasks WHERE id = ?', [id]);
     broadcast(req.params.projectId, { type: 'task:created', payload: task });
     runAutomations('task_created', task, null, req.user).catch(() => {});
+    notifySlack(req.params.projectId, 'created', task);
 
     req.log.info({ taskId: id, title, projectId: req.params.projectId, userId: req.user.id }, 'task.created');
     res.status(201).json(task);
@@ -504,6 +506,7 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
 
     const updated = await queryOne('SELECT * FROM tasks WHERE id = ?', [req.params.taskId]);
     broadcast(req.params.projectId, { type: 'task:updated', payload: updated });
+    notifySlack(req.params.projectId, updated.status === 'done' && old.status !== 'done' ? 'completed' : 'updated', updated);
 
     const triggers = [];
     if (status !== undefined && status !== old.status) triggers.push('task_status_changed');

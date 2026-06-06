@@ -2,7 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { queryOne, queryAll, execute } = require('../config/db');
 const { authenticate } = require('../middleware/auth');
-const { notifyComment } = require('../services/notificationService');
+const { notifyComment, createNotification } = require('../services/notificationService');
 const { broadcast } = require('../services/wsService');
 const { validate, createCommentSchema } = require('../config/validate');
 
@@ -38,6 +38,25 @@ router.post('/', validate(createCommentSchema), async (req, res) => {
     ]);
 
     await notifyComment(comment, task, req.user);
+
+    // Notify @mentioned project members
+    const handles = (content.match(/@([\w.'-]+)/g) || []).map((m) => m.slice(1).toLowerCase());
+    if (handles.length) {
+      const members = await queryAll(
+        `SELECT u.id, u.name FROM users u
+         JOIN project_members pm ON pm.user_id = u.id
+         WHERE pm.project_id = ? AND u.id != ?`,
+        [task.project_id, req.user.id]
+      );
+      const notified = new Set([task.assignee_id, task.created_by].filter(Boolean));
+      for (const m of members) {
+        if (!notified.has(m.id) && handles.some((h) => m.name.toLowerCase().replace(/\s+/g, '').startsWith(h))) {
+          await createNotification(m.id, 'mention', `${req.user.name} mentioned you in "${task.title}"`, 'task', task.id);
+          notified.add(m.id);
+        }
+      }
+    }
+
     broadcast(task.project_id, { type: 'comment:created', payload: { taskId: req.params.taskId, comment } });
     res.status(201).json(comment);
   } catch (err) {

@@ -15,6 +15,7 @@ const EMPTY_FILTERS = { assignee: '', priority: '', tag: '', q: '', to: '' };
 export function KanbanBoardPage() {
   const { projectId } = useParams({ strict: false });
   const { data: project } = useProject(projectId);
+  const [showMeetingNotes, setShowMeetingNotes] = useState(false);
 
   // Subscribe to real-time project events
   useEffect(() => {
@@ -54,14 +55,23 @@ export function KanbanBoardPage() {
       <ProjectNav projectId={projectId} project={project} />
 
       {/* Filter bar */}
-      <div className="px-6 py-2.5 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-between shrink-0">
-        <p className="text-xs text-gray-400 dark:text-slate-500">Drag cards between columns to update status</p>
-        <KanbanFilters projectId={projectId} filters={filters} onChange={setFilters} />
+      <div className="px-4 py-2.5 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-between gap-2 shrink-0 flex-wrap">
+        <p className="text-xs text-gray-400 dark:text-slate-500 hidden sm:block">Drag cards between columns to update status</p>
+        <div className="flex items-center gap-2 ml-auto">
+          <Button size="sm" variant="secondary" onClick={() => setShowMeetingNotes(true)} title="Extract tasks from meeting notes">
+            <ClipboardList size={14} /> <span className="hidden sm:inline">Meeting Notes</span>
+          </Button>
+          <KanbanFilters projectId={projectId} filters={filters} onChange={setFilters} />
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden">
         <KanbanBoard projectId={projectId} filters={filters} />
       </div>
+
+      {showMeetingNotes && (
+        <MeetingNotesModal projectId={projectId} onClose={() => setShowMeetingNotes(false)} />
+      )}
     </div>
   );
 }
