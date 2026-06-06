@@ -6,6 +6,9 @@ import { useProject } from '@/hooks/useProjects';
 import { ProjectNav } from './ProjectNav';
 import { subscribeProject, unsubscribeProject, useWsEvent } from '@/hooks/useWebSocket';
 import { queryClient } from '@/lib/queryClient';
+import { Button } from '@/components/ui/Button';
+import { ClipboardList } from 'lucide-react';
+import { MeetingNotesModal } from '@/components/shared/MeetingNotesModal';
 
 const EMPTY_FILTERS = { assignee: '', priority: '', tag: '', q: '', to: '' };
 

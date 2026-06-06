@@ -182,16 +182,17 @@ export function TaskListPage() {
 
       <div className="p-6 flex-1 overflow-auto page-fade">
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Search */}
-            <div className="relative">
+        <div className="flex flex-col gap-3 mb-4">
+          {/* Top row: search (full-width on mobile) + action buttons */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            {/* Search — full width on mobile, auto on sm+ */}
+            <div className="relative w-full sm:w-auto">
               <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tasks…"
-                className="pl-7 pr-7 py-1.5 text-xs border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 w-40 focus:w-52 transition-all"
+                className="pl-7 pr-7 py-1.5 text-xs border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-40 sm:focus:w-52 transition-all"
               />
               {search && (
                 <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -199,6 +200,25 @@ export function TaskListPage() {
                 </button>
               )}
             </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button size="sm" variant="secondary" onClick={() => setShowMeetingNotes(true)} title="Extract tasks from meeting notes">
+                <ClipboardList size={14} /> Meeting Notes
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setShowImport(true)}>
+                <Upload size={14} /> Import
+              </Button>
+              <Button size="sm" variant="secondary" onClick={handleExport}>
+                <Download size={14} /> Export
+              </Button>
+              <Button size="sm" onClick={() => setShowAdd(true)}>
+                <Plus size={14} /> Add Task
+              </Button>
+            </div>
+          </div>
+
+          {/* Filter chips row — wraps on small screens */}
+          <div className="flex items-center gap-3 flex-wrap">
             <p className="text-sm text-gray-500 dark:text-slate-400">
               <span className="font-bold text-gray-800 dark:text-white">{sortedTasks.length}</span> tasks
             </p>
@@ -243,21 +263,6 @@ export function TaskListPage() {
               <option value="">All priorities</option>
               {['low','medium','high','critical'].map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="secondary" onClick={() => setShowMeetingNotes(true)} title="Extract tasks from meeting notes">
-              <ClipboardList size={14} /> Meeting Notes
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => setShowImport(true)}>
-              <Upload size={14} /> Import
-            </Button>
-            <Button size="sm" variant="secondary" onClick={handleExport}>
-              <Download size={14} /> Export
-            </Button>
-            <Button size="sm" onClick={() => setShowAdd(true)}>
-              <Plus size={14} /> Add Task
-            </Button>
           </div>
         </div>
 
