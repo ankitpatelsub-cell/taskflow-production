@@ -172,15 +172,17 @@ function SprintTaskRow({ task, projectId, sprintId, canWrite, onOpen }) {
         {task.title}
       </span>
 
-      <PriorityBadge priority={task.priority} />
+      <span className="hidden sm:inline-flex shrink-0">
+        <PriorityBadge priority={task.priority} />
+      </span>
 
       {task.assignee_name ? (
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
           <Avatar name={task.assignee_name} size="sm" />
           <span className="text-xs text-gray-500 hidden sm:inline">{task.assignee_name}</span>
         </div>
       ) : (
-        <span className="text-gray-300 text-xs shrink-0">Unassigned</span>
+        <span className="hidden sm:inline text-gray-300 text-xs shrink-0">Unassigned</span>
       )}
 
       {canWrite && (
@@ -375,18 +377,20 @@ export function SprintDetailPage() {
                 )}
 
                 {(sprint.start_date || sprint.end_date) && (
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-2">
-                    <CalendarDays size={13} />
-                    <span>
-                      {sprint.start_date ? formatDate(sprint.start_date) : '—'}
-                      {' → '}
-                      {sprint.end_date ? formatDate(sprint.end_date) : '—'}
-                    </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <CalendarDays size={13} />
+                      <span>
+                        {sprint.start_date ? formatDate(sprint.start_date) : '—'}
+                        {' → '}
+                        {sprint.end_date ? formatDate(sprint.end_date) : '—'}
+                      </span>
+                    </div>
                   </div>
                 )}
 
                 {/* Progress */}
-                <div className="mt-3 flex items-center gap-3">
+                <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
                   <div className="flex-1 max-w-xs h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-indigo-500 rounded-full transition-all"
@@ -427,7 +431,9 @@ export function SprintDetailPage() {
           {/* Burndown chart card */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <h2 className="text-sm font-bold text-gray-700 mb-4">Burndown Chart</h2>
-            <BurndownChart sprint={sprint} burndownData={burndownData} />
+            <div className="min-h-[180px] sm:min-h-[240px]">
+              <BurndownChart sprint={sprint} burndownData={burndownData} />
+            </div>
           </div>
 
           {/* Task list card */}

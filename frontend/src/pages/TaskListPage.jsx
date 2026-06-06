@@ -324,124 +324,153 @@ export function TaskListPage() {
           </div>
         )}
 
-        {/* Table */}
+        {/* Table / Card list */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden shadow-sm">
           {isLoading ? (
             <TableSkeleton />
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-slate-700 bg-gray-50/70 dark:bg-slate-700/50">
-                  <th className="px-4 py-3 w-8">
-                    <input
-                      type="checkbox"
-                      checked={selected.size === tasks.length && tasks.length > 0}
-                      onChange={toggleAll}
-                      className="rounded accent-indigo-600"
-                    />
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-full">
-                    <button onClick={() => toggleSort('title')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
-                      Task <SortIcon col="title" />
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                    <button onClick={() => toggleSort('status')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
-                      Status <SortIcon col="status" />
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                    <button onClick={() => toggleSort('priority')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
-                      Priority <SortIcon col="priority" />
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                    <button onClick={() => toggleSort('assignee')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
-                      Assignee <SortIcon col="assignee" />
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                    <button onClick={() => toggleSort('deadline')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
-                      Deadline <SortIcon col="deadline" />
-                    </button>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-slate-700">
+            <>
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-gray-100 dark:divide-slate-700">
                 {tasks.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-16 text-center">
-                      <div className="text-4xl mb-3">📋</div>
-                      <p className="font-semibold text-gray-500 dark:text-slate-400">No tasks yet</p>
-                      <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">Click "Add Task" to create your first task</p>
-                    </td>
-                  </tr>
+                  <div className="px-4 py-16 text-center">
+                    <div className="text-4xl mb-3">📋</div>
+                    <p className="font-semibold text-gray-500 dark:text-slate-400">No tasks yet</p>
+                    <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">Click "Add Task" to create your first task</p>
+                  </div>
                 )}
                 {sortedTasks.map((task, idx) => (
-                  <tr
-                    key={task.id}
-                    className={cn(
-                      'hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 cursor-pointer transition-colors',
-                      selected.has(task.id) && 'bg-indigo-50/50 dark:bg-indigo-900/20',
-                      focusedIdx === idx && 'ring-1 ring-inset ring-indigo-400 bg-indigo-50/40 dark:bg-indigo-900/20'
-                    )}
-                    onMouseEnter={() => setFocusedIdx(idx)}
-                  >
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(task.id)}
-                        onChange={() => toggleSelect(task.id)}
-                        className="rounded accent-indigo-600"
-                      />
-                    </td>
-                    <td className="px-4 py-3" onClick={() => openTask(task.id)}>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={cn('font-medium', task.status === 'done' ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-900 dark:text-white')}>
-                          {task.title}
-                        </span>
-                        {task.tags?.length > 0 && task.tags.map((t) => (
-                          <span key={t.id} className="text-xs px-1.5 py-0.5 rounded-md" style={{ backgroundColor: t.color + '22', color: t.color }}>
-                            {t.name}
-                          </span>
-                        ))}
+                  <div key={task.id} onClick={() => openTask(task.id)} className="px-4 py-3 flex items-start gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 active:bg-gray-100 dark:active:bg-slate-700">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{task.title}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', STATUS_COLORS[task.status])}>{STATUS_LABELS[task.status]}</span>
+                        <PriorityBadge priority={task.priority} />
+                        {task.deadline && <span className="text-xs text-gray-400 dark:text-slate-500">{formatDate(task.deadline)}</span>}
                       </div>
-                    </td>
-                    <td className="px-4 py-3" onClick={() => openTask(task.id)}>
-                      <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold', STATUS_COLORS[task.status])}>
-                        {STATUS_LABELS[task.status]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3" onClick={() => openTask(task.id)}>
-                      <PriorityBadge priority={task.priority} />
-                    </td>
-                    <td className="px-4 py-3" onClick={() => openTask(task.id)}>
-                      {task.assignee_name ? (
-                        <div className="flex items-center gap-1.5">
-                          <Avatar name={task.assignee_name} size="sm" />
-                          <span className="text-gray-700 dark:text-slate-300 text-xs">{task.assignee_name}</span>
-                        </div>
-                      ) : <span className="text-gray-300 dark:text-slate-600">—</span>}
-                    </td>
-                    <td className="px-4 py-3" onClick={() => openTask(task.id)}>
-                      {task.deadline ? (
-                        <span className={cn(
-                          'flex items-center gap-1 text-xs',
-                          isOverdue(task.deadline) && task.status !== 'done' ? 'text-red-500 font-semibold' :
-                          isDueSoon(task.deadline) && task.status !== 'done' ? 'text-amber-500 font-medium' :
-                          'text-gray-400 dark:text-slate-500'
-                        )}>
-                          <Calendar size={12} />{formatDate(task.deadline)}
-                          {isDueSoon(task.deadline) && task.status !== 'done' && !isOverdue(task.deadline) && (
-                            <span className="text-[10px] bg-amber-50 text-amber-600 px-1 rounded-full font-bold">soon</span>
-                          )}
-                        </span>
-                      ) : <span className="text-gray-300 dark:text-slate-600">—</span>}
-                    </td>
-                  </tr>
+                    </div>
+                    {task.assignee_name && <Avatar name={task.assignee_name} size="sm" />}
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-slate-700 bg-gray-50/70 dark:bg-slate-700/50">
+                      <th className="px-4 py-3 w-8">
+                        <input
+                          type="checkbox"
+                          checked={selected.size === tasks.length && tasks.length > 0}
+                          onChange={toggleAll}
+                          className="rounded accent-indigo-600"
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-full">
+                        <button onClick={() => toggleSort('title')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                          Task <SortIcon col="title" />
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <button onClick={() => toggleSort('status')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                          Status <SortIcon col="status" />
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <button onClick={() => toggleSort('priority')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                          Priority <SortIcon col="priority" />
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <button onClick={() => toggleSort('assignee')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                          Assignee <SortIcon col="assignee" />
+                        </button>
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <button onClick={() => toggleSort('deadline')} className="flex items-center hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
+                          Deadline <SortIcon col="deadline" />
+                        </button>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 dark:divide-slate-700">
+                    {tasks.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-16 text-center">
+                          <div className="text-4xl mb-3">📋</div>
+                          <p className="font-semibold text-gray-500 dark:text-slate-400">No tasks yet</p>
+                          <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">Click "Add Task" to create your first task</p>
+                        </td>
+                      </tr>
+                    )}
+                    {sortedTasks.map((task, idx) => (
+                      <tr
+                        key={task.id}
+                        className={cn(
+                          'hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 cursor-pointer transition-colors',
+                          selected.has(task.id) && 'bg-indigo-50/50 dark:bg-indigo-900/20',
+                          focusedIdx === idx && 'ring-1 ring-inset ring-indigo-400 bg-indigo-50/40 dark:bg-indigo-900/20'
+                        )}
+                        onMouseEnter={() => setFocusedIdx(idx)}
+                      >
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selected.has(task.id)}
+                            onChange={() => toggleSelect(task.id)}
+                            className="rounded accent-indigo-600"
+                          />
+                        </td>
+                        <td className="px-4 py-3" onClick={() => openTask(task.id)}>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={cn('font-medium', task.status === 'done' ? 'line-through text-gray-400 dark:text-slate-500' : 'text-gray-900 dark:text-white')}>
+                              {task.title}
+                            </span>
+                            {task.tags?.length > 0 && task.tags.map((t) => (
+                              <span key={t.id} className="text-xs px-1.5 py-0.5 rounded-md" style={{ backgroundColor: t.color + '22', color: t.color }}>
+                                {t.name}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3" onClick={() => openTask(task.id)}>
+                          <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold', STATUS_COLORS[task.status])}>
+                            {STATUS_LABELS[task.status]}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3" onClick={() => openTask(task.id)}>
+                          <PriorityBadge priority={task.priority} />
+                        </td>
+                        <td className="px-4 py-3" onClick={() => openTask(task.id)}>
+                          {task.assignee_name ? (
+                            <div className="flex items-center gap-1.5">
+                              <Avatar name={task.assignee_name} size="sm" />
+                              <span className="text-gray-700 dark:text-slate-300 text-xs">{task.assignee_name}</span>
+                            </div>
+                          ) : <span className="text-gray-300 dark:text-slate-600">—</span>}
+                        </td>
+                        <td className="px-4 py-3" onClick={() => openTask(task.id)}>
+                          {task.deadline ? (
+                            <span className={cn(
+                              'flex items-center gap-1 text-xs',
+                              isOverdue(task.deadline) && task.status !== 'done' ? 'text-red-500 font-semibold' :
+                              isDueSoon(task.deadline) && task.status !== 'done' ? 'text-amber-500 font-medium' :
+                              'text-gray-400 dark:text-slate-500'
+                            )}>
+                              <Calendar size={12} />{formatDate(task.deadline)}
+                              {isDueSoon(task.deadline) && task.status !== 'done' && !isOverdue(task.deadline) && (
+                                <span className="text-[10px] bg-amber-50 text-amber-600 px-1 rounded-full font-bold">soon</span>
+                              )}
+                            </span>
+                          ) : <span className="text-gray-300 dark:text-slate-600">—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

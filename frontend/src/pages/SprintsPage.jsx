@@ -76,7 +76,7 @@ function SprintCard({ sprint, projectId, canWrite, onNavigate }) {
       onClick={() => onNavigate(sprint.id)}
     >
       {/* Card header */}
-      <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
+      <div className="px-4 sm:px-5 pt-4 pb-3 flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-bold text-gray-900 truncate">{sprint.name}</h3>
@@ -130,9 +130,9 @@ function SprintCard({ sprint, projectId, canWrite, onNavigate }) {
       </div>
 
       {/* Meta row */}
-      <div className="px-5 pb-4 space-y-2.5">
+      <div className="px-4 sm:px-5 pb-4 space-y-2.5">
         {(sprint.start_date || sprint.end_date) && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 flex-wrap">
             <CalendarDays size={12} />
             <span>
               {sprint.start_date ? formatDate(sprint.start_date) : '—'}
@@ -142,7 +142,7 @@ function SprintCard({ sprint, projectId, canWrite, onNavigate }) {
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1">
+        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1 flex-wrap">
           <ListChecks size={12} />
           <span>{totalTasks} task{totalTasks !== 1 ? 's' : ''}</span>
         </div>

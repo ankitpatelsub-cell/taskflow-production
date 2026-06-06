@@ -205,7 +205,7 @@ function EpicCard({ epic, onDelete, onUpdate }) {
       <div className="flex">
         <div className="w-1 shrink-0 rounded-l-xl" style={{ backgroundColor: epic.color || '#6366f1' }} />
 
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-4 sm:p-5">
           {/* Header row */}
           <div className="flex items-start gap-3">
             <button
@@ -386,7 +386,7 @@ export function EpicsPage() {
         <div className="p-6 space-y-6 max-w-5xl mx-auto">
 
           {/* Page header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="text-xl font-bold text-gray-900">Epics &amp; Roadmap</h2>
               <p className="text-sm text-gray-500 mt-0.5">
@@ -432,6 +432,8 @@ export function EpicsPage() {
           {/* ── Gantt-style timeline ── */}
           {timelineEpics.length > 0 && (
             <div>
+              <p className="md:hidden text-xs text-gray-400 text-center py-2">Gantt view available on wider screens</p>
+              <div className="hidden md:block">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="font-semibold text-gray-800">Timeline</h3>
@@ -533,6 +535,7 @@ export function EpicsPage() {
                     ))}
                   </div>
                 </div>
+              </div>
               </div>
             </div>
           )}
