@@ -20,7 +20,7 @@ export function VerifyEmailPage() {
           <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <CheckSquare size={28} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Stride</h1>
+          <h1 className="text-3xl font-bold text-white">Tick</h1>
         </div>
         <div className="bg-white/95 rounded-2xl shadow-2xl p-8 text-center">
           {status === 'loading' && <><Loader2 size={32} className="animate-spin mx-auto text-indigo-500 mb-3" /><p className="text-gray-600">Verifying…</p></>}

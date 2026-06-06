@@ -26,19 +26,19 @@ export function AppShell() {
   // Dynamic document title
   useEffect(() => {
     const path = location.pathname;
-    let title = 'Stride';
-    if (path.includes('/board'))        title = 'Board | Stride';
-    else if (path.includes('/list'))    title = 'List | Stride';
-    else if (path.includes('/calendar')) title = 'Calendar | Stride';
-    else if (path.includes('/standup')) title = 'Standup | Stride';
-    else if (path.includes('/members')) title = 'Members | Stride';
-    else if (path.includes('/settings')) title = 'Settings | Stride';
-    else if (path.includes('/dashboard')) title = 'Dashboard | Stride';
-    else if (path.includes('/notifications')) title = 'Notifications | Stride';
-    else if (path.includes('/profile')) title = 'My Profile | Stride';
-    else if (path.includes('/billing')) title = 'Billing | Stride';
-    else if (path.includes('/admin/users')) title = 'User Management | Stride';
-    else if (path.includes('/admin/backups')) title = 'Backups | Stride';
+    let title = 'Tick';
+    if (path.includes('/board'))        title = 'Board | Tick';
+    else if (path.includes('/list'))    title = 'List | Tick';
+    else if (path.includes('/calendar')) title = 'Calendar | Tick';
+    else if (path.includes('/standup')) title = 'Standup | Tick';
+    else if (path.includes('/members')) title = 'Members | Tick';
+    else if (path.includes('/settings')) title = 'Settings | Tick';
+    else if (path.includes('/dashboard')) title = 'Dashboard | Tick';
+    else if (path.includes('/notifications')) title = 'Notifications | Tick';
+    else if (path.includes('/profile')) title = 'My Profile | Tick';
+    else if (path.includes('/billing')) title = 'Billing | Tick';
+    else if (path.includes('/admin/users')) title = 'User Management | Tick';
+    else if (path.includes('/admin/backups')) title = 'Backups | Tick';
     document.title = title;
   }, [location.pathname]);
 

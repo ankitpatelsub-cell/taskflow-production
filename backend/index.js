@@ -168,7 +168,7 @@ async function init() {
   startCronJobs();
 
   server.listen(PORT, () => {
-    logger.info(`Stride API running on http://localhost:${PORT} [${NODE_ENV}]`);
+    logger.info(`Tick API running on http://localhost:${PORT} [${NODE_ENV}]`);
     logger.info(`WebSocket server at ws://localhost:${PORT}/ws`);
   });
 }

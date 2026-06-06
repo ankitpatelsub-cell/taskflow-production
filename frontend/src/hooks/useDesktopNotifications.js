@@ -66,7 +66,7 @@ export function useDesktopNotifications() {
       if (age > TWO_MINUTES) return;
 
       try {
-        const notif = new Notification('Stride', {
+        const notif = new Notification('Tick', {
           body: n.message || 'You have a new notification',
           icon: '/icons/icon-192.png',
           badge: '/icons/icon-192.png',
