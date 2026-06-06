@@ -78,16 +78,38 @@ router.get('/:projectId', requireProjectAccess, async (req, res) => {
   }
 });
 
+// POST /api/projects/:projectId/slack-test
+router.post('/:projectId/slack-test', requireProjectManage, async (req, res) => {
+  try {
+    const proj = await queryOne('SELECT slack_webhook_url FROM projects WHERE id = ?', [req.params.projectId]);
+    if (!proj?.slack_webhook_url) return res.status(400).json({ error: 'No Slack webhook URL configured' });
+    const https = require('https');
+    const url = new URL(proj.slack_webhook_url);
+    const body = JSON.stringify({ text: ':white_check_mark: Tick is connected to this Slack channel!' });
+    await new Promise((resolve, reject) => {
+      const r = https.request({ hostname: url.hostname, path: url.pathname + url.search, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, (resp) => {
+        let d = ''; resp.on('data', (c) => d += c); resp.on('end', () => resp.statusCode < 300 ? resolve(d) : reject(new Error(`Slack returned ${resp.statusCode}`)));
+      });
+      r.on('error', reject); r.write(body); r.end();
+    });
+    res.json({ message: 'Test message sent' });
+  } catch (err) {
+    req.log.error({ err: err.message, projectId: req.params.projectId }, 'slack.test.failed');
+    res.status(502).json({ error: err.message || 'Slack test failed' });
+  }
+});
+
 // PATCH /api/projects/:projectId
 router.patch('/:projectId', requireProjectManage, async (req, res) => {
   try {
-    const { name, description, color, status } = req.body;
+    const { name, description, color, status, slack_webhook_url } = req.body;
     const sets = ['updated_at = NOW()'];
     const vals = [];
-    if (name !== undefined)        { sets.push('name = ?');        vals.push(name); }
-    if (description !== undefined) { sets.push('description = ?'); vals.push(description); }
-    if (color !== undefined)       { sets.push('color = ?');       vals.push(color); }
-    if (status !== undefined)      { sets.push('status = ?');      vals.push(status); }
+    if (name !== undefined)              { sets.push('name = ?');              vals.push(name); }
+    if (description !== undefined)       { sets.push('description = ?');       vals.push(description); }
+    if (color !== undefined)             { sets.push('color = ?');             vals.push(color); }
+    if (status !== undefined)            { sets.push('status = ?');            vals.push(status); }
+    if (slack_webhook_url !== undefined) { sets.push('slack_webhook_url = ?'); vals.push(slack_webhook_url); }
     vals.push(req.params.projectId);
     await execute(`UPDATE projects SET ${sets.join(', ')} WHERE id = ?`, vals);
     req.log.info({ projectId: req.params.projectId, userId: req.user.id, fields: Object.keys(req.body) }, 'project.updated');

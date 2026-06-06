@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { Trash2, MessageSquare } from 'lucide-react';
+import { EmojiReactions } from './EmojiReactions';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -86,6 +87,7 @@ export function CommentThread({ taskId }) {
                   )}
                 </div>
                 <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{c.content}</p>
+                <EmojiReactions commentId={c.id} />
               </div>
             </div>
           ))}

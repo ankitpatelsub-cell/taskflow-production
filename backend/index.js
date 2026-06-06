@@ -46,6 +46,14 @@ const automationRoutes   = require('./src/routes/automations');
 const aiSummaryRoutes    = require('./src/routes/aiSummary');
 const taskLinkRoutes     = require('./src/routes/taskLinks');
 const dependencyRoutes   = require('./src/routes/taskDependencies');
+const sprintRoutes       = require('./src/routes/sprints');
+const epicRoutes         = require('./src/routes/epics');
+const { fieldDefsRouter, fieldValuesRouter } = require('./src/routes/customFields');
+const webhookRoutes      = require('./src/routes/webhooks');
+const reactionRoutes     = require('./src/routes/reactions');
+const { shareApiRouter, publicShareRouter } = require('./src/routes/share');
+const twoFactorRoutes    = require('./src/routes/twoFactor');
+const aiTaskRoutes       = require('./src/routes/aiTasks');
 
 const app = express();
 const server = http.createServer(app);
@@ -73,6 +81,9 @@ app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 if (NODE_ENV !== 'test') {
   app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 }
+
+// ── Public share (no auth, no /api prefix, must be before JSON middleware) ────
+app.use('/share', publicShareRouter);
 
 // ── Stripe webhook needs raw body — mount BEFORE express.json() ───────────────
 app.use('/api/billing/webhook', billingRoutes);
@@ -115,6 +126,15 @@ app.use('/api/tasks/:taskId/attachments',        attachmentRoutes);
 app.use('/api/tasks/:taskId/time-logs',          timeLogRoutes);
 app.use('/api/tasks/:taskId/links',              taskLinkRoutes);
 app.use('/api/tasks/:taskId/dependencies',       dependencyRoutes);
+app.use('/api/projects/:projectId/sprints',     sprintRoutes);
+app.use('/api/projects/:projectId/epics',       epicRoutes);
+app.use('/api/projects/:projectId/custom-fields', fieldDefsRouter);
+app.use('/api/tasks/:taskId/custom-field-values', fieldValuesRouter);
+app.use('/api/projects/:projectId/webhooks',    webhookRoutes);
+app.use('/api/comments/:commentId/reactions',   reactionRoutes);
+app.use('/api/projects/:projectId/share',       shareApiRouter);
+app.use('/api/auth/2fa',                        twoFactorRoutes);
+app.use('/api/projects/:projectId/ai',          aiTaskRoutes);
 app.use('/api/projects/:projectId/workload',     workloadRoutes);
 app.use('/api/projects/:projectId/automations',  automationRoutes);
 app.use('/api/projects/:projectId/ai-summary',   aiSummaryRoutes);

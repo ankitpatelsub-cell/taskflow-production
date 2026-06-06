@@ -46,6 +46,11 @@ const WorkloadPage        = lazy(() => import('./pages/WorkloadPage').then((m) =
 const AutomationsPage     = lazy(() => import('./pages/AutomationsPage').then((m) => ({ default: m.AutomationsPage })));
 const TimeReportPage      = lazy(() => import('./pages/TimeReportPage').then((m) => ({ default: m.TimeReportPage })));
 const GanttPage           = lazy(() => import('./pages/GanttPage').then((m) => ({ default: m.GanttPage })));
+const SprintsPage         = lazy(() => import('./pages/SprintsPage').then((m) => ({ default: m.SprintsPage })));
+const SprintDetailPage    = lazy(() => import('./pages/SprintDetailPage').then((m) => ({ default: m.SprintDetailPage })));
+const EpicsPage           = lazy(() => import('./pages/EpicsPage').then((m) => ({ default: m.EpicsPage })));
+const AuditLogPage        = lazy(() => import('./pages/AuditLogPage').then((m) => ({ default: m.AuditLogPage })));
+const PublicSharePage     = lazy(() => import('./pages/PublicSharePage').then((m) => ({ default: m.PublicSharePage })));
 
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 const PageLoader  = () => <div className="p-6 space-y-4"><TableSkeleton rows={8} /></div>;
@@ -66,6 +71,7 @@ const resetPasswordRoute  = createRoute({ getParentRoute: () => rootRoute, path:
 const verifyEmailRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/verify-email/$token',     component: VerifyEmailPage });
 const privacyRoute        = createRoute({ getParentRoute: () => rootRoute, path: '/privacy',                 component: PrivacyPolicyPage });
 const termsRoute          = createRoute({ getParentRoute: () => rootRoute, path: '/terms',                   component: TermsPage });
+const publicShareRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/share/$token',             component: S(PublicSharePage) });
 const notFoundRoute       = createRoute({ getParentRoute: () => rootRoute, path: '*',                        component: NotFoundPage });
 
 const indexRoute = createRoute({
@@ -96,6 +102,9 @@ const routes = [
   { path: '/projects/$projectId/standup',       Component: S(StandupPage) },
   { path: '/projects/$projectId/time-report',   Component: S(TimeReportPage) },
   { path: '/projects/$projectId/gantt',         Component: S(GanttPage) },
+  { path: '/projects/$projectId/sprints',       Component: S(SprintsPage) },
+  { path: '/projects/$projectId/sprints/$sprintId', Component: S(SprintDetailPage) },
+  { path: '/projects/$projectId/epics',         Component: S(EpicsPage) },
   { path: '/projects/$projectId/members',       Component: S(MembersPage) },
   { path: '/projects/$projectId/settings',      Component: S(ProjectSettingsPage) },
   { path: '/profile',                           Component: S(ProfilePage) },
@@ -103,6 +112,7 @@ const routes = [
   { path: '/billing',                           Component: S(BillingPage) },
   { path: '/admin/users',                       Component: S(UserManagementPage) },
   { path: '/admin/backups',                     Component: S(BackupManagerPage) },
+  { path: '/admin/audit-log',                   Component: S(AuditLogPage) },
 ].map(({ path, Component }) =>
   createRoute({ getParentRoute: () => appRoute, path, component: Component })
 );
@@ -118,6 +128,7 @@ export const routeTree = rootRoute.addChildren([
   privacyRoute,
   termsRoute,
   indexRoute,
+  publicShareRoute,
   appRoute.addChildren(routes),
   notFoundRoute,
 ]);

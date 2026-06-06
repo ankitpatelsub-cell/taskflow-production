@@ -6,7 +6,7 @@ import { useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell, GitBranch } from 'lucide-react';
+import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell, GitBranch, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
@@ -14,15 +14,21 @@ import { TimeTracker } from './TimeTracker';
 import { TaskLinks } from './TaskLinks';
 import { TaskForm } from './TaskForm';
 import { TaskDependencies } from './TaskDependencies';
+import { CustomFieldsPanel } from './CustomFieldsPanel';
+import { AITaskPanel } from './AITaskPanel';
+import { MarkdownContent } from '@/components/shared/MarkdownContent';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useTranslation } from 'react-i18next';
+import { toast } from '@/components/ui/Toast';
 
 const TABS = [
   { id: 'details',      label: 'Details' },
   { id: 'subtasks',     label: 'Subtasks' },
   { id: 'dependencies', label: 'Dependencies' },
-  { id: 'comments',     label: 'Comments' },
+  { id: 'ai',          label: 'AI' },
+  { id: 'fields',      label: 'Fields' },
+  { id: 'comments',    label: 'Comments' },
   { id: 'time',         label: 'Time' },
   { id: 'links',        label: 'Links' },
   { id: 'activity',     label: 'Activity' },
@@ -63,6 +69,19 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
   function handleDelete() {
     if (!confirm(`Delete "${task.title}"? This cannot be undone.`)) return;
     del.mutate(taskId, { onSuccess: onClose });
+  }
+
+  async function handleDuplicate() {
+    try {
+      const { title, description, status, priority, assignee_id, deadline } = task;
+      await api.post(`/projects/${projectId}/tasks`, {
+        title: `${title} (copy)`, description, status, priority, assignee_id, deadline,
+      });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      toast.success('Task duplicated');
+    } catch {
+      toast.error('Failed to duplicate task');
+    }
   }
 
   function startEditDesc() {
@@ -160,6 +179,9 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
               <div className="flex-1" />
               <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
                 <Edit3 size={13} /> Edit
+              </Button>
+              <Button size="sm" variant="secondary" onClick={handleDuplicate} title="Duplicate task">
+                <Copy size={13} />
               </Button>
               <div className="w-px h-5 bg-gray-200 dark:bg-slate-600" />
               <Button size="sm" variant="danger" onClick={handleDelete} title="Delete task">
@@ -351,12 +373,9 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                       </div>
                     </div>
                   ) : task.description ? (
-                    <p
-                      className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed cursor-text"
-                      onClick={startEditDesc}
-                    >
-                      {task.description}
-                    </p>
+                    <div className="cursor-text" onClick={startEditDesc}>
+                      <MarkdownContent content={task.description} />
+                    </div>
                   ) : (
                     <p
                       className="text-sm text-gray-400 dark:text-slate-500 italic cursor-pointer hover:text-indigo-500 transition-colors"
@@ -507,6 +526,8 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   )}
 
                   {tab === 'dependencies' && <TaskDependencies taskId={taskId} projectId={projectId} />}
+                  {tab === 'ai'     && <AITaskPanel projectId={projectId} taskId={taskId} task={task} />}
+                  {tab === 'fields' && <CustomFieldsPanel projectId={projectId} taskId={taskId} />}
                   {tab === 'comments' && <CommentThread taskId={taskId} />}
                   {tab === 'time'     && <TimeTracker taskId={taskId} />}
                   {tab === 'links'    && <TaskLinks taskId={taskId} />}

@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { getGroupedTimezones, getCurrentTimezone } from '@/lib/timezones';
-import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell, Palette, Monitor, Sun, Moon } from 'lucide-react';
+import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell, Palette, Monitor, Sun, Moon, ShieldCheck } from 'lucide-react';
+import { TwoFactorSettings } from '@/components/settings/TwoFactorSettings';
 import { useTranslation } from 'react-i18next';
 import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import {
@@ -353,6 +354,11 @@ export function ProfilePage() {
             </Button>
           </div>
         </form>
+      </Section>
+
+      {/* Two-Factor Authentication */}
+      <Section title="Two-Factor Authentication" icon={ShieldCheck}>
+        <TwoFactorSettings />
       </Section>
 
       {/* Danger Zone */}

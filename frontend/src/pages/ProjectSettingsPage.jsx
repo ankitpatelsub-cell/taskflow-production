@@ -7,6 +7,9 @@ import { ProjectNav } from './ProjectNav';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from '@/components/ui/Toast';
+import { WebhooksSettings } from '@/components/settings/WebhooksSettings';
+import { SlackSettings } from '@/components/settings/SlackSettings';
+import { useMutation } from '@tanstack/react-query';
 
 const COLORS = [
   '#6366f1', '#f59e0b', '#10b981', '#ef4444',
@@ -68,6 +71,37 @@ export function ProjectSettingsPage() {
     refetchTags();
     qc.invalidateQueries({ queryKey: ['tags', projectId] });
   }
+
+  // Custom fields
+  const { data: customFields = [], refetch: refetchFields } = useQuery({
+    queryKey: ['custom-fields', projectId],
+    queryFn: () => api.get(`/projects/${projectId}/custom-fields`).then((r) => r.data),
+    enabled: !!projectId,
+  });
+  const [newFieldName, setNewFieldName] = useState('');
+  const [newFieldType, setNewFieldType] = useState('text');
+  const addField = useMutation({
+    mutationFn: () => api.post(`/projects/${projectId}/custom-fields`, { name: newFieldName.trim(), type: newFieldType }),
+    onSuccess: () => { setNewFieldName(''); refetchFields(); toast.success('Field added'); },
+    onError: () => toast.error('Failed to add field'),
+  });
+  const deleteField = useMutation({
+    mutationFn: (id) => api.delete(`/projects/${projectId}/custom-fields/${id}`),
+    onSuccess: () => { refetchFields(); toast.success('Field removed'); },
+  });
+
+  // Public share
+  const enableShare = useMutation({
+    mutationFn: () => api.post(`/projects/${projectId}/share`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['project', projectId] }); toast.success('Public link enabled'); },
+  });
+  const disableShare = useMutation({
+    mutationFn: () => api.delete(`/projects/${projectId}/share`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['project', projectId] }); toast.success('Public link disabled'); },
+  });
+  const shareUrl = project?.share_enabled && project?.share_token
+    ? `${window.location.origin}/share/${project.share_token}`
+    : null;
 
   return (
     <div className="h-full flex flex-col">
@@ -182,6 +216,76 @@ export function ProjectSettingsPage() {
               <Button size="sm" onClick={addTag} disabled={!newTag.trim()}>Add</Button>
             </div>
           </div>
+        </div>
+
+        {/* Custom Fields */}
+        <div>
+          <h3 className="font-bold text-gray-800 dark:text-white mb-4">Custom Fields</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm space-y-3">
+            {customFields.length === 0 ? (
+              <p className="text-sm text-gray-400 dark:text-slate-500 italic">No custom fields yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {customFields.map((f) => (
+                  <div key={f.id} className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                    <div>
+                      <span className="text-sm font-medium text-gray-800 dark:text-white">{f.name}</span>
+                      <span className="ml-2 text-xs text-gray-400 bg-gray-100 dark:bg-slate-600 px-1.5 py-0.5 rounded">{f.type}</span>
+                    </div>
+                    <button onClick={() => deleteField.mutate(f.id)} className="text-gray-300 hover:text-red-500 transition-colors text-lg leading-none">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2 pt-1 border-t border-gray-100 dark:border-slate-700">
+              <input
+                value={newFieldName}
+                onChange={(e) => setNewFieldName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && newFieldName.trim() && addField.mutate()}
+                placeholder="Field name (Enter to add)"
+                className="flex-1 text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-700 dark:text-white"
+              />
+              <select
+                value={newFieldType}
+                onChange={(e) => setNewFieldType(e.target.value)}
+                className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-700 dark:text-white"
+              >
+                {['text','number','select','date','checkbox','url'].map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <Button size="sm" onClick={() => addField.mutate()} disabled={!newFieldName.trim() || addField.isPending}>Add</Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Public Share */}
+        <div>
+          <h3 className="font-bold text-gray-800 dark:text-white mb-4">Public Share Link</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm space-y-3">
+            <p className="text-sm text-gray-500 dark:text-slate-400">Share a read-only view of this project with anyone, even without a Tick account.</p>
+            {shareUrl ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input readOnly value={shareUrl} className="flex-1 text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-gray-50 dark:bg-slate-700 dark:text-white font-mono text-xs" />
+                  <Button size="sm" variant="secondary" onClick={() => { navigator.clipboard.writeText(shareUrl); toast.success('Copied!'); }}>Copy</Button>
+                </div>
+                <Button size="sm" variant="danger" onClick={() => disableShare.mutate()} disabled={disableShare.isPending}>Disable Link</Button>
+              </div>
+            ) : (
+              <Button onClick={() => enableShare.mutate()} disabled={enableShare.isPending}>Enable Public Link</Button>
+            )}
+          </div>
+        </div>
+
+        {/* Webhooks */}
+        <div>
+          <h3 className="font-bold text-gray-800 dark:text-white mb-4">Webhooks</h3>
+          <WebhooksSettings projectId={projectId} />
+        </div>
+
+        {/* Slack */}
+        <div>
+          <h3 className="font-bold text-gray-800 dark:text-white mb-4">Slack Integration</h3>
+          <SlackSettings projectId={projectId} />
         </div>
       </div>
     </div>
