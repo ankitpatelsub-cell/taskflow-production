@@ -9,6 +9,7 @@ import { QuickCreateButton } from '@/components/shared/QuickCreateButton';
 import { KeyboardShortcutsHelp } from '@/components/shared/KeyboardShortcutsHelp';
 import { CommandPalette } from '@/components/shared/CommandPalette';
 import { OnboardingChecklist } from '@/components/shared/OnboardingChecklist';
+import { EmailVerificationBanner } from '@/components/shared/EmailVerificationBanner';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { ToastProvider } from '@/components/ui/Toast';
 import { useThemeStore } from '@/stores/themeStore';
@@ -105,6 +106,7 @@ export function AppShell() {
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 w-full">
         <Topbar />
+        <EmailVerificationBanner />
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>

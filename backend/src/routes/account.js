@@ -6,6 +6,7 @@ const { hash } = require('../utils/password');
 const { authenticate } = require('../middleware/auth');
 const { sendPasswordResetEmail } = require('../services/emailService');
 const { APP_URL } = require('../config/env');
+const { signAccess } = require('../utils/jwt');
 
 const router = express.Router();
 
@@ -83,7 +84,12 @@ router.post('/verify-email', async (req, res) => {
     await execute('UPDATE users SET email_verified = 1 WHERE id = ?', [record.user_id]);
     await execute('UPDATE email_verification_tokens SET used_at = NOW() WHERE id = ?', [record.id]);
 
-    res.json({ message: 'Email verified.' });
+    // Return a fresh access token with email_verified: true so the client updates immediately
+    const user = await queryOne('SELECT id, name, email, role, avatar_url FROM users WHERE id = ?', [record.user_id]);
+    const accessToken = signAccess({
+      id: user.id, email: user.email, role: user.role, name: user.name, email_verified: true,
+    });
+    res.json({ message: 'Email verified.', accessToken, user });
   } catch (err) {
     res.status(500).json({ error: 'Verification failed' });
   }

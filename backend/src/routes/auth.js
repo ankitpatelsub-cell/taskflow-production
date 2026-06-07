@@ -18,7 +18,13 @@ function hashToken(token) {
 }
 
 function issueTokens(user) {
-  const payload = { id: user.id, email: user.email, role: user.role, name: user.name };
+  const payload = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+    email_verified: !!(user.email_verified),
+  };
   return {
     accessToken: signAccess(payload),
     refreshToken: signRefresh({ id: user.id }),
@@ -66,8 +72,8 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
           } else {
             const id = uuidv4();
             await execute(
-              `INSERT INTO users (id, name, email, oauth_provider, oauth_id, avatar_url, role, is_active)
-               VALUES (?, ?, ?, 'google', ?, ?, 'member', 1)`,
+              `INSERT INTO users (id, name, email, oauth_provider, oauth_id, avatar_url, role, is_active, email_verified)
+               VALUES (?, ?, ?, 'google', ?, ?, 'member', 1, 1)`,
               [id, profile.displayName || email, email, profile.id, profile.photos?.[0]?.value || null]
             );
             user = await queryOne('SELECT * FROM users WHERE id = ?', [id]);
@@ -253,6 +259,45 @@ router.post('/logout', authenticate, async (req, res) => {
     res.json({ message: 'Logged out' });
   } catch {
     res.json({ message: 'Logged out' });
+  }
+});
+
+// POST /api/auth/resend-verification
+// No email_verified gate needed — this is the escape hatch.
+// Rate-limited by the global auth limiter. Requires a valid access token so a
+// random person can't spam verification emails for arbitrary addresses.
+router.post('/resend-verification', authenticate, async (req, res) => {
+  try {
+    const user = await queryOne('SELECT id, name, email, email_verified FROM users WHERE id = ?', [req.user.id]);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.email_verified) return res.status(400).json({ error: 'Email already verified' });
+
+    // Invalidate any outstanding tokens for this user
+    await execute(
+      "UPDATE email_verification_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL",
+      [user.id]
+    );
+
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    await execute(
+      'INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)',
+      [uuidv4(), user.id, hashToken(verifyToken), verifyExpires]
+    );
+
+    const { sendWelcomeEmail } = require('../services/emailService');
+    const { APP_URL } = require('../config/env');
+    await sendWelcomeEmail({
+      to: user.email,
+      name: user.name,
+      verifyUrl: `${APP_URL}/verify-email/${verifyToken}`,
+    });
+
+    req.log.info({ userId: user.id }, 'auth.verification_resent');
+    res.json({ message: 'Verification email sent' });
+  } catch (err) {
+    req.log.error({ userId: req.user?.id, err: err.message }, 'auth.resend_verification_failed');
+    res.status(500).json({ error: 'Failed to send verification email' });
   }
 });
 

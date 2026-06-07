@@ -2,14 +2,24 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from '@tanstack/react-router';
 import { CheckSquare, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
 
 export function VerifyEmailPage() {
   const { token } = useParams({ from: '/verify-email/$token' });
   const [status, setStatus] = useState('loading'); // loading | success | error
 
+  const { setToken, setEmailVerified } = useAuthStore();
+
   useEffect(() => {
     api.post('/auth/verify-email', { token })
-      .then(() => setStatus('success'))
+      .then(({ data }) => {
+        // Update the stored token so the email_verified claim takes effect immediately
+        if (data.accessToken) {
+          setToken(data.accessToken);
+          setEmailVerified(true);
+        }
+        setStatus('success');
+      })
       .catch(() => setStatus('error'));
   }, [token]);
 

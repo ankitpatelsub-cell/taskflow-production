@@ -115,6 +115,28 @@ app.use('/api/auth/refresh',         authLimiter);
 app.use('/api/auth/register',        authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 
+// ── Email verification gate ────────────────────────────────────────────────────
+// All authenticated API calls (except /api/auth/* and read-only public routes)
+// are blocked until the user has verified their email address.
+// The check reads the claim from the already-verified JWT — no extra DB query.
+const { verifyAccess: _verifyAccess } = require('./src/utils/jwt');
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/auth/') || req.path === '/health' || req.path === '/version') {
+    return next();
+  }
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return next(); // unauthenticated — let route handle it
+  try {
+    const payload = _verifyAccess(header.slice(7));
+    if (!payload.email_verified) {
+      return res.status(403).json({ error: 'Email not verified', code: 'EMAIL_NOT_VERIFIED' });
+    }
+  } catch {
+    // Invalid token — let the route's authenticate middleware emit the 401
+  }
+  next();
+});
+
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth',                         authRoutes);
 app.use('/api/workspaces',                   workspaceRoutes);
