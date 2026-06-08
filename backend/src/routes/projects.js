@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
           (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL AND status = 'done') as done_count,
           (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
         FROM projects p JOIN users u ON p.created_by = u.id
-        WHERE p.workspace_id = ?
+        WHERE p.workspace_id = ? AND p.status != 'archived'
         ORDER BY p.created_at DESC
       `, [workspace_id]);
     } else if (req.user.role === 'admin' || req.user.role === 'super_admin') {
@@ -46,6 +46,7 @@ router.get('/', async (req, res) => {
           (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND parent_task_id IS NULL AND status = 'done') as done_count,
           (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
         FROM projects p JOIN users u ON p.created_by = u.id
+        WHERE p.status != 'archived'
         ORDER BY p.created_at DESC
       `);
     } else {
@@ -57,6 +58,7 @@ router.get('/', async (req, res) => {
         FROM projects p
         JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = ?
         JOIN users u ON p.created_by = u.id
+        WHERE p.status != 'archived'
         ORDER BY p.created_at DESC
       `, [req.user.id]);
     }

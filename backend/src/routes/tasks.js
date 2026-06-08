@@ -145,7 +145,7 @@ async function maybeCreateNextOccurrence(task, userId) {
       recurrence_ends_at, recurrence_parent_id
     ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `, [
-    newId, task.project_id, task.parent_task_id || null,
+    newId, task.project_id, null, // recurrences are always top-level tasks
     task.title, task.description || null, 'todo', task.priority,
     task.assignee_id || null, userId, nextDate,
     task.estimated_hours || null, maxPosRow.pos,
@@ -396,6 +396,13 @@ router.post('/', requireWriteAccess, validate(createTaskSchema), async (req, res
       parent_task_id, tag_ids,
       recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at,
     } = req.body;
+
+    if (parent_task_id) {
+      const parent = await queryOne('SELECT project_id FROM tasks WHERE id = ?', [parent_task_id]);
+      if (!parent || parent.project_id !== req.params.projectId) {
+        return res.status(400).json({ error: 'parent_task_id must belong to the same project' });
+      }
+    }
 
     const id = uuidv4();
     const maxPosRow = await queryOne(

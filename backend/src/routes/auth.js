@@ -280,6 +280,13 @@ router.post('/resend-verification', authenticate, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (user.email_verified) return res.status(400).json({ error: 'Email already verified' });
 
+    // Enforce 5-minute cooldown per user to prevent email spam
+    const recent = await queryOne(
+      "SELECT id FROM email_verification_tokens WHERE user_id = ? AND used_at IS NULL AND created_at > NOW() - INTERVAL '5 minutes'",
+      [user.id]
+    );
+    if (recent) return res.status(429).json({ error: 'Please wait 5 minutes before requesting another verification email.' });
+
     // Invalidate any outstanding tokens for this user
     await execute(
       "UPDATE email_verification_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL",

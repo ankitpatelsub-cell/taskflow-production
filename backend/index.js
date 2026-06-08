@@ -59,6 +59,9 @@ const workspaceRoutes    = require('./src/routes/workspaces');
 const app = express();
 const server = http.createServer(app);
 
+// ── Trust proxy (required for correct req.ip behind nginx) ────────────────────
+app.set('trust proxy', 1);
+
 // ── WebSocket server ───────────────────────────────────────────────────────────
 const wss = new WebSocketServer({ server, path: '/ws' });
 wsService.register(wss);
@@ -76,6 +79,7 @@ app.use(helmet({
   },
 }));
 
+if (CORS_ORIGIN === '*') throw new Error('CORS_ORIGIN cannot be * when credentials=true');
 app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 
 // ── Logging ────────────────────────────────────────────────────────────────────
@@ -117,7 +121,8 @@ const userLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => {
     const auth = req.headers.authorization;
-    return auth ? `u:${auth.slice(-24)}` : `ip:${req.ip}`;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    return token?.length > 10 ? `u:${token.slice(-24)}` : `ip:${req.ip}`;
   },
   message: { error: 'Too many requests. Please slow down.' },
   skip: (req) => req.path === '/health' || req.path === '/version',
@@ -125,9 +130,10 @@ const userLimiter = rateLimit({
 
 app.use('/api/', globalLimiter);
 app.use('/api/', userLimiter);
-app.use('/api/auth/login',           authLimiter);
-app.use('/api/auth/refresh',         authLimiter);
-app.use('/api/auth/register',        authLimiter);
+app.use('/api/auth/login',                authLimiter);
+app.use('/api/auth/refresh',              authLimiter);
+app.use('/api/auth/register',             authLimiter);
+app.use('/api/auth/resend-verification',  authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 
 // ── Email verification gate ────────────────────────────────────────────────────

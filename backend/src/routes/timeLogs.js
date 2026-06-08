@@ -6,9 +6,22 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router({ mergeParams: true });
 router.use(authenticate);
 
+async function requireTaskAccess(req, res) {
+  const task = await queryOne('SELECT project_id FROM tasks WHERE id = ?', [req.params.taskId]);
+  if (!task) { res.status(404).json({ error: 'Task not found' }); return false; }
+  if (req.user.role === 'admin' || req.user.role === 'super_admin') return true;
+  const member = await queryOne(
+    'SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?',
+    [task.project_id, req.user.id]
+  );
+  if (!member) { res.status(403).json({ error: 'Access denied' }); return false; }
+  return true;
+}
+
 // GET /api/tasks/:taskId/time-logs
 router.get('/', async (req, res) => {
   try {
+    if (!await requireTaskAccess(req, res)) return;
     const logs = await queryAll(`
       SELECT tl.*, u.name as user_name
       FROM time_logs tl
@@ -25,6 +38,7 @@ router.get('/', async (req, res) => {
 // POST /api/tasks/:taskId/time-logs
 router.post('/', async (req, res) => {
   try {
+    if (!await requireTaskAccess(req, res)) return;
     const { duration_minutes, note } = req.body;
     if (!duration_minutes || duration_minutes < 1) {
       return res.status(400).json({ error: 'duration_minutes must be at least 1' });
