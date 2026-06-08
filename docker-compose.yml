@@ -1,18 +1,15 @@
 version: '3.9'
 
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
-    container_name: taskflow-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: taskflow
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskflow_secret}
       POSTGRES_DB: taskflow
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
     volumes:
-      - taskflow-pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U taskflow"]
       interval: 10s
@@ -22,62 +19,49 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
-    container_name: taskflow-backend
+      dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     environment:
-      - PORT=3001
-      - NODE_ENV=production
-      - CORS_ORIGIN=http://localhost
-      - APP_URL=${APP_URL:-http://localhost}
-      - DATABASE_URL=postgresql://taskflow:${POSTGRES_PASSWORD:-taskflow_secret}@postgres:5432/taskflow
-      - DATABASE_SSL=false
-      # ⚠️  Change these secrets before deploying!
-      - JWT_SECRET=${JWT_SECRET:-change_this_jwt_secret_32chars_min}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-change_this_refresh_secret_32chars}
-      - BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY:-change_this_backup_key_32chars__}
-      - BACKUP_CRON=${BACKUP_CRON:-0 2 * * *}
-      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
-      # Email
-      - SMTP_HOST=${SMTP_HOST:-}
-      - SMTP_PORT=${SMTP_PORT:-587}
-      - SMTP_USER=${SMTP_USER:-}
-      - SMTP_PASS=${SMTP_PASS:-}
-      - EMAIL_FROM=${EMAIL_FROM:-TaskFlow <noreply@taskflow.app>}
-      # Stripe
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
-      - STRIPE_PRO_PRICE_ID=${STRIPE_PRO_PRICE_ID:-}
-      - STRIPE_TEAM_PRICE_ID=${STRIPE_TEAM_PRICE_ID:-}
-      # OAuth
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-    volumes:
-      - taskflow-uploads:/app/uploads
-      - taskflow-backups:/app/data/backups
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://taskflow:${DB_PASSWORD:-changeme}@db:5432/taskflow
+      DATABASE_SSL: "false"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      APP_URL: ${APP_URL:-http://localhost}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@taskflow.app}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRO_PRICE_ID: ${STRIPE_PRO_PRICE_ID:-}
+      STRIPE_TEAM_PRICE_ID: ${STRIPE_TEAM_PRICE_ID:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     ports:
       - "3001:3001"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+    volumes:
+      - uploads:/app/uploads
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    container_name: taskflow-frontend
+    image: nginx:alpine
     restart: unless-stopped
-    ports:
-      - "80:80"
     depends_on:
       - backend
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
 
 volumes:
-  taskflow-pgdata:    # PostgreSQL data
-  taskflow-uploads:   # Task file attachments
-  taskflow-backups:   # Encrypted database backups
+  pgdata:
+  uploads:

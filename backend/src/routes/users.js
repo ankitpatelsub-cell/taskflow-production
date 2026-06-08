@@ -106,7 +106,10 @@ router.patch('/:id/password', async (req, res) => {
 
     const { password, currentPassword } = req.body;
     if (!password) return res.status(400).json({ error: 'password required' });
-    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ error: 'Password must contain at least one uppercase letter and one number' });
+    }
 
     if (isSelf && !isAdmin) {
       if (!currentPassword) return res.status(400).json({ error: 'currentPassword required' });
@@ -117,6 +120,7 @@ router.patch('/:id/password', async (req, res) => {
 
     const password_hash = await hash(password);
     await execute('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash, req.params.id]);
+    await execute('DELETE FROM refresh_tokens WHERE user_id = ?', [req.params.id]);
     res.json({ message: 'Password updated' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update password' });

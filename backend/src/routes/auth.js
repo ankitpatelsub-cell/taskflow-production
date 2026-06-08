@@ -119,7 +119,10 @@ router.post('/register', async (req, res) => {
     if (!name?.trim())    return res.status(400).json({ error: 'Name is required' });
     if (!email?.trim())   return res.status(400).json({ error: 'Email is required' });
     if (!password)        return res.status(400).json({ error: 'Password is required' });
-    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ error: 'Password must contain at least one uppercase letter and one number' });
+    }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return res.status(400).json({ error: 'Invalid email address' });
@@ -238,7 +241,12 @@ router.post('/refresh', async (req, res) => {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    const accessToken = signAccess({ id: user.id, email: user.email, role: user.role, name: user.name });
+    // Rotate: delete old token and issue a new one (single-use tokens)
+    await execute('DELETE FROM refresh_tokens WHERE id = ?', [stored.id]);
+    const { accessToken, refreshToken: newRefreshToken } = issueTokens(user);
+    await storeRefreshToken(user.id, newRefreshToken);
+    setRefreshCookie(res, newRefreshToken);
+
     req.log.debug({ userId: user.id }, 'auth.token_refreshed');
     res.json({ accessToken });
   } catch (err) {

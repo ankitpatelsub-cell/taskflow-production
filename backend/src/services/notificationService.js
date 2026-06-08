@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const { execute, queryOne } = require('../config/db');
 const { broadcastToUser } = require('./wsService');
+const { sendEmail } = require('./emailService');
 const logger = require('../config/logger');
 
 async function logActivity(entityType, entityId, userId, action, oldValue, newValue) {
@@ -28,6 +29,20 @@ async function createNotification(userId, type, message, entityType, entityId) {
       [id, userId, type, message, entityType, entityId]
     );
     broadcastToUser(userId, { type: 'notification:new', payload: { id, type, message, entityType, entityId } });
+
+    // Email delivery for high-priority notification types (non-blocking)
+    if (process.env.SMTP_HOST && (type === 'task_assigned' || type === 'mention')) {
+      queryOne('SELECT email, name FROM users WHERE id = ?', [userId])
+        .then((user) => {
+          if (!user?.email) return;
+          return sendEmail({
+            to: user.email,
+            subject: message,
+            html: `<p>${message}</p><p><a href="${process.env.APP_URL}">Open Tick</a></p>`,
+          });
+        })
+        .catch(() => {}); // never block on email failure
+    }
   } catch (err) {
     logger.error({ userId, type, entityType, entityId, err: err.message }, 'notification.create_failed');
   }

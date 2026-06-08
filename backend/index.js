@@ -109,7 +109,22 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
+// Per-user limit: 120 req/min for authenticated users (keyed by token suffix)
+const userLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const auth = req.headers.authorization;
+    return auth ? `u:${auth.slice(-24)}` : `ip:${req.ip}`;
+  },
+  message: { error: 'Too many requests. Please slow down.' },
+  skip: (req) => req.path === '/health' || req.path === '/version',
+});
+
 app.use('/api/', globalLimiter);
+app.use('/api/', userLimiter);
 app.use('/api/auth/login',           authLimiter);
 app.use('/api/auth/refresh',         authLimiter);
 app.use('/api/auth/register',        authLimiter);

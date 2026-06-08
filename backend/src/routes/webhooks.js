@@ -248,6 +248,22 @@ router.post('/:webhookId/test', requireWriteAccess, async (req, res) => {
  * @param {string} event      - e.g. 'task:created'
  * @param {object} payload    - arbitrary event data
  */
+async function deliverWithRetry(webhook, body, maxAttempts = 3) {
+  const extraHeaders = {};
+  if (webhook.secret) {
+    extraHeaders['X-Tick-Signature'] = signPayload(webhook.secret, body);
+  }
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const status = await httpsPost(webhook.url, body, extraHeaders);
+      if (status >= 200 && status < 300) return; // success
+      if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, 1000 * attempt));
+    } catch {
+      if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, 1000 * attempt));
+    }
+  }
+}
+
 async function dispatchWebhook(projectId, event, payload) {
   try {
     const webhooks = await queryAll(
@@ -264,17 +280,7 @@ async function dispatchWebhook(projectId, event, payload) {
     const body = { event, payload, timestamp: new Date().toISOString() };
 
     await Promise.allSettled(
-      webhooks.map(async (webhook) => {
-        try {
-          const extraHeaders = {};
-          if (webhook.secret) {
-            extraHeaders['X-Tick-Signature'] = signPayload(webhook.secret, body);
-          }
-          await httpsPost(webhook.url, body, extraHeaders);
-        } catch {
-          // Silently swallow delivery errors — fire-and-forget
-        }
-      })
+      webhooks.map((webhook) => deliverWithRetry(webhook, body))
     );
   } catch {
     // Silently swallow query errors — callers must not be interrupted

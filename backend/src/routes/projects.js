@@ -5,6 +5,12 @@ const { authenticate, requireMinRole, requireProjectAccess, requireProjectManage
 const { logActivity } = require('../services/notificationService');
 // req.log (pino-http) used for request-scoped logging
 
+const PLAN_LIMITS = {
+  free: { projects: 3, members: 5 },
+  pro:  { projects: 10, members: 25 },
+  team: { projects: Infinity, members: Infinity },
+};
+
 const router = express.Router();
 router.use(authenticate);
 
@@ -76,6 +82,20 @@ router.post('/', async (req, res) => {
       );
       if (!wsMember) return res.status(403).json({ error: 'Not a workspace member' });
       if (wsMember.role === 'member') return res.status(403).json({ error: 'Workspace admin access required to create projects' });
+    }
+
+    // Plan limit check
+    const sub = await queryOne('SELECT plan FROM subscriptions ORDER BY created_at DESC LIMIT 1');
+    const plan = sub?.plan || 'free';
+    const planLimit = (PLAN_LIMITS[plan] || PLAN_LIMITS.free).projects;
+    if (planLimit !== Infinity) {
+      const countRow = await queryOne("SELECT COUNT(*) as c FROM projects WHERE workspace_id = ? AND status = 'active'", [workspace_id]);
+      if (parseInt(countRow.c, 10) >= planLimit) {
+        return res.status(402).json({
+          error: `${plan.charAt(0).toUpperCase() + plan.slice(1)} plan allows up to ${planLimit} active projects per workspace. Upgrade to create more.`,
+          code: 'PLAN_LIMIT_REACHED',
+        });
+      }
     }
 
     const id = uuidv4();

@@ -133,4 +133,4 @@ async function sendWelcomeEmail({ to, name, verifyUrl }) {
   });
 }
 
-module.exports = { sendInviteEmail, sendPasswordResetEmail, sendWelcomeEmail };
+module.exports = { sendInviteEmail, sendPasswordResetEmail, sendWelcomeEmail, sendEmail };
