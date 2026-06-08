@@ -5,6 +5,12 @@ const { v4: uuidv4 } = require('uuid');
 const { queryOne, queryAll, execute } = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 
+const PLAN_LIMITS = {
+  free: { members: 5 },
+  pro:  { members: 25 },
+  team: { members: Infinity },
+};
+
 const router = express.Router();
 router.use(authenticate);
 
@@ -158,6 +164,23 @@ router.post('/:workspaceId/members', async (req, res) => {
       [req.params.workspaceId, user.id]
     );
     if (existing) return res.status(409).json({ error: 'User is already a workspace member' });
+
+    // Plan member limit check
+    const sub = await queryOne('SELECT plan FROM subscriptions ORDER BY created_at DESC LIMIT 1');
+    const plan = sub?.plan || 'free';
+    const memberLimit = (PLAN_LIMITS[plan] || PLAN_LIMITS.free).members;
+    if (memberLimit !== Infinity) {
+      const countRow = await queryOne(
+        'SELECT COUNT(*) as c FROM workspace_members WHERE workspace_id = ?',
+        [req.params.workspaceId]
+      );
+      if (parseInt(countRow.c, 10) >= memberLimit) {
+        return res.status(402).json({
+          error: `${plan.charAt(0).toUpperCase() + plan.slice(1)} plan allows up to ${memberLimit} members per workspace. Upgrade to add more.`,
+          code: 'PLAN_LIMIT_REACHED',
+        });
+      }
+    }
 
     await execute(
       'INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)',
