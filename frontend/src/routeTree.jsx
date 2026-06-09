@@ -51,6 +51,7 @@ const SprintDetailPage    = lazy(() => import('./pages/SprintDetailPage').then((
 const EpicsPage           = lazy(() => import('./pages/EpicsPage').then((m) => ({ default: m.EpicsPage })));
 const AuditLogPage        = lazy(() => import('./pages/AuditLogPage').then((m) => ({ default: m.AuditLogPage })));
 const PublicSharePage     = lazy(() => import('./pages/PublicSharePage').then((m) => ({ default: m.PublicSharePage })));
+const AnalyticsPage         = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const WorkspaceSettingsPage = lazy(() => import('./pages/WorkspaceSettingsPage').then((m) => ({ default: m.WorkspaceSettingsPage })));
 
 // ── Skeletons ─────────────────────────────────────────────────────────────────
@@ -114,7 +115,8 @@ const routes = [
   { path: '/admin/users',                       Component: S(UserManagementPage) },
   { path: '/admin/backups',                     Component: S(BackupManagerPage) },
   { path: '/admin/audit-log',                   Component: S(AuditLogPage) },
-  { path: '/workspaces/$workspaceId/settings',  Component: S(WorkspaceSettingsPage) },
+  { path: '/analytics',                                 Component: S(AnalyticsPage) },
+  { path: '/workspaces/$workspaceId/settings',          Component: S(WorkspaceSettingsPage) },
 ].map(({ path, Component }) =>
   createRoute({ getParentRoute: () => appRoute, path, component: Component })
 );
