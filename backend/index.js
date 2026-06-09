@@ -54,12 +54,16 @@ const reactionRoutes     = require('./src/routes/reactions');
 const { shareApiRouter, publicShareRouter } = require('./src/routes/share');
 const twoFactorRoutes    = require('./src/routes/twoFactor');
 const aiTaskRoutes       = require('./src/routes/aiTasks');
-const workspaceRoutes    = require('./src/routes/workspaces');
+const templateRoutes       = require('./src/routes/templates');
+const analyticsRoutes      = require('./src/routes/analytics');
+const aiPlanningRoutes     = require('./src/routes/aiPlanning');
+const sprintInsightsRoutes = require('./src/routes/sprintInsights');
+const workspaceRoutes      = require('./src/routes/workspaces');
 
 const app = express();
 const server = http.createServer(app);
 
-// ── Trust proxy (required for correct req.ip behind nginx) ────────────────────
+// ── Trust proxy (required for correct req.ip behind nginx/load balancer) ──────
 app.set('trust proxy', 1);
 
 // ── WebSocket server ───────────────────────────────────────────────────────────
@@ -113,7 +117,7 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
-// Per-user limit: 120 req/min for authenticated users (keyed by token suffix)
+// Per-user limit: 120 req/min keyed by token suffix (requires trust proxy above)
 const userLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 120,
@@ -133,8 +137,8 @@ app.use('/api/', userLimiter);
 app.use('/api/auth/login',                authLimiter);
 app.use('/api/auth/refresh',              authLimiter);
 app.use('/api/auth/register',             authLimiter);
+app.use('/api/auth/forgot-password',      authLimiter);
 app.use('/api/auth/resend-verification',  authLimiter);
-app.use('/api/auth/forgot-password', authLimiter);
 
 // ── Email verification gate ────────────────────────────────────────────────────
 // All authenticated API calls (except /api/auth/* and read-only public routes)
@@ -172,6 +176,7 @@ app.use('/api/tasks/:taskId/time-logs',          timeLogRoutes);
 app.use('/api/tasks/:taskId/links',              taskLinkRoutes);
 app.use('/api/tasks/:taskId/dependencies',       dependencyRoutes);
 app.use('/api/projects/:projectId/sprints',     sprintRoutes);
+app.use('/api/projects/:projectId/sprints',     sprintInsightsRoutes);
 app.use('/api/projects/:projectId/epics',       epicRoutes);
 app.use('/api/projects/:projectId/custom-fields', fieldDefsRouter);
 app.use('/api/tasks/:taskId/custom-field-values', fieldValuesRouter);
@@ -183,6 +188,9 @@ app.use('/api/projects/:projectId/ai',          aiTaskRoutes);
 app.use('/api/projects/:projectId/workload',     workloadRoutes);
 app.use('/api/projects/:projectId/automations',  automationRoutes);
 app.use('/api/projects/:projectId/ai-summary',   aiSummaryRoutes);
+app.use('/api/templates',                    templateRoutes);
+app.use('/api/analytics',                    analyticsRoutes);
+app.use('/api/projects/:projectId',          aiPlanningRoutes);
 app.use('/api/notifications',                notificationRoutes);
 app.use('/api/admin',                        adminRoutes);
 app.use('/api/invitations',                  invitationRoutes);
