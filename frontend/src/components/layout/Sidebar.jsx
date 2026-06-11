@@ -63,9 +63,8 @@ export function Sidebar() {
 
   const activeProjects = projects.filter((p) => p.status === 'active');
   const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
-  const canCreateProject = currentWorkspace &&
-    (currentWorkspace.member_role === 'owner' || currentWorkspace.member_role === 'admin' ||
-     isAdminOrAbove(user?.role));
+  const canCreateProject = isAdminOrAbove(user?.role) ||
+    (currentWorkspace && (currentWorkspace.member_role === 'owner' || currentWorkspace.member_role === 'admin'));
   const unreadCount = notifData?.unread_count || 0;
   const currentPath = router.location.pathname;
 

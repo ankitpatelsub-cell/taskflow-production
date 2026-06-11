@@ -1,18 +1,18 @@
 -- Project templates
 CREATE TABLE IF NOT EXISTS project_templates (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   name TEXT NOT NULL,
   description TEXT,
   category TEXT NOT NULL DEFAULT 'general',
   color TEXT NOT NULL DEFAULT '#6366f1',
   is_builtin BOOLEAN NOT NULL DEFAULT false,
-  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS template_tasks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  template_id UUID NOT NULL REFERENCES project_templates(id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  template_id TEXT NOT NULL REFERENCES project_templates(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
   status TEXT NOT NULL DEFAULT 'todo',

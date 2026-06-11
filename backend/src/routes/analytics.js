@@ -17,7 +17,7 @@ router.get('/portfolio', async (req, res) => {
       : isAdmin
         ? `1=1`
         : `p.id IN (SELECT project_id FROM project_members WHERE user_id = $1)`;
-    const projectParam = workspace_id ? workspace_id : req.user.id;
+    const projectParams = workspace_id ? [workspace_id] : isAdmin ? [] : [req.user.id];
 
     const [projects, taskStats, sprintStats, memberStats, overdueStats] = await Promise.all([
       // Active projects
@@ -31,7 +31,7 @@ router.get('/portfolio', async (req, res) => {
         WHERE ${projectFilter} AND p.status = 'active'
         ORDER BY p.created_at DESC
         LIMIT 20
-      `, [projectParam]),
+      `, projectParams),
 
       // Overall task completion rate (last 30 days)
       queryOne(`
@@ -43,7 +43,7 @@ router.get('/portfolio', async (req, res) => {
         FROM tasks t
         JOIN projects p ON p.id = t.project_id
         WHERE ${projectFilter} AND t.parent_task_id IS NULL
-      `, [projectParam]),
+      `, projectParams),
 
       // Sprint on-time delivery rate
       queryOne(`
@@ -54,7 +54,7 @@ router.get('/portfolio', async (req, res) => {
         FROM sprints s
         JOIN projects p ON p.id = s.project_id
         WHERE ${projectFilter}
-      `, [projectParam]),
+      `, projectParams),
 
       // Team productivity (tasks done per member last 30 days)
       queryAll(`
@@ -72,7 +72,7 @@ router.get('/portfolio', async (req, res) => {
         GROUP BY u.id, u.name, u.avatar_url
         ORDER BY tasks_done DESC
         LIMIT 10
-      `, [projectParam]),
+      `, projectParams),
 
       // Overdue tasks by project
       queryAll(`
@@ -86,7 +86,7 @@ router.get('/portfolio', async (req, res) => {
           AND t.parent_task_id IS NULL
         GROUP BY p.id, p.name, p.color
         ORDER BY overdue_count DESC
-      `, [projectParam]),
+      `, projectParams),
     ]);
 
     // Completion trend — last 8 weeks
@@ -102,7 +102,7 @@ router.get('/portfolio', async (req, res) => {
         AND t.parent_task_id IS NULL
       GROUP BY DATE_TRUNC('week', updated_at)::date
       ORDER BY week
-    `, [projectParam]);
+    `, projectParams);
 
     res.json({
       projects,
