@@ -8,6 +8,26 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router({ mergeParams: true });
 router.use(authenticate);
 
+// Verify caller belongs to the project that owns the comment's task (or is admin)
+async function requireCommentAccess(req, res, next) {
+  try {
+    if (['admin', 'super_admin'].includes(req.user.role)) return next();
+    const comment = await queryOne('SELECT task_id FROM comments WHERE id = ?', [req.params.commentId]);
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+    const task = await queryOne('SELECT project_id FROM tasks WHERE id = ?', [comment.task_id]);
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    const member = await queryOne(
+      'SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?',
+      [task.project_id, req.user.id]
+    );
+    if (!member) return res.status(403).json({ error: 'Access denied' });
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+router.use(requireCommentAccess);
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**

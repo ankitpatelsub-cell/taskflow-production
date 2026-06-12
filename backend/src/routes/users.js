@@ -46,8 +46,12 @@ router.post('/', requireMinRole('admin'), async (req, res) => {
   }
 });
 
-// GET /api/users/:id
+// GET /api/users/:id — self or admin only
 router.get('/:id', async (req, res) => {
+  const isAdmin = hasMinRole(req.user.role, 'admin');
+  if (req.user.id !== req.params.id && !isAdmin) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   try {
     const user = await queryOne(
       'SELECT id, name, email, role, avatar_url, timezone, is_active, created_at FROM users WHERE id = ?',
@@ -83,7 +87,11 @@ router.patch('/:id', async (req, res) => {
     if (name !== undefined)       { sets.push('name = ?');       vals.push(name); }
     if (avatar_url !== undefined)  { sets.push('avatar_url = ?');  vals.push(avatar_url); }
     if (timezone !== undefined)    { sets.push('timezone = ?');    vals.push(timezone); }
-    if (is_active !== undefined)   { sets.push('is_active = ?');   vals.push(is_active); }
+    if (is_active !== undefined) {
+      if (!isAdmin) return res.status(403).json({ error: 'Only admins can change account active status' });
+      sets.push('is_active = ?');
+      vals.push(is_active);
+    }
     if (role !== undefined)        { sets.push('role = ?');        vals.push(role); }
 
     if (sets.length) {

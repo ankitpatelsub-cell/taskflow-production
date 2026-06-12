@@ -16,13 +16,23 @@ router.post('/', authenticate, async (req, res) => {
     const { email, projectId, role = 'member' } = req.body;
     if (!email || !projectId) return res.status(400).json({ error: 'email and projectId required' });
 
-    // Check requester has project access
+    // Invitations may only grant project-level roles, never global system roles
+    const INVITABLE_ROLES = ['member', 'viewer'];
+    if (!INVITABLE_ROLES.includes(role)) {
+      return res.status(400).json({ error: 'Invalid role; invitations can only grant member or viewer' });
+    }
+
+    const isAdminOrAbove = ['admin', 'super_admin'].includes(req.user.role);
+
+    // Require project_manager or above — plain members cannot send invites
+    if (!isAdminOrAbove && req.user.role !== 'project_manager') {
+      return res.status(403).json({ error: 'Project manager or admin required to send invitations' });
+    }
     const member = await queryOne(
       'SELECT id FROM project_members WHERE project_id = ? AND user_id = ?',
       [projectId, req.user.id]
     );
-    const isAdminOrAbove = ['admin', 'super_admin'].includes(req.user.role);
-    if (!member && !isAdminOrAbove) return res.status(403).json({ error: 'Not a project member' });
+    if (!member && !isAdminOrAbove) return res.status(403).json({ error: 'Not a member of this project' });
 
     const project = await queryOne('SELECT * FROM projects WHERE id = ?', [projectId]);
     if (!project) return res.status(404).json({ error: 'Project not found' });

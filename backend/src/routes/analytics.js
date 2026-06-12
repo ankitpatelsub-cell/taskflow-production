@@ -11,6 +11,15 @@ router.get('/portfolio', async (req, res) => {
     const { workspace_id } = req.query;
     const isAdmin = ['admin', 'super_admin'].includes(req.user.role);
 
+    // Verify the caller is actually a member of the requested workspace
+    if (workspace_id && !isAdmin) {
+      const wsMember = await queryOne(
+        'SELECT 1 FROM workspace_members WHERE workspace_id = ? AND user_id = ?',
+        [workspace_id, req.user.id]
+      );
+      if (!wsMember) return res.status(403).json({ error: 'Not a workspace member' });
+    }
+
     // Projects the user can see
     const projectFilter = workspace_id
       ? `p.workspace_id = $1`

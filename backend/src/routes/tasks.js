@@ -552,7 +552,8 @@ router.delete('/:taskId', requireWriteAccess, async (req, res) => {
 router.patch('/:taskId/position', requireWriteAccess, async (req, res) => {
   try {
     const { status, position } = req.body;
-    const old = await queryOne('SELECT * FROM tasks WHERE id = ?', [req.params.taskId]);
+    const old = await queryOne('SELECT * FROM tasks WHERE id = ? AND project_id = ?', [req.params.taskId, req.params.projectId]);
+    if (!old) return res.status(404).json({ error: 'Task not found' });
 
     const sets = ['updated_at = NOW()'];
     const vals = [];

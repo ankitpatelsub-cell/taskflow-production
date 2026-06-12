@@ -6,6 +6,24 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router({ mergeParams: true });
 router.use(authenticate);
 
+// Verify caller belongs to the project that owns this task (or is admin)
+async function requireTaskAccess(req, res, next) {
+  try {
+    if (['admin', 'super_admin'].includes(req.user.role)) return next();
+    const task = await queryOne('SELECT project_id FROM tasks WHERE id = ?', [req.params.taskId]);
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    const member = await queryOne(
+      'SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?',
+      [task.project_id, req.user.id]
+    );
+    if (!member) return res.status(403).json({ error: 'Access denied' });
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+router.use(requireTaskAccess);
+
 function detectLinkType(url) {
   if (!url) return 'url';
   if (/github\.com.*\/pull\/\d+/.test(url))    return 'github_pr';

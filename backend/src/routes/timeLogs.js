@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
 // DELETE /api/tasks/:taskId/time-logs/:logId
 router.delete('/:logId', async (req, res) => {
   try {
-    const log = await queryOne('SELECT * FROM time_logs WHERE id = ?', [req.params.logId]);
+    const log = await queryOne('SELECT * FROM time_logs WHERE id = ? AND task_id = ?', [req.params.logId, req.params.taskId]);
     if (!log) return res.status(404).json({ error: 'Log not found' });
     if (log.user_id !== req.user.id && !['admin', 'super_admin'].includes(req.user.role)) {
       return res.status(403).json({ error: 'Forbidden' });
