@@ -45,10 +45,10 @@ router.get('/portfolio', async (req, res) => {
       // Overall task completion rate (last 30 days)
       queryOne(`
         SELECT
-          COUNT(*) FILTER (WHERE status = 'done') AS completed,
+          COUNT(*) FILTER (WHERE t.status = 'done') AS completed,
           COUNT(*) AS total,
-          COUNT(*) FILTER (WHERE status = 'done' AND updated_at >= NOW() - INTERVAL '30 days') AS completed_30d,
-          COUNT(*) FILTER (WHERE deadline < NOW() AND status != 'done') AS overdue
+          COUNT(*) FILTER (WHERE t.status = 'done' AND t.updated_at >= NOW() - INTERVAL '30 days') AS completed_30d,
+          COUNT(*) FILTER (WHERE t.deadline::timestamptz < NOW() AND t.status != 'done') AS overdue
         FROM tasks t
         JOIN projects p ON p.id = t.project_id
         WHERE ${projectFilter} AND t.parent_task_id IS NULL
@@ -58,8 +58,8 @@ router.get('/portfolio', async (req, res) => {
       queryOne(`
         SELECT
           COUNT(*) AS total_sprints,
-          COUNT(*) FILTER (WHERE status = 'completed') AS completed_sprints,
-          COUNT(*) FILTER (WHERE status = 'completed' AND end_date >= CURRENT_DATE) AS on_time_sprints
+          COUNT(*) FILTER (WHERE s.status = 'completed') AS completed_sprints,
+          COUNT(*) FILTER (WHERE s.status = 'completed' AND s.end_date >= CURRENT_DATE) AS on_time_sprints
         FROM sprints s
         JOIN projects p ON p.id = s.project_id
         WHERE ${projectFilter}
@@ -69,7 +69,7 @@ router.get('/portfolio', async (req, res) => {
       queryAll(`
         SELECT u.id, u.name, u.avatar_url,
           COUNT(t.id) FILTER (WHERE t.status = 'done') AS tasks_done,
-          COUNT(t.id) FILTER (WHERE t.status != 'done' AND t.deadline < NOW()) AS overdue_tasks,
+          COUNT(t.id) FILTER (WHERE t.status != 'done' AND t.deadline::timestamptz < NOW()) AS overdue_tasks,
           COALESCE(SUM(tl.duration_minutes), 0) AS total_minutes_logged
         FROM users u
         JOIN project_members pm ON pm.user_id = u.id
@@ -91,7 +91,7 @@ router.get('/portfolio', async (req, res) => {
         JOIN projects p ON p.id = t.project_id
         WHERE ${projectFilter}
           AND t.status != 'done'
-          AND t.deadline < NOW()
+          AND t.deadline::timestamptz < NOW()
           AND t.parent_task_id IS NULL
         GROUP BY p.id, p.name, p.color
         ORDER BY overdue_count DESC
@@ -101,7 +101,7 @@ router.get('/portfolio', async (req, res) => {
     // Completion trend — last 8 weeks
     const weeklyTrend = await queryAll(`
       SELECT
-        DATE_TRUNC('week', updated_at)::date AS week,
+        DATE_TRUNC('week', t.updated_at)::date AS week,
         COUNT(*) AS completed
       FROM tasks t
       JOIN projects p ON p.id = t.project_id
@@ -109,7 +109,7 @@ router.get('/portfolio', async (req, res) => {
         AND t.status = 'done'
         AND t.updated_at >= NOW() - INTERVAL '8 weeks'
         AND t.parent_task_id IS NULL
-      GROUP BY DATE_TRUNC('week', updated_at)::date
+      GROUP BY DATE_TRUNC('week', t.updated_at)::date
       ORDER BY week
     `, projectParams);
 
@@ -155,7 +155,7 @@ router.get('/projects/:projectId/health', async (req, res) => {
           COUNT(*) AS total,
           COUNT(*) FILTER (WHERE status = 'done') AS done,
           COUNT(*) FILTER (WHERE status = 'in_progress') AS in_progress,
-          COUNT(*) FILTER (WHERE deadline < NOW() AND status != 'done') AS overdue,
+          COUNT(*) FILTER (WHERE deadline::timestamptz < NOW() AND status != 'done') AS overdue,
           AVG(estimated_hours) FILTER (WHERE estimated_hours IS NOT NULL) AS avg_estimated,
           COALESCE(SUM(tl.duration_minutes), 0) / 60.0 AS actual_hours
         FROM tasks t
