@@ -7,7 +7,7 @@ const router = express.Router({ mergeParams: true });
 router.use(authenticate, requireProjectAccess);
 
 const VALID_TRIGGERS = ['task_status_changed', 'task_created', 'task_assigned'];
-const VALID_ACTIONS  = ['notify_assignee', 'notify_members', 'change_status'];
+const VALID_ACTIONS  = ['notify_assignee', 'notify_members', 'change_status', 'notify_slack'];
 
 // GET /api/projects/:projectId/automations
 router.get('/', async (req, res) => {

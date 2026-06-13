@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import { toast } from '@/components/ui/Toast';
 import { WebhooksSettings } from '@/components/settings/WebhooksSettings';
 import { SlackSettings } from '@/components/settings/SlackSettings';
+import { GuestAccessSettings } from '@/components/settings/GuestAccessSettings';
 import { useMutation } from '@tanstack/react-query';
 
 const COLORS = [
@@ -286,6 +287,12 @@ export function ProjectSettingsPage() {
         <div>
           <h3 className="font-bold text-gray-800 dark:text-white mb-4">Slack Integration</h3>
           <SlackSettings projectId={projectId} />
+        </div>
+
+        {/* Guest Access */}
+        <div>
+          <h3 className="font-bold text-gray-800 dark:text-white mb-4">Guest Access</h3>
+          <GuestAccessSettings projectId={projectId} />
         </div>
       </div>
     </div>

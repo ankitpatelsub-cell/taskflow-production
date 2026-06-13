@@ -51,6 +51,7 @@ const SprintDetailPage    = lazy(() => import('./pages/SprintDetailPage').then((
 const EpicsPage           = lazy(() => import('./pages/EpicsPage').then((m) => ({ default: m.EpicsPage })));
 const AuditLogPage        = lazy(() => import('./pages/AuditLogPage').then((m) => ({ default: m.AuditLogPage })));
 const PublicSharePage     = lazy(() => import('./pages/PublicSharePage').then((m) => ({ default: m.PublicSharePage })));
+const GuestViewPage       = lazy(() => import('./pages/GuestViewPage').then((m) => ({ default: m.GuestViewPage })));
 const AnalyticsPage         = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const WorkspaceSettingsPage = lazy(() => import('./pages/WorkspaceSettingsPage').then((m) => ({ default: m.WorkspaceSettingsPage })));
 
@@ -74,6 +75,7 @@ const verifyEmailRoute    = createRoute({ getParentRoute: () => rootRoute, path:
 const privacyRoute        = createRoute({ getParentRoute: () => rootRoute, path: '/privacy',                 component: PrivacyPolicyPage });
 const termsRoute          = createRoute({ getParentRoute: () => rootRoute, path: '/terms',                   component: TermsPage });
 const publicShareRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/share/$token',             component: S(PublicSharePage) });
+const guestViewRoute      = createRoute({ getParentRoute: () => rootRoute, path: '/guest/$token',             component: S(GuestViewPage) });
 const notFoundRoute       = createRoute({ getParentRoute: () => rootRoute, path: '*',                        component: NotFoundPage });
 
 const indexRoute = createRoute({
@@ -133,6 +135,7 @@ export const routeTree = rootRoute.addChildren([
   termsRoute,
   indexRoute,
   publicShareRoute,
+  guestViewRoute,
   appRoute.addChildren(routes),
   notFoundRoute,
 ]);

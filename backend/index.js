@@ -59,6 +59,8 @@ const analyticsRoutes      = require('./src/routes/analytics');
 const aiPlanningRoutes     = require('./src/routes/aiPlanning');
 const sprintInsightsRoutes = require('./src/routes/sprintInsights');
 const workspaceRoutes      = require('./src/routes/workspaces');
+const guestRoutes          = require('./src/routes/guests');
+const guestPublicRoutes    = require('./src/routes/guestPublic');
 
 const app = express();
 const server = http.createServer(app);
@@ -187,6 +189,8 @@ app.use('/api/auth/2fa',                        twoFactorRoutes);
 app.use('/api/projects/:projectId/ai',          aiTaskRoutes);
 app.use('/api/projects/:projectId/workload',     workloadRoutes);
 app.use('/api/projects/:projectId/automations',  automationRoutes);
+app.use('/api/projects/:projectId/guests',       guestRoutes);
+app.use('/api/guest',                            guestPublicRoutes); // public — no auth
 app.use('/api/projects/:projectId/ai-summary',   aiSummaryRoutes);
 app.use('/api/templates',                    templateRoutes);
 app.use('/api/analytics',                    analyticsRoutes);

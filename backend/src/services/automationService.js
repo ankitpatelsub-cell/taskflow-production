@@ -77,6 +77,14 @@ async function runAutomations(triggerType, task, old, actor) {
         );
         logger.info({ automationId: a.id, taskId: task.id, newStatus: a.action_value }, 'automation.status_changed');
       }
+
+      if (a.action_type === 'notify_slack') {
+        const { notifySlack } = require('./slackService');
+        const msg = a.action_value
+          || `[${a.name}] Task "${task.title}" — ${triggerType.replace(/_/g, ' ')}`;
+        await notifySlack(task.project_id, 'automation', { ...task, _msg: msg });
+        logger.debug({ automationId: a.id, taskId: task.id }, 'automation.slack_notified');
+      }
     }
   } catch (err) {
     logger.error({ triggerType, taskId: task.id, projectId: task.project_id, err: err.message }, 'automation.run_failed');

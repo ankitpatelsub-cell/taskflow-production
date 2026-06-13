@@ -18,6 +18,7 @@ const ACTION_LABELS = {
   notify_assignee: 'Notify assignee',
   notify_members:  'Notify all members',
   change_status:   'Change status to',
+  notify_slack:    'Post to Slack',
 };
 
 const STATUSES = ['todo', 'in_progress', 'review', 'done'];
@@ -155,6 +156,15 @@ export function AutomationsPage() {
                     <option value="">select status…</option>
                     {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS_MAP[s]}</option>)}
                   </select>
+                )}
+                {form.action_type === 'notify_slack' && (
+                  <input
+                    type="text"
+                    placeholder="Optional custom message…"
+                    value={form.action_value}
+                    onChange={e => setForm(f => ({ ...f, action_value: e.target.value }))}
+                    className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1"
+                  />
                 )}
               </div>
 

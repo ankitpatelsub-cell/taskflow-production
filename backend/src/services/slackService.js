@@ -41,6 +41,8 @@ async function notifySlack(projectId, event, task) {
     } else if (event === 'updated') {
       const status = task.status ? `${STATUS_EMOJI[task.status] || ''} → ${task.status}` : '';
       text = `🔄 *Task updated* in *${project.name}*: ${task.title}${status ? ` (${status})` : ''}`;
+    } else if (event === 'automation') {
+      text = task._msg || `[Automation] Task "${task.title}"`;
     } else {
       return;
     }
