@@ -54,6 +54,7 @@ const PublicSharePage     = lazy(() => import('./pages/PublicSharePage').then((m
 const GuestViewPage       = lazy(() => import('./pages/GuestViewPage').then((m) => ({ default: m.GuestViewPage })));
 const AnalyticsPage         = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const WorkspaceSettingsPage = lazy(() => import('./pages/WorkspaceSettingsPage').then((m) => ({ default: m.WorkspaceSettingsPage })));
+const MySpacePage           = lazy(() => import('./pages/MySpacePage').then((m) => ({ default: m.MySpacePage })));
 
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 const PageLoader  = () => <div className="p-6 space-y-4"><TableSkeleton rows={8} /></div>;
@@ -111,6 +112,7 @@ const routes = [
   { path: '/projects/$projectId/epics',         Component: S(EpicsPage) },
   { path: '/projects/$projectId/members',       Component: S(MembersPage) },
   { path: '/projects/$projectId/settings',      Component: S(ProjectSettingsPage) },
+  { path: '/my-space',                           Component: S(MySpacePage) },
   { path: '/profile',                           Component: S(ProfilePage) },
   { path: '/notifications',                     Component: S(NotificationsPage) },
   { path: '/billing',                           Component: S(BillingPage) },

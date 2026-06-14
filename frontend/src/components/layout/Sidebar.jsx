@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   LayoutDashboard, Bell, User, Shield, Plus, ChevronDown,
-  ChevronRight, Database, LogOut, CreditCard, BarChart3, Settings,
+  ChevronRight, Database, LogOut, CreditCard, BarChart3, Settings, Lock,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjects } from '@/hooks/useProjects';
@@ -109,6 +109,7 @@ export function Sidebar() {
 
           <SectionLabel>{t('nav.menu')}</SectionLabel>
           <NavItem to="/app/dashboard" icon={LayoutDashboard}>{t('nav.dashboard')}</NavItem>
+          <NavItem to="/app/my-space" icon={Lock}>My Space</NavItem>
           <NavItem to="/app/analytics" icon={BarChart3}>Analytics</NavItem>
           <NavItem to="/app/notifications" icon={Bell} badge={unreadCount}>{t('nav.notifications')}</NavItem>
           <NavItem to="/app/profile" icon={User}>{t('nav.profile')}</NavItem>
