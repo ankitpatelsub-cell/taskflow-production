@@ -393,7 +393,7 @@ router.post('/', requireWriteAccess, validate(createTaskSchema), async (req, res
   try {
     const {
       title, description, priority, status, assignee_id, deadline, estimated_hours,
-      parent_task_id, tag_ids,
+      story_points, parent_task_id, tag_ids,
       recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at,
     } = req.body;
 
@@ -413,13 +413,14 @@ router.post('/', requireWriteAccess, validate(createTaskSchema), async (req, res
     await execute(`
       INSERT INTO tasks (
         id, project_id, parent_task_id, title, description, status, priority,
-        assignee_id, created_by, deadline, estimated_hours, position,
+        assignee_id, created_by, deadline, estimated_hours, story_points, position,
         recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `, [
       id, req.params.projectId, parent_task_id || null,
       title, description || null, status || 'todo', priority || 'medium',
-      assignee_id || null, req.user.id, deadline || null, estimated_hours || null, maxPosRow.pos,
+      assignee_id || null, req.user.id, deadline || null, estimated_hours || null,
+      story_points ? parseInt(story_points) : null, maxPosRow.pos,
       recurrence_rule || null, recurrence_interval || 1,
       recurrence_days || null, recurrence_ends_at || null,
     ]);
@@ -467,7 +468,7 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
     if (!old) return res.status(404).json({ error: 'Task not found' });
 
     const {
-      title, description, status, priority, assignee_id, deadline, estimated_hours, tag_ids,
+      title, description, status, priority, assignee_id, deadline, estimated_hours, story_points, tag_ids,
       recurrence_rule, recurrence_interval, recurrence_days, recurrence_ends_at, reminder_at,
     } = req.body;
 
@@ -481,6 +482,7 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
     if (assignee_id !== undefined)     { sets.push('assignee_id = ?');        vals.push(assignee_id || null); }
     if (deadline !== undefined)        { sets.push('deadline = ?');           vals.push(deadline || null); }
     if (estimated_hours !== undefined) { sets.push('estimated_hours = ?');    vals.push(estimated_hours || null); }
+    if (story_points !== undefined)    { sets.push('story_points = ?');       vals.push(story_points ? parseInt(story_points) : null); }
     if (recurrence_rule !== undefined) { sets.push('recurrence_rule = ?');    vals.push(recurrence_rule || null); }
     if (recurrence_interval !== undefined) { sets.push('recurrence_interval = ?'); vals.push(recurrence_interval); }
     if (recurrence_days !== undefined) { sets.push('recurrence_days = ?');    vals.push(recurrence_days || null); }

@@ -10,6 +10,7 @@ import { toast } from '@/components/ui/Toast';
 import { WebhooksSettings } from '@/components/settings/WebhooksSettings';
 import { SlackSettings } from '@/components/settings/SlackSettings';
 import { GuestAccessSettings } from '@/components/settings/GuestAccessSettings';
+import { WorkflowSettings } from '@/components/settings/WorkflowSettings';
 import { useMutation } from '@tanstack/react-query';
 
 const COLORS = [
@@ -275,6 +276,12 @@ export function ProjectSettingsPage() {
               <Button onClick={() => enableShare.mutate()} disabled={enableShare.isPending}>Enable Public Link</Button>
             )}
           </div>
+        </div>
+
+        {/* Workflow Statuses */}
+        <div>
+          <h3 className="font-bold text-gray-800 dark:text-white mb-4">Workflow Statuses</h3>
+          <WorkflowSettings projectId={projectId} />
         </div>
 
         {/* Webhooks */}

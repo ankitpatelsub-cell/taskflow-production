@@ -69,6 +69,11 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
       <div className="flex items-center justify-between gap-2 mt-2.5">
         <div className="flex items-center gap-1.5">
           <PriorityBadge priority={task.priority} />
+          {task.story_points && (
+            <span className="inline-flex items-center text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded">
+              {task.story_points} SP
+            </span>
+          )}
           {task.recurrence_rule && (
             <span
               title={`Repeats ${task.recurrence_rule}${task.recurrence_interval > 1 ? ` every ${task.recurrence_interval}` : ''}`}

@@ -300,14 +300,14 @@ router.get('/:sprintId/burndown', async (req, res) => {
 
     // All tasks currently (or previously) in this sprint
     const tasks = await queryAll(
-      'SELECT id, status FROM tasks WHERE sprint_id = ? AND project_id = ?',
+      'SELECT id, status, COALESCE(story_points, 1) AS points FROM tasks WHERE sprint_id = ? AND project_id = ?',
       [req.params.sprintId, req.params.projectId]
     );
 
-    const totalTasks = tasks.length;
-    if (totalTasks === 0) {
-      return res.json([]);
-    }
+    if (tasks.length === 0) return res.json([]);
+
+    const totalPoints = tasks.reduce((sum, t) => sum + (t.points || 1), 0);
+    const pointsByTaskId = Object.fromEntries(tasks.map(t => [t.id, t.points || 1]));
 
     const taskIds = tasks.map((t) => t.id);
 
@@ -328,7 +328,7 @@ router.get('/:sprintId/burndown', async (req, res) => {
         ORDER BY created_at
       `, taskIds);
 
-      // For each task keep only the earliest 'done' transition that falls within the sprint
+      // For each task keep only the earliest 'done' transition; accumulate story points
       const seenTasks = new Set();
       for (const row of activityRows) {
         if (!seenTasks.has(row.entity_id)) {
@@ -336,12 +336,12 @@ router.get('/:sprintId/burndown', async (req, res) => {
           const dateStr = typeof row.completed_date === 'string'
             ? row.completed_date
             : new Date(row.completed_date).toISOString().slice(0, 10);
-          completionsByDate[dateStr] = (completionsByDate[dateStr] || 0) + 1;
+          completionsByDate[dateStr] = (completionsByDate[dateStr] || 0) + (pointsByTaskId[row.entity_id] || 1);
         }
       }
     }
 
-    // Build the day-by-day series
+    // Build the day-by-day series (in story points)
     const start = new Date(sprint.start_date + 'T00:00:00Z');
     const end   = new Date(sprint.end_date   + 'T00:00:00Z');
     const today = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z');
@@ -359,25 +359,19 @@ router.get('/:sprintId/burndown', async (req, res) => {
       if (hasActivityData) {
         cumulativeCompleted += (completionsByDate[dateStr] || 0);
       } else if (current > effectiveEnd) {
-        // Future days — linear projection based on elapsed progress
         const totalDays = Math.round((end - start) / 86400000) || 1;
-        const elapsed   = Math.round((effectiveEnd - start) / 86400000);
         const dayIndex  = Math.round((current - start) / 86400000);
-        // Simple linear ideal line (no actual data, just projection)
-        cumulativeCompleted = Math.round((dayIndex / totalDays) * totalTasks);
+        cumulativeCompleted = Math.round((dayIndex / totalDays) * totalPoints);
       } else {
-        // Days up to today with no activity data: use current task statuses as a rough proxy
-        // (all "done" tasks are treated as completed on the last day with data = today)
-        const doneTasks = tasks.filter((t) => t.status === 'done').length;
-        if (current >= effectiveEnd) {
-          cumulativeCompleted = doneTasks;
-        }
+        const donePoints = tasks.filter(t => t.status === 'done').reduce((s, t) => s + t.points, 0);
+        if (current >= effectiveEnd) cumulativeCompleted = donePoints;
       }
 
       series.push({
         date:      dateStr,
-        remaining: Math.max(0, totalTasks - cumulativeCompleted),
-        completed: Math.min(totalTasks, cumulativeCompleted),
+        remaining: Math.max(0, totalPoints - cumulativeCompleted),
+        completed: Math.min(totalPoints, cumulativeCompleted),
+        total:     totalPoints,
       });
 
       current.setUTCDate(current.getUTCDate() + 1);

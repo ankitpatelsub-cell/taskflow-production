@@ -109,6 +109,19 @@ router.post('/', async (req, res) => {
       'INSERT INTO project_members (id, project_id, user_id) VALUES (?, ?, ?)',
       [uuidv4(), id, req.user.id]
     );
+    // Seed default workflow statuses
+    const DEFAULT_STATUSES = [
+      { name: 'To Do',       key: 'todo',        color: '#6b7280', bg_color: '#f3f4f6', position: 0, is_default: true  },
+      { name: 'In Progress', key: 'in_progress',  color: '#6366f1', bg_color: '#eef2ff', position: 1, is_default: false },
+      { name: 'Review',      key: 'review',       color: '#f59e0b', bg_color: '#fffbeb', position: 2, is_default: false },
+      { name: 'Done',        key: 'done',         color: '#10b981', bg_color: '#ecfdf5', position: 3, is_default: false },
+    ];
+    for (const s of DEFAULT_STATUSES) {
+      await execute(
+        'INSERT INTO project_statuses (id, project_id, name, key, color, bg_color, position, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING',
+        [uuidv4(), id, s.name, s.key, s.color, s.bg_color, s.position, s.is_default]
+      );
+    }
     await logActivity('project', id, req.user.id, 'created', null, { name });
     req.log.info({ projectId: id, name, userId: req.user.id, workspace_id }, 'project.created');
     res.status(201).json({ id, name, description, color, workspace_id });

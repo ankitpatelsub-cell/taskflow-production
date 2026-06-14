@@ -9,11 +9,14 @@ import { useTasks, useMoveTask } from '@/hooks/useTasks';
 import { STATUS_LABELS } from '@/lib/utils';
 import { BoardSkeleton } from '@/components/ui/Skeleton';
 import { useTranslation } from 'react-i18next';
-
-const COLUMNS = ['todo', 'in_progress', 'review', 'done'];
+import { useProjectStatuses } from '@/hooks/useProjectStatuses';
 
 export function KanbanBoard({ projectId, filters = {} }) {
   const { t } = useTranslation();
+  const { data: projectStatuses } = useProjectStatuses(projectId);
+  const COLUMNS = projectStatuses?.length
+    ? projectStatuses.map(s => s.key)
+    : ['todo', 'in_progress', 'review', 'done'];
   const { data, isLoading } = useTasks(projectId, {
     ...(filters.assignee  && { assignee:  filters.assignee }),
     ...(filters.priority  && { priority:  filters.priority }),
@@ -74,11 +77,12 @@ export function KanbanBoard({ projectId, filters = {} }) {
         {COLUMNS.map((status) => {
           const colTasks = tasks.filter((t) => t.status === status);
           if (hasFilters && colTasks.length === 0) return null;
+          const statusLabel = projectStatuses?.find(s => s.key === status)?.name || STATUS_LABELS[status] || status;
           return (
             <KanbanColumn
               key={status}
               status={status}
-              title={STATUS_LABELS[status]}
+              title={statusLabel}
               tasks={colTasks}
               projectId={projectId}
               filtered={hasFilters}

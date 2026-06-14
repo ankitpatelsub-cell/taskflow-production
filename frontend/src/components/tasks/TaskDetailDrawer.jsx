@@ -6,7 +6,7 @@ import { useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell, GitBranch, Copy } from 'lucide-react';
+import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell, GitBranch, Copy, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
@@ -323,6 +323,26 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                       </div>
                     </div>
                   )}
+
+                  {/* Story Points */}
+                  <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Story Points</p>
+                    <div className="flex items-center gap-2">
+                      <Zap size={14} className="text-indigo-400" />
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        defaultValue={task.story_points || ''}
+                        placeholder="—"
+                        onBlur={(e) => {
+                          const val = e.target.value ? parseInt(e.target.value) : null;
+                          if (val !== task.story_points) update.mutate({ story_points: val });
+                        }}
+                        className="w-16 text-sm font-medium text-gray-800 dark:text-white bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-indigo-300 rounded px-1"
+                      />
+                    </div>
+                  </div>
 
                   {/* Created by */}
                   <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100">
