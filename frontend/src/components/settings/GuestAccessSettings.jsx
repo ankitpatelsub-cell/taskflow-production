@@ -99,7 +99,7 @@ function CreateGuestLinkModal({ projectId, onClose }) {
     <Modal open onClose={onClose} title="Create guest link">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Label</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Label *</label>
           <Input
             value={label}
             onChange={e => setLabel(e.target.value)}

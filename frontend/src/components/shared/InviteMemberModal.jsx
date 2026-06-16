@@ -43,7 +43,7 @@ export function InviteMemberModal({ projectId, onClose }) {
           )}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Email address
+              Email address *
             </label>
             <Input
               type="email"

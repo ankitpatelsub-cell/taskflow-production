@@ -125,8 +125,8 @@ export function ProjectSettingsPage() {
           <h3 className="font-bold text-gray-800 dark:text-white mb-4">Project Settings</h3>
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Name *</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Description</label>
