@@ -149,16 +149,17 @@ router.post('/register', async (req, res) => {
 
     const verifyToken = crypto.randomBytes(32).toString('hex');
     const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    execute(
+    // Await the DB write to ensure the token is stored before sending email
+    await execute(
       'INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)',
       [uuidv4(), id, hashToken(verifyToken), verifyExpires]
-    ).then(() =>
-      sendWelcomeEmail({
-        to: user.email,
-        name: user.name,
-        verifyUrl: `${APP_URL}/verify-email/${verifyToken}`,
-      })
-    ).catch((e) => req.log.warn({ userId: id, err: e.message }, 'auth.welcome_email_failed'));
+    );
+    // Fire-and-forget the email send — failure is logged but does not fail the response
+    sendWelcomeEmail({
+      to: user.email,
+      name: user.name,
+      verifyUrl: `${APP_URL}/verify-email/${verifyToken}`,
+    }).catch((e) => req.log.warn({ userId: id, err: e.message }, 'auth.welcome_email_failed'));
 
     res.status(201).json({
       accessToken,

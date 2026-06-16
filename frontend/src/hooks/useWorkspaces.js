@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import api from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { toast } from '@/components/ui/Toast';
@@ -12,18 +13,24 @@ export const workspaceKeys = {
 
 export function useWorkspaces() {
   const { setWorkspaces, currentWorkspaceId, setCurrentWorkspace } = useWorkspaceStore();
-  return useQuery({
+  const query = useQuery({
     queryKey: workspaceKeys.all,
     queryFn: () => api.get('/workspaces').then((r) => r.data),
-    onSuccess: (data) => {
-      setWorkspaces(data);
-      // Auto-select first workspace if none selected or current no longer exists
-      if (data.length > 0 && (!currentWorkspaceId || !data.find((w) => w.id === currentWorkspaceId))) {
-        setCurrentWorkspace(data[0].id);
-      }
-    },
     staleTime: 30_000,
   });
+
+  // React Query v5 removed onSuccess from useQuery; synchronise store via useEffect
+  useEffect(() => {
+    const data = query.data;
+    if (!data) return;
+    setWorkspaces(data);
+    // Auto-select first workspace if none selected or current no longer exists
+    if (data.length > 0 && (!currentWorkspaceId || !data.find((w) => w.id === currentWorkspaceId))) {
+      setCurrentWorkspace(data[0].id);
+    }
+  }, [query.data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return query;
 }
 
 export function useWorkspace(id) {

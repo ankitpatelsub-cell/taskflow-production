@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { Plus, Play, CheckCheck, Trash2, Target, CalendarDays, ListChecks } from 'lucide-react';
 import { useProject } from '@/hooks/useProjects';
+import { toast } from '@/components/ui/Toast';
 import {
   useSprints,
   useCreateSprint,
@@ -98,7 +99,10 @@ function SprintCard({ sprint, projectId, canWrite, onNavigate }) {
                 size="sm"
                 variant="secondary"
                 loading={startMutation.isPending}
-                onClick={() => startMutation.mutate()}
+                onClick={() => startMutation.mutate(undefined, {
+                  onSuccess: () => toast.success('Sprint started'),
+                  onError: (e) => toast.error(e?.response?.data?.error || 'Failed to start sprint'),
+                })}
                 title="Start sprint"
               >
                 <Play size={13} /> Start
@@ -109,7 +113,10 @@ function SprintCard({ sprint, projectId, canWrite, onNavigate }) {
                 size="sm"
                 variant="success"
                 loading={completeMutation.isPending}
-                onClick={() => completeMutation.mutate()}
+                onClick={() => completeMutation.mutate(undefined, {
+                  onSuccess: () => toast.success('Sprint completed'),
+                  onError: (e) => toast.error(e?.response?.data?.error || 'Failed to complete sprint'),
+                })}
                 title="Complete sprint"
               >
                 <CheckCheck size={13} /> Complete
@@ -142,9 +149,14 @@ function SprintCard({ sprint, projectId, canWrite, onNavigate }) {
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1 flex-wrap">
-          <ListChecks size={12} />
-          <span>{totalTasks} task{totalTasks !== 1 ? 's' : ''}</span>
+        <div className="flex items-center justify-between gap-1.5 text-xs text-gray-400 mb-1 flex-wrap">
+          <span className="flex items-center gap-1">
+            <ListChecks size={12} />
+            <span>{totalTasks} task{totalTasks !== 1 ? 's' : ''}</span>
+          </span>
+          {totalTasks > 0 && (
+            <span className="font-semibold text-gray-500">{Math.round((doneTasks / totalTasks) * 100)}%</span>
+          )}
         </div>
 
         <TaskProgress done={doneTasks} total={totalTasks} />
@@ -167,14 +179,19 @@ function CreateSprintModal({ projectId, onClose }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!form.name.trim()) {
-      setErrors({ name: 'Sprint name is required' });
-      return;
+    const errs = {};
+    if (!form.name.trim()) errs.name = 'Sprint name is required';
+    if (form.start_date && form.end_date && form.end_date < form.start_date) {
+      errs.end_date = 'End date must be on or after the start date';
     }
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     const payload = { name: form.name.trim(), goal: form.goal.trim() || null };
     if (form.start_date) payload.start_date = form.start_date;
     if (form.end_date)   payload.end_date   = form.end_date;
-    createMutation.mutate(payload, { onSuccess: onClose });
+    createMutation.mutate(payload, {
+      onSuccess: onClose,
+      onError: (e) => toast.error(e?.response?.data?.error || 'Failed to create sprint'),
+    });
   }
 
   const inputClass =
@@ -227,8 +244,9 @@ function CreateSprintModal({ projectId, onClose }) {
             name="end_date"
             value={form.end_date}
             onChange={handleChange}
-            className={inputClass}
+            className={cn(inputClass, errors.end_date && 'border-red-300 ring-1 ring-red-300')}
           />
+          {errors.end_date && <p className="text-xs text-red-500 mt-1">{errors.end_date}</p>}
         </div>
       </div>
 

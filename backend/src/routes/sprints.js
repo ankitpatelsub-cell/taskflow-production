@@ -129,10 +129,26 @@ router.patch('/:sprintId', requireWriteAccess, async (req, res) => {
 
     const { name, goal, start_date, end_date, status } = req.body;
 
+    const VALID_SPRINT_STATUSES = ['planning', 'active', 'completed'];
+    const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (name !== undefined && !String(name).trim()) {
+      return res.status(400).json({ error: 'name cannot be empty' });
+    }
+    if (status !== undefined && !VALID_SPRINT_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be one of: planning, active, completed' });
+    }
+    if (start_date && !DATE_RE.test(start_date)) {
+      return res.status(400).json({ error: 'start_date must be in YYYY-MM-DD format' });
+    }
+    if (end_date && !DATE_RE.test(end_date)) {
+      return res.status(400).json({ error: 'end_date must be in YYYY-MM-DD format' });
+    }
+
     const sets = ['updated_at = NOW()'];
     const vals = [];
 
-    if (name !== undefined)       { sets.push('name = ?');       vals.push(name); }
+    if (name !== undefined)       { sets.push('name = ?');       vals.push(String(name).trim()); }
     if (goal !== undefined)       { sets.push('goal = ?');       vals.push(goal || null); }
     if (start_date !== undefined) { sets.push('start_date = ?'); vals.push(start_date || null); }
     if (end_date !== undefined)   { sets.push('end_date = ?');   vals.push(end_date || null); }
@@ -206,6 +222,7 @@ router.post('/:sprintId/complete', requireWriteAccess, async (req, res) => {
     );
     if (!sprint) return res.status(404).json({ error: 'Sprint not found' });
     if (sprint.status === 'completed') return res.status(400).json({ error: 'Sprint is already completed' });
+    if (sprint.status !== 'active') return res.status(400).json({ error: 'Only active sprints can be completed' });
 
     const today = new Date().toISOString().slice(0, 10);
     await execute(

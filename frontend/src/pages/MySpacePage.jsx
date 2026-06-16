@@ -165,7 +165,7 @@ function TaskRow({ task, onToggle, onDelete, onUpdate }) {
             </span>
           )}
           {task.notes && (
-            <span className="text-xs text-gray-300 italic truncate max-w-[200px]">{task.notes}</span>
+            <span className="text-xs text-gray-300 italic truncate max-w-[200px]" title={task.notes}>{task.notes}</span>
           )}
         </div>
       </div>
@@ -216,6 +216,7 @@ export function MySpacePage() {
       qc.invalidateQueries({ queryKey: ['personal-tasks'] });
       toast.success('Cleared completed tasks');
     },
+    onError: () => toast.error('Failed to clear completed tasks'),
   });
 
   const todo = tasks.filter(t => t.status === 'todo');
@@ -288,11 +289,20 @@ export function MySpacePage() {
             );
           })}
 
-          {todo.length === 0 && tasks.length === 0 && (
+          {todo.length === 0 && (
             <div className="text-center py-16 text-gray-300">
               <Check size={40} className="mx-auto mb-3 opacity-40" />
-              <p className="text-sm text-gray-400">Your personal space is empty</p>
-              <p className="text-xs mt-1">Add a task above to get started</p>
+              {tasks.length === 0 ? (
+                <>
+                  <p className="text-sm text-gray-400">Your personal space is empty</p>
+                  <p className="text-xs mt-1">Add a task above to get started</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-400">All to-dos cleared!</p>
+                  <p className="text-xs mt-1">Check the completed section below</p>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -316,13 +326,13 @@ export function MySpacePage() {
                     key={task.id}
                     task={task}
                     onToggle={(id, status) => update.mutate({ id, data: { status } })}
-                    onDelete={(id) => remove.mutate(id)}
+                    onDelete={(id) => { if (confirm('Delete this task?')) remove.mutate(id); }}
                     onUpdate={(id, data) => update.mutate({ id, data })}
                   />
                 ))}
               </div>
               <button
-                onClick={() => clearDone.mutate()}
+                onClick={() => { if (confirm('Clear all completed tasks? This cannot be undone.')) clearDone.mutate(); }}
                 className="mt-3 text-xs text-gray-400 hover:text-red-400 transition-colors flex items-center gap-1"
               >
                 <Trash2 size={11} /> Clear all completed

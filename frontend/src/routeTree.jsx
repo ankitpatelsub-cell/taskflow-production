@@ -97,6 +97,25 @@ const appRoute = createRoute({
   component: AppShell,
 });
 
+// Redirect routes for convenience URLs
+const projectsIndexRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/projects',
+  beforeLoad: () => { throw redirect({ to: '/app/dashboard' }); },
+});
+
+const adminIndexRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/admin',
+  beforeLoad: () => { throw redirect({ to: '/app/admin/users' }); },
+});
+
+const projectIndexRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/projects/$projectId',
+  beforeLoad: ({ params }) => { throw redirect({ to: `/app/projects/${params.projectId}/board` }); },
+});
+
 const routes = [
   { path: '/dashboard',                         Component: S(DashboardPage) },
   { path: '/projects/$projectId/board',         Component: S(KanbanBoardPage, BoardLoader) },
@@ -138,6 +157,6 @@ export const routeTree = rootRoute.addChildren([
   indexRoute,
   publicShareRoute,
   guestViewRoute,
-  appRoute.addChildren(routes),
+  appRoute.addChildren([...routes, projectsIndexRoute, adminIndexRoute, projectIndexRoute]),
   notFoundRoute,
 ]);

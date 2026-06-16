@@ -19,7 +19,7 @@ import {
   Users,
 } from 'lucide-react';
 import { usePortfolioAnalytics } from '@/hooks/useAnalytics';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, formatTimeAgo } from '@/lib/utils';
 
 // ── Skeleton helpers ──────────────────────────────────────────────────────────
 function Skeleton({ className }) {
@@ -228,8 +228,8 @@ function ProjectsHealthSection({ projects = [] }) {
                     {p.name}
                   </span>
                 </div>
-                <span className="text-xs text-gray-400 dark:text-slate-500 shrink-0">
-                  {p.last_activity ? formatDate(p.last_activity) : 'No activity'}
+                <span className="text-xs text-gray-400 dark:text-slate-500 shrink-0" title={p.last_activity ? formatDate(p.last_activity) : undefined}>
+                  {p.last_activity ? formatTimeAgo(p.last_activity) : 'No activity'}
                 </span>
               </div>
               <TaskProgressBar
@@ -324,7 +324,7 @@ function EmptyState() {
 
 // ── AnalyticsPage ─────────────────────────────────────────────────────────────
 export function AnalyticsPage() {
-  const { data, isLoading, isError } = usePortfolioAnalytics();
+  const { data, isLoading, isError, refetch } = usePortfolioAnalytics();
 
   if (isLoading) return <PageSkeleton />;
 
@@ -333,9 +333,15 @@ export function AnalyticsPage() {
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
           <AlertTriangle size={18} className="text-red-500 shrink-0" />
-          <p className="text-sm font-semibold text-red-700 dark:text-red-400">
-            Failed to load analytics. Please try again later.
+          <p className="text-sm font-semibold text-red-700 dark:text-red-400 flex-1">
+            Failed to load analytics. Please try again.
           </p>
+          <button
+            onClick={() => refetch()}
+            className="text-sm font-semibold text-red-700 dark:text-red-400 underline hover:no-underline shrink-0"
+          >
+            Try again
+          </button>
         </div>
       </div>
     );

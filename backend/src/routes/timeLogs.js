@@ -39,9 +39,10 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     if (!await requireTaskAccess(req, res)) return;
-    const { duration_minutes, note } = req.body;
-    if (!duration_minutes || duration_minutes < 1) {
-      return res.status(400).json({ error: 'duration_minutes must be at least 1' });
+    const { note } = req.body;
+    const duration_minutes = Number(req.body.duration_minutes);
+    if (!Number.isFinite(duration_minutes) || duration_minutes < 1) {
+      return res.status(400).json({ error: 'duration_minutes must be a positive number (at least 1)' });
     }
     if (duration_minutes > 1440) {
       return res.status(400).json({ error: 'Cannot log more than 24 hours at once' });
@@ -64,6 +65,7 @@ router.post('/', async (req, res) => {
 // DELETE /api/tasks/:taskId/time-logs/:logId
 router.delete('/:logId', async (req, res) => {
   try {
+    if (!await requireTaskAccess(req, res)) return;
     const log = await queryOne('SELECT * FROM time_logs WHERE id = ? AND task_id = ?', [req.params.logId, req.params.taskId]);
     if (!log) return res.status(404).json({ error: 'Log not found' });
     if (log.user_id !== req.user.id && !['admin', 'super_admin'].includes(req.user.role)) {

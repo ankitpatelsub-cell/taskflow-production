@@ -91,7 +91,9 @@ function calcNextDate(deadline, rule, interval = 1, days = null) {
   }
 
   if (rule === 'weekly') {
-    const targets = days ? JSON.parse(days).map(Number).sort((a, b) => a - b) : [d.getUTCDay()];
+    let parsed = null;
+    if (days) { try { parsed = JSON.parse(days); } catch { parsed = null; } }
+    const targets = parsed ? parsed.map(Number).sort((a, b) => a - b) : [d.getUTCDay()];
     const cur = d.getUTCDay();
     let found = null;
     for (let week = 0; week < interval + 1; week++) {
@@ -305,7 +307,13 @@ router.post('/import', requireWriteAccess, upload.single('file'), async (req, re
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-    const text = req.file.buffer.toString('utf-8');
+    const mimeOk = req.file.mimetype === 'text/csv' || req.file.mimetype === 'application/vnd.ms-excel' || req.file.originalname?.endsWith('.csv');
+    if (!mimeOk) return res.status(400).json({ error: 'File must be a CSV' });
+
+    // Strip UTF-8 BOM if present
+    const raw = req.file.buffer;
+    const hasBom = raw[0] === 0xef && raw[1] === 0xbb && raw[2] === 0xbf;
+    const text = raw.slice(hasBom ? 3 : 0).toString('utf-8');
     const rows = parseCSV(text);
     if (rows.length < 2) return res.status(400).json({ error: 'CSV must have a header row and at least one data row' });
 
@@ -475,7 +483,12 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
     const sets = ['updated_at = NOW()'];
     const vals = [];
 
-    if (title !== undefined)           { sets.push('title = ?');              vals.push(title); }
+    if (title !== undefined) {
+      const trimmedTitle = String(title).trim();
+      if (!trimmedTitle) return res.status(400).json({ error: 'title cannot be empty' });
+      sets.push('title = ?');
+      vals.push(trimmedTitle);
+    }
     if (description !== undefined)     { sets.push('description = ?');        vals.push(description); }
     if (status !== undefined)          { sets.push('status = ?');             vals.push(status); }
     if (priority !== undefined)        { sets.push('priority = ?');           vals.push(priority); }
@@ -554,6 +567,21 @@ router.delete('/:taskId', requireWriteAccess, async (req, res) => {
 router.patch('/:taskId/position', requireWriteAccess, async (req, res) => {
   try {
     const { status, position } = req.body;
+
+    if (status !== undefined) {
+      const DEFAULT_STATUSES = ['todo', 'in_progress', 'review', 'done'];
+      const customStatuses = await queryAll(
+        'SELECT key FROM project_statuses WHERE project_id = ?',
+        [req.params.projectId]
+      );
+      const validStatuses = customStatuses.length
+        ? customStatuses.map((s) => s.key)
+        : DEFAULT_STATUSES;
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+      }
+    }
+
     const old = await queryOne('SELECT * FROM tasks WHERE id = ? AND project_id = ?', [req.params.taskId, req.params.projectId]);
     if (!old) return res.status(404).json({ error: 'Task not found' });
 
@@ -585,6 +613,7 @@ router.patch('/bulk/update', requireWriteAccess, async (req, res) => {
   try {
     const { taskIds, updates } = req.body;
     if (!Array.isArray(taskIds) || !taskIds.length) return res.status(400).json({ error: 'taskIds required' });
+    if (taskIds.length > 100) return res.status(400).json({ error: 'Cannot bulk-update more than 100 tasks at once' });
 
     const allowed = ['status', 'priority', 'assignee_id'];
     const entries = Object.entries(updates || {}).filter(([k]) => allowed.includes(k));

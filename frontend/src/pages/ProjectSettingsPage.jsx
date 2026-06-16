@@ -51,7 +51,8 @@ export function ProjectSettingsPage() {
   const [newTagColor, setNewTagColor] = useState('#64748b');
 
   function handleUpdate() {
-    update.mutate({ name, description, color }, {
+    if (!name.trim()) { toast.error('Project name cannot be empty'); return; }
+    update.mutate({ name: name.trim(), description, color }, {
       onSuccess: () => {
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
@@ -62,16 +63,27 @@ export function ProjectSettingsPage() {
 
   async function addTag() {
     if (!newTag.trim()) return;
-    await api.post(`/projects/${projectId}/tags`, { name: newTag.trim(), color: newTagColor });
-    setNewTag('');
-    refetchTags();
-    qc.invalidateQueries({ queryKey: ['tags', projectId] });
+    try {
+      await api.post(`/projects/${projectId}/tags`, { name: newTag.trim(), color: newTagColor });
+      setNewTag('');
+      refetchTags();
+      qc.invalidateQueries({ queryKey: ['tags', projectId] });
+      toast.success('Tag added');
+    } catch {
+      toast.error('Failed to add tag');
+    }
   }
 
   async function deleteTag(id) {
-    await api.delete(`/projects/${projectId}/tags/${id}`);
-    refetchTags();
-    qc.invalidateQueries({ queryKey: ['tags', projectId] });
+    if (!confirm('Remove this tag? It will be removed from all tasks.')) return;
+    try {
+      await api.delete(`/projects/${projectId}/tags/${id}`);
+      refetchTags();
+      qc.invalidateQueries({ queryKey: ['tags', projectId] });
+      toast.success('Tag removed');
+    } catch {
+      toast.error('Failed to remove tag');
+    }
   }
 
   // Custom fields
@@ -270,7 +282,10 @@ export function ProjectSettingsPage() {
                   <input readOnly value={shareUrl} className="flex-1 text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 bg-gray-50 dark:bg-slate-700 dark:text-white font-mono text-xs" />
                   <Button size="sm" variant="secondary" onClick={() => { navigator.clipboard.writeText(shareUrl); toast.success('Copied!'); }}>Copy</Button>
                 </div>
-                <Button size="sm" variant="danger" onClick={() => disableShare.mutate()} disabled={disableShare.isPending}>Disable Link</Button>
+                <Button size="sm" variant="danger" onClick={() => {
+                  if (!confirm('Disable the public link? Anyone with the current link will lose access.')) return;
+                  disableShare.mutate();
+                }} disabled={disableShare.isPending}>Disable Link</Button>
               </div>
             ) : (
               <Button onClick={() => enableShare.mutate()} disabled={enableShare.isPending}>Enable Public Link</Button>

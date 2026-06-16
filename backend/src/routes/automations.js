@@ -53,6 +53,22 @@ router.post('/', requireProjectManage, async (req, res) => {
 router.patch('/:automationId', requireProjectManage, async (req, res) => {
   try {
     const { name, trigger_type, trigger_value, action_type, action_value, is_active } = req.body;
+
+    // Validate enums on update (same allowlist as creation)
+    if (trigger_type !== undefined && !VALID_TRIGGERS.includes(trigger_type)) {
+      return res.status(400).json({ error: `trigger_type must be one of: ${VALID_TRIGGERS.join(', ')}` });
+    }
+    if (action_type !== undefined && !VALID_ACTIONS.includes(action_type)) {
+      return res.status(400).json({ error: `action_type must be one of: ${VALID_ACTIONS.join(', ')}` });
+    }
+    // Enforce max-length on value fields to prevent oversized payloads
+    if (trigger_value && String(trigger_value).length > 500) {
+      return res.status(400).json({ error: 'trigger_value is too long (max 500 characters)' });
+    }
+    if (action_value && String(action_value).length > 500) {
+      return res.status(400).json({ error: 'action_value is too long (max 500 characters)' });
+    }
+
     const sets = []; const vals = [];
     if (name !== undefined)          { sets.push('name = ?');          vals.push(name); }
     if (trigger_type !== undefined)  { sets.push('trigger_type = ?');  vals.push(trigger_type); }
@@ -61,6 +77,13 @@ router.patch('/:automationId', requireProjectManage, async (req, res) => {
     if (action_value !== undefined)  { sets.push('action_value = ?');  vals.push(action_value); }
     if (is_active !== undefined)     { sets.push('is_active = ?');     vals.push(is_active ? 1 : 0); }
     if (!sets.length) return res.status(400).json({ error: 'Nothing to update' });
+
+    // Verify the automation belongs to this project before modifying
+    const existing = await queryOne(
+      'SELECT id FROM automations WHERE id = ? AND project_id = ?',
+      [req.params.automationId, req.params.projectId]
+    );
+    if (!existing) return res.status(404).json({ error: 'Automation not found' });
 
     vals.push(req.params.automationId);
     await execute(`UPDATE automations SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`, [...vals, req.params.projectId]);

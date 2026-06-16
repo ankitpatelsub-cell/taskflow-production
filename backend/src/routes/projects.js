@@ -73,8 +73,12 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, description, color = '#6366f1', workspace_id } = req.body;
-    if (!name) return res.status(400).json({ error: 'name required' });
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    if (!trimmedName) return res.status(400).json({ error: 'name required' });
     if (!workspace_id) return res.status(400).json({ error: 'workspace_id required' });
+    if (color && !/^#[0-9a-fA-F]{3,8}$/.test(color)) {
+      return res.status(400).json({ error: 'color must be a valid hex color (e.g. #6366f1)' });
+    }
 
     // Verify caller has admin/owner role in the workspace (or is global admin)
     if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
@@ -86,8 +90,11 @@ router.post('/', async (req, res) => {
       if (wsMember.role === 'member') return res.status(403).json({ error: 'Workspace admin access required to create projects' });
     }
 
-    // Plan limit check
-    const sub = await queryOne('SELECT plan FROM subscriptions ORDER BY created_at DESC LIMIT 1');
+    // Plan limit check — scope to the workspace's own subscription
+    const sub = await queryOne(
+      'SELECT plan FROM subscriptions WHERE workspace_id = ? ORDER BY created_at DESC LIMIT 1',
+      [workspace_id]
+    );
     const plan = sub?.plan || 'free';
     const planLimit = (PLAN_LIMITS[plan] || PLAN_LIMITS.free).projects;
     if (planLimit !== Infinity) {
@@ -103,7 +110,7 @@ router.post('/', async (req, res) => {
     const id = uuidv4();
     await execute(
       'INSERT INTO projects (id, name, description, color, created_by, workspace_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, name, description || null, color, req.user.id, workspace_id]
+      [id, trimmedName, description || null, color, req.user.id, workspace_id]
     );
     await execute(
       'INSERT INTO project_members (id, project_id, user_id) VALUES (?, ?, ?)',
@@ -172,9 +179,23 @@ router.post('/:projectId/slack-test', requireProjectManage, async (req, res) => 
 router.patch('/:projectId', requireProjectManage, async (req, res) => {
   try {
     const { name, description, color, status, slack_webhook_url } = req.body;
+    const VALID_PROJECT_STATUSES = ['active', 'archived'];
+    if (name !== undefined && !String(name).trim()) {
+      return res.status(400).json({ error: 'name cannot be empty' });
+    }
+    if (status !== undefined && !VALID_PROJECT_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be active or archived' });
+    }
+    if (color !== undefined && color && !/^#[0-9a-fA-F]{3,8}$/.test(color)) {
+      return res.status(400).json({ error: 'color must be a valid hex color (e.g. #6366f1)' });
+    }
+    if (slack_webhook_url !== undefined && slack_webhook_url) {
+      try { const u = new URL(slack_webhook_url); if (u.protocol !== 'https:') throw new Error(); }
+      catch { return res.status(400).json({ error: 'slack_webhook_url must be a valid HTTPS URL' }); }
+    }
     const sets = ['updated_at = NOW()'];
     const vals = [];
-    if (name !== undefined)              { sets.push('name = ?');              vals.push(name); }
+    if (name !== undefined)              { sets.push('name = ?');              vals.push(String(name).trim()); }
     if (description !== undefined)       { sets.push('description = ?');       vals.push(description); }
     if (color !== undefined)             { sets.push('color = ?');             vals.push(color); }
     if (status !== undefined)            { sets.push('status = ?');            vals.push(status); }
@@ -209,6 +230,8 @@ router.post('/:projectId/members', requireProjectManage, async (req, res) => {
   try {
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ error: 'userId required' });
+    const userExists = await queryOne('SELECT id FROM users WHERE id = ?', [userId]);
+    if (!userExists) return res.status(404).json({ error: 'User not found' });
     const existing = await queryOne(
       'SELECT id FROM project_members WHERE project_id = ? AND user_id = ?',
       [req.params.projectId, userId]
@@ -246,8 +269,11 @@ router.delete('/:projectId/members/:userId', requireProjectManage, async (req, r
 router.get('/:projectId/time-report', requireProjectAccess, async (req, res) => {
   try {
     const { from, to } = req.query;
+    const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+    if (from && !DATE_RE.test(from)) return res.status(400).json({ error: 'from must be YYYY-MM-DD' });
+    if (to && !DATE_RE.test(to)) return res.status(400).json({ error: 'to must be YYYY-MM-DD' });
 
-    // Build optional date-range filter fragments for time_logs.started_at
+    // Build optional date-range filter fragments for time_logs.logged_at
     const dateConditions = [];
     const dateParams = [];
     if (from) {

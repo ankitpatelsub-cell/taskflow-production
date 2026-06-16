@@ -1,6 +1,6 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const { queryAll, queryOne, execute } = require('../config/db');
+const { queryAll, queryOne, execute, withTransaction } = require('../config/db');
 const { authenticate, requireProjectAccess, requireProjectManage } = require('../middleware/auth');
 
 const router = express.Router({ mergeParams: true });
@@ -67,28 +67,45 @@ router.patch('/:statusId', requireProjectManage, async (req, res) => {
     if (!status) return res.status(404).json({ error: 'Status not found' });
 
     const { name, color, bg_color, is_default } = req.body;
+
+    const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
+    if (name !== undefined && !String(name).trim()) {
+      return res.status(400).json({ error: 'name cannot be empty' });
+    }
+    if (color !== undefined && color && !HEX_RE.test(color)) {
+      return res.status(400).json({ error: 'color must be a valid hex color (e.g. #6366f1)' });
+    }
+    if (bg_color !== undefined && bg_color && !HEX_RE.test(bg_color)) {
+      return res.status(400).json({ error: 'bg_color must be a valid hex color (e.g. #eef2ff)' });
+    }
+
     const sets = []; const vals = [];
-    if (name !== undefined)       { sets.push('name = ?');       vals.push(name.trim()); }
+    if (name !== undefined)       { sets.push('name = ?');       vals.push(String(name).trim()); }
     if (color !== undefined)      { sets.push('color = ?');      vals.push(color); }
     if (bg_color !== undefined)   { sets.push('bg_color = ?');   vals.push(bg_color); }
     if (is_default !== undefined) {
-      // Only one status can be default — clear others first
-      if (is_default) {
-        await execute(
-          "UPDATE project_statuses SET is_default = false WHERE project_id = ?",
-          [req.params.projectId]
-        );
-      }
       sets.push('is_default = ?'); vals.push(is_default);
     }
     if (!sets.length) return res.status(400).json({ error: 'Nothing to update' });
 
-    vals.push(req.params.statusId, req.params.projectId);
-    await execute(
-      `UPDATE project_statuses SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`,
-      vals
-    );
-    const row = await queryOne('SELECT * FROM project_statuses WHERE id = ?', [req.params.statusId]);
+    // If setting a new default, do it atomically — clear all others then set the new one
+    let row;
+    if (is_default) {
+      row = await withTransaction(async (txQuery) => {
+        await txQuery('UPDATE project_statuses SET is_default = false WHERE project_id = ?', [req.params.projectId]);
+        const fullVals = [...vals, req.params.statusId, req.params.projectId];
+        await txQuery(`UPDATE project_statuses SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`, fullVals);
+        const updated = await txQuery('SELECT * FROM project_statuses WHERE id = ?', [req.params.statusId]);
+        return updated.rows[0];
+      });
+    } else {
+      vals.push(req.params.statusId, req.params.projectId);
+      await execute(
+        `UPDATE project_statuses SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`,
+        vals
+      );
+      row = await queryOne('SELECT * FROM project_statuses WHERE id = ?', [req.params.statusId]);
+    }
     res.json(row);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update status' });
@@ -142,6 +159,7 @@ router.post('/reorder', requireProjectManage, async (req, res) => {
   try {
     const { order } = req.body;
     if (!Array.isArray(order)) return res.status(400).json({ error: 'order must be an array of status ids' });
+    if (order.length > 50) return res.status(400).json({ error: 'Cannot reorder more than 50 statuses at once' });
 
     for (let i = 0; i < order.length; i++) {
       await execute(

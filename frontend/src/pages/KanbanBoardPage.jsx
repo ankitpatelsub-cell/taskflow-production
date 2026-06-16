@@ -14,7 +14,7 @@ const EMPTY_FILTERS = { assignee: '', priority: '', tag: '', q: '', to: '' };
 
 export function KanbanBoardPage() {
   const { projectId } = useParams({ strict: false });
-  const { data: project } = useProject(projectId);
+  const { data: project, error: projectError } = useProject(projectId);
   const [showMeetingNotes, setShowMeetingNotes] = useState(false);
 
   // Subscribe to real-time project events
@@ -49,6 +49,18 @@ export function KanbanBoardPage() {
     if (!filterKey) return;
     try { localStorage.setItem(filterKey, JSON.stringify(filters)); } catch {}
   }, [filters, filterKey]);
+
+  if (projectError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center max-w-sm px-6">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Failed to load project</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400">{projectError.message || 'Please try again or check your permissions.'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">

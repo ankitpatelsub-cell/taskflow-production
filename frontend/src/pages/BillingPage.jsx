@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { CheckCircle2, Zap, Building2, Shield, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/Button';
+import { toast } from '@/components/ui/Toast';
 
 const PLAN_ICONS = { free: Shield, pro: Zap, team: Building2 };
 const PLAN_COLORS = {
@@ -31,7 +32,7 @@ export function BillingPage() {
       const { data } = await api.post('/billing/checkout', { plan });
       window.location.href = data.url;
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to start checkout');
+      toast.error(err.response?.data?.error || 'Failed to start checkout');
     } finally {
       setCheckoutLoading(null);
     }
@@ -43,7 +44,7 @@ export function BillingPage() {
       const { data } = await api.post('/billing/portal');
       window.location.href = data.url;
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to open billing portal');
+      toast.error(err.response?.data?.error || 'Failed to open billing portal');
     } finally {
       setPortalLoading(false);
     }

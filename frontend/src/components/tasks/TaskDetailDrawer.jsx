@@ -5,7 +5,7 @@ import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
-import { cn, formatDate, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
+import { cn, formatDate, formatTimeAgo, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
 import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell, GitBranch, Copy, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { CommentThread } from '@/components/comments/CommentThread';
@@ -60,7 +60,14 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
       </Drawer>
     );
   }
-  if (!task) return null;
+  if (!task) return (
+    <Drawer open onClose={onClose} title="Task not found" wide>
+      <div className="p-6 text-center">
+        <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">This task could not be loaded or may have been deleted.</p>
+        <Button variant="secondary" onClick={onClose}>Close</Button>
+      </div>
+    </Drawer>
+  );
 
   function handleUpdate(data) {
     update.mutate(data, { onSuccess: () => setEditing(false) });
@@ -104,6 +111,8 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
       const newStatus = subtask.status === 'done' ? 'todo' : 'done';
       await api.patch(`/projects/${projectId}/tasks/${subtask.id}`, { status: newStatus });
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId, taskId] });
+    } catch {
+      toast.error('Failed to update subtask');
     } finally {
       setTogglingSubtask(null);
     }
@@ -111,9 +120,15 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
 
   async function addSubtask() {
     if (!newSubtask.trim()) return;
-    await api.post(`/projects/${projectId}/tasks`, { title: newSubtask.trim(), parent_task_id: taskId });
-    setNewSubtask('');
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId, taskId] });
+    const saved = newSubtask;
+    try {
+      await api.post(`/projects/${projectId}/tasks`, { title: saved.trim(), parent_task_id: taskId });
+      setNewSubtask('');
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, taskId] });
+    } catch {
+      setNewSubtask(saved);
+      toast.error('Failed to add subtask');
+    }
   }
 
   const overdue = task.deadline && isOverdue(task.deadline) && task.status !== 'done';
@@ -345,9 +360,9 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   </div>
 
                   {/* Created by */}
-                  <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100">
+                  <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100" title={formatDate(task.created_at)}>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Created</p>
-                    <p className="text-sm text-gray-700">{formatDate(task.created_at)}</p>
+                    <p className="text-sm text-gray-700">{formatTimeAgo(task.created_at)}</p>
                   </div>
                 </div>
 
@@ -502,7 +517,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   {tab === 'details' && (
                     <div className="text-sm text-gray-500 dark:text-slate-400 space-y-2">
                       <p>Created by <strong className="text-gray-700 dark:text-slate-200">{task.creator_name || 'Unknown'}</strong></p>
-                      <p>Last updated <strong className="text-gray-700 dark:text-slate-200">{formatDate(task.updated_at)}</strong></p>
+                      <p>Last updated <strong className="text-gray-700 dark:text-slate-200" title={formatDate(task.updated_at)}>{formatTimeAgo(task.updated_at)}</strong></p>
                       {task.recurrence_parent_id && (
                         <p className="text-xs text-indigo-400">Part of a recurring series</p>
                       )}
@@ -574,8 +589,14 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                         <input type="file" className="hidden" onChange={async (e) => {
                           const f = e.target.files[0]; if (!f) return;
                           const fd = new FormData(); fd.append('file', f);
-                          await api.post(`/tasks/${taskId}/attachments`, fd);
-                          queryClient.invalidateQueries({ queryKey: ['tasks', projectId, taskId] });
+                          try {
+                            await api.post(`/tasks/${taskId}/attachments`, fd);
+                            queryClient.invalidateQueries({ queryKey: ['tasks', projectId, taskId] });
+                            toast.success('File uploaded');
+                          } catch {
+                            toast.error('Upload failed — check file size (max 5 MB) and try again');
+                          }
+                          e.target.value = '';
                         }} />
                       </label>
                     </div>

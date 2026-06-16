@@ -43,7 +43,7 @@ const uuidOrEmpty = z.preprocess(emptyToNull, z.string().uuid().optional().nulla
 const createTaskSchema = z.object({
   title:           z.string().min(1, 'Title required').max(200),
   description:     z.preprocess(emptyToNull, z.string().max(2000).optional().nullable()),
-  status:          z.enum(['todo', 'in_progress', 'review', 'done']).optional().default('todo'),
+  status:          z.string().min(1).max(50).optional().default('todo'),
   priority:        z.enum(['low', 'medium', 'high', 'critical']).optional().default('medium'),
   assignee_id:     uuidOrEmpty,
   deadline:        z.preprocess(emptyToNull, z.string().optional().nullable()),
@@ -59,7 +59,13 @@ const createTaskSchema = z.object({
     (v) => (v === '' || v === undefined || v === null ? 1 : Number(v)),
     z.number().int().min(1).max(365).optional().default(1)
   ),
-  recurrence_days:     z.string().optional().nullable(),   // JSON array e.g. "[1,3,5]"
+  recurrence_days:     z.preprocess(
+    emptyToNull,
+    z.string().refine(
+      (v) => { try { const p = JSON.parse(v); return Array.isArray(p); } catch { return false; } },
+      { message: 'recurrence_days must be a JSON array e.g. "[1,3,5]"' }
+    ).optional().nullable()
+  ),
   recurrence_ends_at:  z.preprocess(emptyToNull, z.string().optional().nullable()),
   reminder_at:         z.preprocess(emptyToNull, z.string().datetime({ offset: true }).optional().nullable()),
 });

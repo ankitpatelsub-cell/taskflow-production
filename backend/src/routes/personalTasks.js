@@ -6,12 +6,19 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router();
 router.use(authenticate);
 
+const VALID_PRIORITIES = ['low', 'medium', 'high', 'critical'];
+const VALID_STATUSES   = ['todo', 'done'];
+const DATE_RE          = /^\d{4}-\d{2}-\d{2}$/;
+
 // All queries scope to req.user.id — no other user can ever access these tasks
 
 // GET /api/me/tasks
 router.get('/', async (req, res) => {
   try {
     const { status } = req.query;
+    if (status && !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
     const rows = await queryAll(
       `SELECT * FROM personal_tasks
        WHERE owner_id = ?
@@ -30,6 +37,12 @@ router.post('/', async (req, res) => {
   try {
     const { title, notes, priority = 'medium', due_date } = req.body;
     if (!title?.trim()) return res.status(400).json({ error: 'title is required' });
+    if (!VALID_PRIORITIES.includes(priority)) {
+      return res.status(400).json({ error: `Invalid priority. Must be one of: ${VALID_PRIORITIES.join(', ')}` });
+    }
+    if (due_date && !DATE_RE.test(due_date)) {
+      return res.status(400).json({ error: 'due_date must be in YYYY-MM-DD format' });
+    }
 
     const maxPos = await queryOne(
       'SELECT COALESCE(MAX(position), -1) AS m FROM personal_tasks WHERE owner_id = ?',
@@ -57,6 +70,20 @@ router.patch('/:id', async (req, res) => {
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
     const { title, notes, status, priority, due_date, position } = req.body;
+
+    if (status !== undefined && !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+    if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {
+      return res.status(400).json({ error: `Invalid priority. Must be one of: ${VALID_PRIORITIES.join(', ')}` });
+    }
+    if (due_date && !DATE_RE.test(due_date)) {
+      return res.status(400).json({ error: 'due_date must be in YYYY-MM-DD format' });
+    }
+    if (title !== undefined && !title.trim()) {
+      return res.status(400).json({ error: 'title cannot be empty' });
+    }
+
     const sets = []; const vals = [];
     if (title !== undefined)    { sets.push('title = ?');    vals.push(title.trim()); }
     if (notes !== undefined)    { sets.push('notes = ?');    vals.push(notes || null); }
@@ -78,20 +105,9 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/me/tasks/:id
-router.delete('/:id', async (req, res) => {
-  try {
-    const deleted = await execute(
-      'DELETE FROM personal_tasks WHERE id = ? AND owner_id = ?',
-      [req.params.id, req.user.id]
-    );
-    res.json({ message: 'Deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete personal task' });
-  }
-});
-
 // DELETE /api/me/tasks/done — bulk clear completed tasks
+// IMPORTANT: this route MUST be registered before DELETE /:id so Express does not
+// match "done" as a task ID.
 router.delete('/done', async (req, res) => {
   try {
     await execute(
@@ -101,6 +117,20 @@ router.delete('/done', async (req, res) => {
     res.json({ message: 'Cleared completed tasks' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to clear completed tasks' });
+  }
+});
+
+// DELETE /api/me/tasks/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    const result = await execute(
+      'DELETE FROM personal_tasks WHERE id = ? AND owner_id = ?',
+      [req.params.id, req.user.id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Task not found' });
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete personal task' });
   }
 });
 
