@@ -4,6 +4,7 @@ import { useLogin } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
+import { useUiStore } from '@/stores/uiStore';
 import { CheckSquare, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
@@ -11,6 +12,7 @@ import api from '@/lib/api';
 const GOOGLE_OAUTH_ENABLED = import.meta.env.VITE_GOOGLE_OAUTH === 'true';
 
 export function LoginPage() {
+  const { openContact } = useUiStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -204,6 +206,14 @@ export function LoginPage() {
           <Link to="/privacy" className="hover:text-indigo-200/60 transition-colors">Privacy Policy</Link>
           {' · '}
           <Link to="/terms" className="hover:text-indigo-200/60 transition-colors">Terms of Service</Link>
+          {' · '}
+          <button
+            type="button"
+            onClick={openContact}
+            className="hover:text-indigo-200/60 transition-colors"
+          >
+            Contact Us
+          </button>
         </p>
 
         {!totpStep && (

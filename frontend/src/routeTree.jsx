@@ -5,12 +5,14 @@ import {
 import { useAuthStore } from './stores/authStore';
 import { BoardSkeleton, TableSkeleton } from './components/ui/Skeleton';
 import { CookieBanner } from './components/shared/CookieBanner';
+import { ContactModal } from './components/shared/ContactModal';
 
 function RootLayout() {
   return (
     <>
       <Outlet />
       <CookieBanner />
+      <ContactModal />
     </>
   );
 }

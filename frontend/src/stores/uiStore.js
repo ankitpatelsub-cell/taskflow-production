@@ -6,6 +6,7 @@ export const useUiStore = create((set) => ({
   taskDrawerOpen: false,
   selectedTaskId: null,
   quickCreateOpen: false,
+  contactOpen: false,
 
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setActiveProject: (id) => set({ activeProjectId: id }),
@@ -13,4 +14,6 @@ export const useUiStore = create((set) => ({
   closeTaskDrawer: () => set({ taskDrawerOpen: false, selectedTaskId: null }),
   openQuickCreate: () => set({ quickCreateOpen: true }),
   closeQuickCreate: () => set({ quickCreateOpen: false }),
+  openContact:  () => set({ contactOpen: true }),
+  closeContact: () => set({ contactOpen: false }),
 }));

@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   LayoutDashboard, Bell, User, Shield, Plus, ChevronDown,
-  ChevronRight, Database, LogOut, CreditCard, BarChart3, Settings, Lock,
+  ChevronRight, Database, LogOut, CreditCard, BarChart3, Settings, Lock, HelpCircle,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjects } from '@/hooks/useProjects';
@@ -46,7 +46,7 @@ function SectionLabel({ children }) {
 }
 
 export function Sidebar() {
-  const { sidebarOpen } = useUiStore();
+  const { sidebarOpen, openContact } = useUiStore();
   const { user } = useAuthStore();
   const { data: projects = [] } = useProjects();
   const { data: notifData } = useNotifications();
@@ -183,6 +183,17 @@ export function Sidebar() {
         {/* ── Version ──────────────────────────────────────── */}
         <div className="px-4 pb-1 shrink-0">
           <p className="text-[10px] text-slate-700 select-none">v1.0.0</p>
+        </div>
+
+        {/* ── Contact / Help ───────────────────────────────── */}
+        <div className="px-3 pb-1 shrink-0">
+          <button
+            onClick={openContact}
+            className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:bg-white/10 hover:text-slate-300 transition-colors"
+          >
+            <HelpCircle size={13} className="shrink-0" />
+            Contact Us
+          </button>
         </div>
 
         {/* ── Bottom user card ──────────────────────────────── */}
