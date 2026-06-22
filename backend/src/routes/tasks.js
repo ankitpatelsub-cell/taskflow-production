@@ -210,6 +210,35 @@ async function getTaskWithDetails(taskId) {
 }
 
 // GET /tasks
+// GET /api/projects/:projectId/tasks/similar?title=...
+// Returns up to 5 non-done tasks with similar titles (word-overlap based)
+router.get('/similar', async (req, res) => {
+  try {
+    const { title = '' } = req.query;
+    const words = title.toLowerCase().split(/\W+/).filter((w) => w.length >= 3);
+    if (!words.length) return res.json([]);
+
+    // Build ILIKE conditions — a task is "similar" if it shares ≥1 significant word
+    const conditions = words.map(() => 'LOWER(title) LIKE ?');
+    const params = [...words.map((w) => `%${w}%`), req.params.projectId];
+    const tasks = await queryAll(
+      `SELECT id, title, status, priority FROM tasks
+       WHERE (${conditions.join(' OR ')}) AND project_id = ? AND status != 'done'
+       LIMIT 5`,
+      params
+    );
+    // Score each result by word overlap (higher = more similar)
+    const queryWords = new Set(words);
+    const scored = tasks.map((t) => {
+      const tWords = t.title.toLowerCase().split(/\W+/).filter((w) => w.length >= 3);
+      const overlap = tWords.filter((w) => queryWords.has(w)).length;
+      const score = overlap / Math.max(queryWords.size, tWords.length);
+      return { ...t, score };
+    }).filter((t) => t.score >= 0.3).sort((a, b) => b.score - a.score);
+    res.json(scored.slice(0, 5));
+  } catch (err) { res.status(500).json({ error: 'Similarity check failed' }); }
+});
+
 router.get('/', async (req, res) => {
   try {
     const { status, priority, assignee, tag, from, to, parent, q, page = 1, limit = 50 } = req.query;

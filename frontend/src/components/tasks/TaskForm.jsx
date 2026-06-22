@@ -1,11 +1,13 @@
 import { useForm, useWatch } from 'react-hook-form';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useProjectMembers } from '@/hooks/useProjects';
 import { useProjectStatuses } from '@/hooks/useProjectStatuses';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import api from '@/lib/api';
 
 const WEEKDAYS = [
   { label: 'Sun', value: 0 },
@@ -16,6 +18,25 @@ const WEEKDAYS = [
   { label: 'Fri', value: 5 },
   { label: 'Sat', value: 6 },
 ];
+
+function useSimilarTasks(projectId, title) {
+  const [similar, setSimilar] = useState([]);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (!projectId || !title || title.trim().length < 4) { setSimilar([]); return; }
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      try {
+        const res = await api.get(`/projects/${projectId}/tasks/similar`, { params: { title } });
+        setSimilar(res.data || []);
+      } catch { setSimilar([]); }
+    }, 500);
+    return () => clearTimeout(timerRef.current);
+  }, [projectId, title]);
+
+  return similar;
+}
 
 export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, loading }) {
   const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
@@ -30,6 +51,8 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
 
   const recurrenceRule = useWatch({ control, name: 'recurrence_rule' });
   const recurrenceDays = useWatch({ control, name: 'recurrence_days' });
+  const titleValue = useWatch({ control, name: 'title' });
+  const similarTasks = useSimilarTasks(projectId, titleValue);
   // Parse existing days for the checkbox state
   const existingDays = (() => {
     try { return JSON.parse(defaultValues.recurrence_days || '[]'); } catch { return []; }
@@ -66,6 +89,26 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
         <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Title *</label>
         <Input {...register('title', { required: true })} placeholder="Task title" />
         {errors.title && <p className="text-xs text-red-500 mt-1">Title is required</p>}
+        {similarTasks.length > 0 && !defaultValues.id && (
+          <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1.5">
+              <AlertTriangle size={12} /> Similar tasks already exist
+            </div>
+            <ul className="space-y-1">
+              {similarTasks.map((t) => (
+                <li key={t.id} className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                  <span className={cn(
+                    'px-1.5 py-0.5 rounded text-[10px] font-medium capitalize',
+                    t.status === 'todo' ? 'bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-slate-300' :
+                    t.status === 'in_progress' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' :
+                    'bg-amber-200 dark:bg-amber-900/40 text-amber-700'
+                  )}>{t.status.replace('_', ' ')}</span>
+                  {t.title}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div>
