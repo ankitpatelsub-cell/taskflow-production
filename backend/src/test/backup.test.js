@@ -77,13 +77,11 @@ describe('Backup encryption (AES-256-CBC)', () => {
     }).toThrow();
   });
 
-  it('handles binary data (simulated SQLite file)', () => {
-    // SQLite files start with this magic string
-    const sqliteMagic = Buffer.from('SQLite format 3\x00');
-    const fakeDb = Buffer.concat([sqliteMagic, Buffer.alloc(100, 0xAB)]);
-    const encrypted = encrypt(fakeDb);
+  it('handles binary data (simulated JSON backup)', () => {
+    const fakeBackup = Buffer.from(JSON.stringify({ version: 2, tables: { users: [] } }));
+    const encrypted = encrypt(fakeBackup);
     const decrypted = decrypt(encrypted);
-    expect(decrypted.slice(0, 16).toString('utf8')).toBe('SQLite format 3\x00');
+    expect(JSON.parse(decrypted.toString('utf8')).version).toBe(2);
   });
 });
 
@@ -107,23 +105,22 @@ describe('Backup file lifecycle', () => {
   });
 
   it('backup filename follows expected pattern', () => {
-    const pattern = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.db\.enc$/;
+    const pattern = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.json\.enc$/;
     const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const filename = `backup_${ts}.db.enc`;
+    const filename = `backup_${ts}.json.enc`;
     expect(pattern.test(filename)).toBe(true);
   });
 
   it('old backups can be listed and sorted by mtime', () => {
-    const files = ['backup_a.db.enc', 'backup_b.db.enc', 'backup_c.db.enc'];
+    const files = ['backup_a.json.enc', 'backup_b.json.enc', 'backup_c.json.enc'];
     files.forEach((f) => {
       fs.writeFileSync(path.join(tmpDir, f), Buffer.from('data'));
     });
     const listed = fs.readdirSync(tmpDir)
-      .filter((f) => f.endsWith('.db.enc'))
+      .filter((f) => f.endsWith('.json.enc') || f.endsWith('.db.enc'))
       .map((f) => ({ name: f, mtime: fs.statSync(path.join(tmpDir, f)).mtime }))
       .sort((a, b) => b.mtime - a.mtime);
     expect(listed.length).toBeGreaterThanOrEqual(3);
-    expect(listed.every((f) => f.name.endsWith('.db.enc'))).toBe(true);
   });
 
   it('restored file content matches original', () => {

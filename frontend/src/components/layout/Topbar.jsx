@@ -1,4 +1,4 @@
-import { Menu, Sun, Moon } from 'lucide-react';
+import { Menu, Sun, Moon, Monitor, Search } from 'lucide-react';
 import { useUiStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeStore } from '@/stores/themeStore';
@@ -11,7 +11,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 export function Topbar() {
   const { toggleSidebar } = useUiStore();
   const { user } = useAuthStore();
-  const { theme, toggleTheme } = useThemeStore();
+  const { theme, cycleTheme } = useThemeStore();
   const logout = useLogout();
   const navigate = useNavigate();
 
@@ -25,15 +25,25 @@ export function Topbar() {
         <Menu size={18} />
       </button>
 
+      {/* Search hint — clicks open command palette */}
+      <button
+        onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 hover:text-gray-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+      >
+        <Search size={13} />
+        <span className="text-xs">Search…</span>
+        <kbd className="text-[10px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1 py-0.5 font-mono leading-none">⌘K</kbd>
+      </button>
+
       <div className="flex-1" />
 
-      {/* Dark mode toggle */}
+      {/* Theme cycle: system → light → dark → system */}
       <button
-        onClick={toggleTheme}
+        onClick={cycleTheme}
         className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        title={theme === 'dark' ? 'Theme: Dark' : theme === 'light' ? 'Theme: Light' : 'Theme: System (auto)'}
       >
-        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        {theme === 'dark' ? <Moon size={18} /> : theme === 'light' ? <Sun size={18} /> : <Monitor size={18} />}
       </button>
 
       <NotificationBell />

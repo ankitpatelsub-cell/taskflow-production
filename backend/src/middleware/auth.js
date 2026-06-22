@@ -1,7 +1,7 @@
 const { verifyAccess } = require('../utils/jwt');
-const { getDb } = require('../config/db');
+const { queryOne } = require('../config/db');
+const logger = require('../config/logger');
 
-// ── Role hierarchy ────────────────────────────────────────────────────────────
 const ROLE_WEIGHTS = {
   super_admin:     5,
   admin:           4,
@@ -10,7 +10,6 @@ const ROLE_WEIGHTS = {
   viewer:          1,
 };
 
-/** True if userRole meets or exceeds minRole in the hierarchy */
 function hasMinRole(userRole, minRole) {
   return (ROLE_WEIGHTS[userRole] || 0) >= (ROLE_WEIGHTS[minRole] || 999);
 }
@@ -25,59 +24,67 @@ function authenticate(req, res, next) {
     req.user = payload;
     next();
   } catch {
+    logger.warn({ method: req.method, url: req.url, ip: req.ip }, 'auth.token_invalid');
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 
-/** Require exact role (legacy) OR use requireMinRole instead */
 function requireRole(role) {
   return (req, res, next) => {
-    if (req.user.role !== role && !hasMinRole(req.user.role, role)) {
+    if (!hasMinRole(req.user.role, role)) {
+      logger.warn({ userId: req.user.id, userRole: req.user.role, required: role, url: req.url }, 'auth.forbidden');
       return res.status(403).json({ error: 'Forbidden' });
     }
     next();
   };
 }
 
-/** Require user to have at least minRole in the hierarchy */
 function requireMinRole(minRole) {
   return (req, res, next) => {
     if (!hasMinRole(req.user.role, minRole)) {
+      logger.warn({ userId: req.user.id, userRole: req.user.role, required: minRole, url: req.url }, 'auth.forbidden');
       return res.status(403).json({ error: `Requires ${minRole} or above` });
     }
     next();
   };
 }
 
-/** Require user to be a project member (admin+ bypass) */
 function requireProjectAccess(req, res, next) {
   if (hasMinRole(req.user.role, 'admin')) return next();
-  const db = getDb();
   const projectId = req.params.projectId || req.params.pid;
-  const member = db
-    .prepare('SELECT id FROM project_members WHERE project_id = ? AND user_id = ?')
-    .get(projectId, req.user.id);
-  if (!member) return res.status(403).json({ error: 'Not a project member' });
-  next();
+  queryOne(
+    'SELECT id FROM project_members WHERE project_id = ? AND user_id = ?',
+    [projectId, req.user.id]
+  ).then((member) => {
+    if (!member) {
+      logger.warn({ userId: req.user.id, projectId, url: req.url }, 'auth.not_project_member');
+      return res.status(403).json({ error: 'Not a project member' });
+    }
+    next();
+  }).catch(next);
 }
 
-/** Require project_manager or above — OR be a project member with pm+ role */
 function requireProjectManage(req, res, next) {
   if (hasMinRole(req.user.role, 'admin')) return next();
+  const projectId = req.params.projectId || req.params.pid;
   if (req.user.role === 'project_manager') {
-    const db = getDb();
-    const projectId = req.params.projectId || req.params.pid;
-    const member = db
-      .prepare('SELECT id FROM project_members WHERE project_id = ? AND user_id = ?')
-      .get(projectId, req.user.id);
-    if (member) return next();
+    queryOne(
+      'SELECT id FROM project_members WHERE project_id = ? AND user_id = ?',
+      [projectId, req.user.id]
+    ).then((member) => {
+      if (member) return next();
+      logger.warn({ userId: req.user.id, projectId, url: req.url }, 'auth.not_project_manager');
+      return res.status(403).json({ error: 'Project manager or admin required' });
+    }).catch(next);
+  } else {
+    logger.warn({ userId: req.user.id, userRole: req.user.role, projectId, url: req.url }, 'auth.forbidden');
+    res.status(403).json({ error: 'Project manager or admin required' });
   }
-  return res.status(403).json({ error: 'Project manager or admin required' });
 }
 
-/** Viewers cannot write — block mutating operations */
 function requireWriteAccess(req, res, next) {
   if (req.user.role === 'viewer') {
+    logger.warn({ userId: req.user.id, url: req.url }, 'auth.viewer_write_denied');
     return res.status(403).json({ error: 'Viewers have read-only access' });
   }
   next();

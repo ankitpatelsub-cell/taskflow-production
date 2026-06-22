@@ -4,7 +4,10 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useCreateProject } from '@/hooks/useProjects';
 
-const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'];
+const COLORS = [
+  '#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316',
+  '#f59e0b','#10b981','#06b6d4','#3b82f6','#64748b',
+];
 
 export function CreateProjectModal({ onClose }) {
   const [name, setName] = useState('');
@@ -44,15 +47,27 @@ export function CreateProjectModal({ onClose }) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
-          <div className="flex gap-2">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setColor(c)}
-                className={`w-7 h-7 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : ''}`}
-                style={{ backgroundColor: c }}
+          <div className="flex items-center gap-3">
+            <div className="flex flex-wrap gap-2 flex-1">
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setColor(c)}
+                  className={`w-7 h-7 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : 'hover:scale-110'}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                title="Custom color"
               />
-            ))}
+              <span className="text-xs text-gray-400 font-mono">{color}</span>
+            </div>
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">

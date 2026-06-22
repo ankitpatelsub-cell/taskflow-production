@@ -4,7 +4,9 @@ import { useRegister } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
-import { CheckSquare, Eye, EyeOff } from 'lucide-react';
+import { CheckSquare, Eye, EyeOff, CheckCircle2, Shield } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export function RegisterPage() {
   const [name, setName]         = useState('');
@@ -15,41 +17,62 @@ export function RegisterPage() {
   const register  = useRegister();
   const navigate  = useNavigate();
   const { isAuthenticated } = useAuthStore();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isAuthenticated) navigate({ to: '/app/dashboard' });
   }, [isAuthenticated]);
 
+  function passwordStrength(pw) {
+    if (!pw) return { score: 0, label: '', color: '' };
+    let score = 0;
+    if (pw.length >= 8)   score++;
+    if (pw.length >= 12)  score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (score <= 1) return { score, label: t('auth.pwWeak'),      color: 'bg-red-500',     text: 'text-red-600' };
+    if (score <= 2) return { score, label: t('auth.pwFair'),      color: 'bg-amber-400',   text: 'text-amber-600' };
+    if (score <= 3) return { score, label: t('auth.pwGood'),      color: 'bg-yellow-400',  text: 'text-yellow-600' };
+    if (score <= 4) return { score, label: t('auth.pwStrong'),    color: 'bg-emerald-500', text: 'text-emerald-600' };
+    return           { score, label: t('auth.pwVeryStrong'),      color: 'bg-emerald-600', text: 'text-emerald-700' };
+  }
+
+  const pwStrength = passwordStrength(password);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
-    if (!name.trim())   { setError('Name is required'); return; }
-    if (!email.trim())  { setError('Email is required'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (!name.trim())   { setError(t('auth.nameRequired')); return; }
+    if (!email.trim())  { setError(t('auth.emailRequired')); return; }
+    if (password.length < 6) { setError(t('auth.passwordTooShort')); return; }
 
     register.mutate(
       { name: name.trim(), email: email.trim(), password },
       {
         onSuccess: () => navigate({ to: '/app/dashboard' }),
-        onError: (err) => setError(err.response?.data?.error || 'Registration failed'),
+        onError: (err) => setError(err.response?.data?.error || t('auth.registrationFailed')),
       }
     );
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 p-4 relative overflow-hidden">
-      {/* Background blobs */}
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-800/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-sm relative">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30">
             <CheckSquare size={28} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">TaskFlow</h1>
-          <p className="text-indigo-200/60 text-sm mt-2">Create your account</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Tick</h1>
+          <p className="text-indigo-200/60 text-sm mt-2">{t('auth.registerSubtitle')}</p>
+        </div>
+
+        <div className="flex items-center justify-center gap-4 mb-5 text-xs text-indigo-300/60">
+          <span className="flex items-center gap-1"><CheckCircle2 size={11} className="text-emerald-400" /> {t('auth.freeForever')}</span>
+          <span className="flex items-center gap-1"><Shield size={11} className="text-emerald-400" /> {t('auth.gdprCompliant')}</span>
         </div>
 
         <form
@@ -62,9 +85,8 @@ export function RegisterPage() {
             </div>
           )}
 
-          {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.fullName')}</label>
             <Input
               type="text"
               value={name}
@@ -75,9 +97,8 @@ export function RegisterPage() {
             />
           </div>
 
-          {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.workEmail')}</label>
             <Input
               type="email"
               value={email}
@@ -87,15 +108,14 @@ export function RegisterPage() {
             />
           </div>
 
-          {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('auth.password')}</label>
             <div className="relative">
               <Input
                 type={showPw ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
+                placeholder="Create a strong password"
                 required
                 className="pr-10"
               />
@@ -108,29 +128,36 @@ export function RegisterPage() {
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Minimum 6 characters</p>
+
+            {password && (
+              <div className="mt-2">
+                <div className="flex gap-1 mb-1">
+                  {[1,2,3,4,5].map((i) => (
+                    <div
+                      key={i}
+                      className={cn('h-1 flex-1 rounded-full transition-all', i <= pwStrength.score ? pwStrength.color : 'bg-gray-200')}
+                    />
+                  ))}
+                </div>
+                <p className={cn('text-xs font-medium', pwStrength.text)}>{pwStrength.label}</p>
+              </div>
+            )}
+            {!password && <p className="text-xs text-gray-400 mt-1">{t('auth.minPassword')}</p>}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={register.isPending}
-          >
-            {register.isPending ? 'Creating account…' : 'Create Account'}
+          <Button type="submit" className="w-full" size="lg" disabled={register.isPending}>
+            {register.isPending ? t('auth.creating') : t('auth.getStarted')}
           </Button>
 
           <p className="text-xs text-gray-400 text-center leading-relaxed">
-            By registering, you'll join as a regular user.
-            Contact an admin to be added to projects.
+            {t('auth.noCardRequired')}
           </p>
         </form>
 
-        {/* Link to login */}
         <p className="text-center text-sm text-indigo-200/60 mt-5">
-          Already have an account?{' '}
+          {t('auth.hasAccount')}{' '}
           <Link to="/login" className="text-indigo-300 hover:text-white font-medium transition-colors">
-            Sign in
+            {t('auth.signIn')}
           </Link>
         </p>
       </div>

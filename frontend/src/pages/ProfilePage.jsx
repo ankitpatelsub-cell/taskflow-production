@@ -6,7 +6,16 @@ import { Button } from '@/components/ui/Button';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { getGroupedTimezones, getCurrentTimezone } from '@/lib/timezones';
-import { CheckCircle2, User, Globe, Lock } from 'lucide-react';
+import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell, Palette, Monitor, Sun, Moon, ShieldCheck } from 'lucide-react';
+import { TwoFactorSettings } from '@/components/settings/TwoFactorSettings';
+import { useTranslation } from 'react-i18next';
+import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
+import {
+  getDesktopNotifEnabled,
+  requestDesktopNotifPermission,
+  disableDesktopNotifs,
+} from '@/hooks/useDesktopNotifications';
+import { useThemeStore } from '@/stores/themeStore';
 
 const grouped = getGroupedTimezones();
 
@@ -24,15 +33,26 @@ function Section({ title, icon: Icon, children }) {
 
 export function ProfilePage() {
   const { user, updateUser } = useAuthStore();
+  const { t, i18n } = useTranslation();
+  const { theme, setTheme } = useThemeStore();
   const [name, setName]         = useState(user?.name || '');
   const [timezone, setTimezone] = useState(user?.timezone || getCurrentTimezone());
   const [saved, setSaved]       = useState(false);
+  const [desktopNotif, setDesktopNotif] = useState(() => getDesktopNotifEnabled());
+  const [notifStatus, setNotifStatus]   = useState(
+    !('Notification' in window) ? 'unsupported' :
+    Notification.permission === 'denied' ? 'denied' : null
+  );
 
   // Password change state
   const [curPw,  setCurPw]  = useState('');
   const [newPw,  setNewPw]  = useState('');
   const [confPw, setConfPw] = useState('');
   const [pwMsg,  setPwMsg]  = useState('');
+
+  // Account deletion state
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleteError,   setDeleteError]   = useState('');
 
   useEffect(() => {
     setName(user?.name || '');
@@ -55,30 +75,50 @@ export function ProfilePage() {
       setCurPw(''); setNewPw(''); setConfPw('');
       setTimeout(() => setPwMsg(''), 3000);
     },
-    onError: () => setPwMsg('error'),
+    onError: (err) => setPwMsg(err?.response?.data?.error === 'Current password is incorrect' ? 'wrongcurrent' : 'error'),
+  });
+
+  const deleteAccount = useMutation({
+    mutationFn: () => api.delete('/account', { data: { confirm: 'DELETE' } }),
+    onSuccess: () => useAuthStore.getState().logout(),
+    onError: () => setDeleteError(t('profile.deleteError')),
   });
 
   function handlePasswordChange(e) {
     e.preventDefault();
+    if (!curPw) { setPwMsg('nocurrent'); return; }
     if (!newPw || !confPw) { setPwMsg('empty'); return; }
     if (newPw !== confPw) { setPwMsg('mismatch'); return; }
     if (newPw.length < 6) { setPwMsg('short'); return; }
-    changePassword.mutate({ password: newPw });
+    changePassword.mutate({ currentPassword: curPw, password: newPw });
+  }
+
+  async function handleExportData() {
+    const res = await fetch('/api/account/data-export', {
+      headers: { Authorization: `Bearer ${useAuthStore.getState().token}` },
+    });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'my-taskflow-data.json'; a.click();
+    URL.revokeObjectURL(url);
   }
 
   const pwMessages = {
-    success:  { text: 'Password changed successfully!', cls: 'text-emerald-600' },
-    mismatch: { text: 'New passwords do not match.',    cls: 'text-red-600' },
-    short:    { text: 'Password must be at least 6 characters.', cls: 'text-red-600' },
-    empty:    { text: 'Please fill in both password fields.', cls: 'text-red-600' },
-    error:    { text: 'Failed to change password.',     cls: 'text-red-600' },
+    success:      { text: t('profile.pwChanged'),      cls: 'text-emerald-600' },
+    mismatch:     { text: t('profile.pwMismatch'),     cls: 'text-red-600' },
+    short:        { text: t('profile.pwTooShort'),     cls: 'text-red-600' },
+    empty:        { text: t('profile.pwEmpty'),        cls: 'text-red-600' },
+    nocurrent:    { text: t('profile.pwNoCurrent'),    cls: 'text-red-600' },
+    wrongcurrent: { text: t('profile.pwWrongCurrent'), cls: 'text-red-600' },
+    error:        { text: t('profile.pwError'),        cls: 'text-red-600' },
   };
 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-5 page-fade">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">My Profile</h2>
-        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage your account details and preferences</p>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('profile.title')}</h2>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{t('profile.subtitle')}</p>
       </div>
 
       {/* Avatar card */}
@@ -96,11 +136,11 @@ export function ProfilePage() {
       </div>
 
       {/* Profile details */}
-      <Section title="Profile Details" icon={User}>
+      <Section title={t('profile.profileDetails')} icon={User}>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Display Name
+              {t('profile.displayName')}
             </label>
             <Input
               value={name}
@@ -111,16 +151,16 @@ export function ProfilePage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Email Address
+              {t('profile.emailAddress')}
             </label>
             <Input value={user?.email || ''} disabled className="opacity-60 cursor-not-allowed" />
-            <p className="text-xs text-gray-400 mt-1">Email cannot be changed. Contact admin.</p>
+            <p className="text-xs text-gray-400 mt-1">{t('profile.emailNote')}</p>
           </div>
 
           <div className="flex justify-between items-center pt-2">
             {saved && (
               <span className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
-                <CheckCircle2 size={15} /> Saved!
+                <CheckCircle2 size={15} /> {t('profile.saved')}
               </span>
             )}
             {!saved && <div />}
@@ -128,18 +168,19 @@ export function ProfilePage() {
               onClick={() => updateProfile.mutate({ name, timezone })}
               disabled={updateProfile.isPending || !name.trim()}
             >
-              {updateProfile.isPending ? 'Saving…' : 'Save Changes'}
+              {updateProfile.isPending ? t('common.loading') : t('common.saveChanges')}
             </Button>
           </div>
         </div>
       </Section>
 
       {/* Timezone */}
-      <Section title="Timezone & Locale" icon={Globe}>
-        <div className="space-y-4">
+      <Section title={t('profile.timezoneLocale')} icon={Globe}>
+        <div className="space-y-5">
+          {/* Timezone */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Timezone
+              {t('profile.timezone')}
             </label>
             <select
               value={timezone}
@@ -155,8 +196,31 @@ export function ProfilePage() {
               ))}
             </select>
             <p className="text-xs text-gray-400 mt-1.5">
-              Current system timezone: <strong>{getCurrentTimezone()}</strong>
+              {t('profile.currentTimezone')}: <strong>{getCurrentTimezone()}</strong>
             </p>
+          </div>
+
+          {/* Language */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
+              {t('profile.language')}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {SUPPORTED_LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => setLanguage(l.code)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+                    i18n.language === l.code
+                      ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                      : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-indigo-300 hover:bg-indigo-50/50 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <span className="text-base leading-none">{l.flag}</span>
+                  <span>{l.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-end pt-1">
@@ -164,18 +228,98 @@ export function ProfilePage() {
               onClick={() => updateProfile.mutate({ name, timezone })}
               disabled={updateProfile.isPending}
             >
-              Save Timezone
+              {t('common.saveChanges')}
             </Button>
           </div>
         </div>
       </Section>
 
+      {/* Appearance */}
+      <Section title={t('profile.appearance')} icon={Palette}>
+        <div className="flex gap-3">
+          {[
+            { value: 'system', Icon: Monitor, label: t('profile.themeSystem'), desc: t('profile.themeSystemDesc') },
+            { value: 'light',  Icon: Sun,     label: t('profile.themeLight'),  desc: t('profile.themeLightDesc')  },
+            { value: 'dark',   Icon: Moon,    label: t('profile.themeDark'),   desc: t('profile.themeDarkDesc')   },
+          ].map(({ value, Icon, label, desc }) => (
+            <button
+              key={value}
+              onClick={() => setTheme(value)}
+              className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center ${
+                theme === value
+                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                  : 'border-gray-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-gray-50 dark:hover:bg-slate-700/50'
+              }`}
+            >
+              <Icon
+                size={20}
+                className={theme === value ? 'text-indigo-500' : 'text-gray-400 dark:text-slate-400'}
+              />
+              <span className={`text-sm font-semibold leading-tight ${theme === value ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-slate-300'}`}>
+                {label}
+              </span>
+              <span className="text-xs text-gray-400 dark:text-slate-500 leading-tight">{desc}</span>
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* Desktop notifications */}
+      <Section title={t('notifications.desktop')} icon={Bell}>
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500 dark:text-slate-400">{t('notifications.desktopDesc')}</p>
+          <div className="flex items-center gap-4">
+            {notifStatus === 'unsupported' ? (
+              <p className="text-sm text-amber-600 dark:text-amber-400">{t('notifications.notSupported')}</p>
+            ) : notifStatus === 'denied' ? (
+              <p className="text-sm text-red-500">{t('notifications.denied')}</p>
+            ) : desktopNotif ? (
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 size={15} /> {t('notifications.enabled')}
+                </span>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => { disableDesktopNotifs(); setDesktopNotif(false); }}
+                >
+                  {t('common.disable')}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                onClick={async () => {
+                  const result = await requestDesktopNotifPermission();
+                  if (result === 'granted') setDesktopNotif(true);
+                  else setNotifStatus(result);
+                }}
+              >
+                <Bell size={13} /> {t('notifications.enable')}
+              </Button>
+            )}
+          </div>
+        </div>
+      </Section>
+
       {/* Change password */}
-      <Section title="Change Password" icon={Lock}>
+      <Section title={t('profile.changePassword')} icon={Lock}>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              New Password
+              {t('profile.currentPassword')}
+            </label>
+            <Input
+              type="password"
+              value={curPw}
+              onChange={(e) => setCurPw(e.target.value)}
+              placeholder="Your current password"
+              autoComplete="current-password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
+              {t('profile.newPassword')}
             </label>
             <Input
               type="password"
@@ -187,13 +331,13 @@ export function ProfilePage() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">
-              Confirm New Password
+              {t('profile.confirmPassword')}
             </label>
             <Input
               type="password"
               value={confPw}
               onChange={(e) => setConfPw(e.target.value)}
-              placeholder="Repeat password"
+              placeholder="Repeat new password"
               autoComplete="new-password"
             />
           </div>
@@ -206,11 +350,61 @@ export function ProfilePage() {
 
           <div className="flex justify-end pt-1">
             <Button type="submit" disabled={changePassword.isPending}>
-              {changePassword.isPending ? 'Changing…' : 'Change Password'}
+              {changePassword.isPending ? t('profile.changing') : t('profile.changePasswordBtn')}
             </Button>
           </div>
         </form>
       </Section>
+
+      {/* Two-Factor Authentication */}
+      <Section title="Two-Factor Authentication" icon={ShieldCheck}>
+        <TwoFactorSettings />
+      </Section>
+
+      {/* Danger Zone */}
+      <div className="rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
+        <div className="flex items-center gap-2 mb-5 pb-4 border-b border-red-100 dark:border-red-900/30">
+          <AlertTriangle size={18} className="text-red-500" />
+          <h3 className="font-bold text-red-600 dark:text-red-400 text-sm">{t('profile.dangerZone')}</h3>
+        </div>
+        <div className="space-y-4">
+
+          {/* Export data */}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-800 dark:text-white">{t('profile.exportData')}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t('profile.exportDesc')}</p>
+            </div>
+            <Button variant="secondary" onClick={handleExportData} className="shrink-0 flex items-center gap-1.5">
+              <Download size={14} /> {t('common.export')}
+            </Button>
+          </div>
+
+          {/* Delete account */}
+          <div className="pt-3 border-t border-red-100 dark:border-red-900/30">
+            <p className="text-sm font-semibold text-gray-800 dark:text-white">{t('profile.deleteAccount')}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 mb-3">{t('profile.deleteDesc')}</p>
+            <div className="flex gap-2">
+              <Input
+                value={deleteConfirm}
+                onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(''); }}
+                placeholder='Type DELETE to confirm'
+                className="max-w-xs"
+              />
+              <Button
+                variant="danger"
+                disabled={deleteConfirm !== 'DELETE' || deleteAccount.isPending}
+                onClick={() => deleteAccount.mutate()}
+                className="shrink-0 flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 size={14} />
+                {deleteAccount.isPending ? t('profile.deleting') : t('profile.deleteAccount')}
+              </Button>
+            </div>
+            {deleteError && <p className="text-xs text-red-600 mt-2">{deleteError}</p>}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -4,8 +4,9 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { cn, formatDate, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Copy, Check } from 'lucide-react';
+import { Calendar, Copy, Check, Sparkles, AlertCircle, TrendingUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import api from '@/lib/api';
 
 function UserGroup({ group }) {
   const { user, tasks, stats } = group;
@@ -55,11 +56,71 @@ function UserGroup({ group }) {
   );
 }
 
+const MOOD_STYLES = {
+  on_track: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+  at_risk:  'bg-amber-50  border-amber-200  text-amber-800',
+  blocked:  'bg-red-50    border-red-200    text-red-800',
+};
+
+function DigestPanel({ digest, onClose }) {
+  return (
+    <div className={cn('rounded-xl border p-4 mb-6 relative', MOOD_STYLES[digest.mood] || MOOD_STYLES.on_track)}>
+      <button onClick={onClose} className="absolute top-3 right-3 text-current opacity-40 hover:opacity-80 transition-opacity">
+        <X size={14} />
+      </button>
+      <div className="flex items-center gap-2 mb-2">
+        <Sparkles size={15} className="shrink-0" />
+        <span className="text-xs font-bold uppercase tracking-wide">AI Digest — {digest.date}</span>
+        <span className={cn('ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border',
+          digest.mood === 'on_track' ? 'bg-emerald-100 border-emerald-300' :
+          digest.mood === 'at_risk'  ? 'bg-amber-100 border-amber-300' :
+          'bg-red-100 border-red-300'
+        )}>
+          {digest.mood?.replace('_', ' ')}
+        </span>
+      </div>
+      <p className="text-sm leading-relaxed mb-3">{digest.digest}</p>
+      {digest.highlights?.length > 0 && (
+        <div className="mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-wide mb-1 flex items-center gap-1">
+            <TrendingUp size={11} /> Highlights
+          </p>
+          <ul className="space-y-0.5">
+            {digest.highlights.map((h, i) => <li key={i} className="text-xs">• {h}</li>)}
+          </ul>
+        </div>
+      )}
+      {digest.blockers?.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide mb-1 flex items-center gap-1">
+            <AlertCircle size={11} /> Needs Attention
+          </p>
+          <ul className="space-y-0.5">
+            {digest.blockers.map((b, i) => <li key={i} className="text-xs">• {b}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function StandupView({ projectId }) {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [status, setStatus] = useState('');
   const { data, isLoading } = useStandup(projectId, { date, status: status || undefined });
   const [copied, setCopied] = useState(false);
+  const [digest, setDigest] = useState(null);
+  const [digestLoading, setDigestLoading] = useState(false);
+
+  async function generateDigest() {
+    setDigestLoading(true);
+    try {
+      const res = await api.post(`/projects/${projectId}/standup/digest`, { date });
+      setDigest(res.data);
+    } finally {
+      setDigestLoading(false);
+    }
+  }
 
   function copyToClipboard() {
     if (!data) return;
@@ -106,8 +167,14 @@ export function StandupView({ projectId }) {
             {copied ? <Check size={14} /> : <Copy size={14} />}
             {copied ? 'Copied!' : 'Copy'}
           </Button>
+          <Button size="sm" variant="primary" onClick={generateDigest} disabled={digestLoading}>
+            <Sparkles size={14} />
+            {digestLoading ? 'Generating…' : 'AI Digest'}
+          </Button>
         </div>
       </div>
+
+      {digest && <DigestPanel digest={digest} onClose={() => setDigest(null)} />}
 
       {isLoading ? (
         <div className="space-y-4">

@@ -8,15 +8,21 @@ import { TaskCard } from '@/components/tasks/TaskCard';
 import { useTasks, useMoveTask } from '@/hooks/useTasks';
 import { STATUS_LABELS } from '@/lib/utils';
 import { BoardSkeleton } from '@/components/ui/Skeleton';
-
-const COLUMNS = ['todo', 'in_progress', 'review', 'done'];
+import { useTranslation } from 'react-i18next';
+import { useProjectStatuses } from '@/hooks/useProjectStatuses';
 
 export function KanbanBoard({ projectId, filters = {} }) {
+  const { t } = useTranslation();
+  const { data: projectStatuses } = useProjectStatuses(projectId);
+  const COLUMNS = projectStatuses?.length
+    ? projectStatuses.map(s => s.key)
+    : ['todo', 'in_progress', 'review', 'done'];
   const { data, isLoading } = useTasks(projectId, {
     ...(filters.assignee  && { assignee:  filters.assignee }),
     ...(filters.priority  && { priority:  filters.priority }),
     ...(filters.tag       && { tag:       filters.tag }),
     ...(filters.q         && { q:         filters.q }),
+    ...(filters.to        && { to:        filters.to }),
     limit: 200,
   });
   const tasks = data || [];
@@ -43,6 +49,23 @@ export function KanbanBoard({ projectId, filters = {} }) {
 
   const hasFilters = Object.values(filters).some(Boolean);
 
+  if (!hasFilters && tasks.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center max-w-sm px-6">
+          <div className="text-6xl mb-4">🚀</div>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{t('task.noTasksYet')}</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">
+            {t('task.emptyBoardHint')}
+          </p>
+          <p className="text-xs text-gray-400 dark:text-slate-500">
+            {t('task.dragHint')}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -54,11 +77,12 @@ export function KanbanBoard({ projectId, filters = {} }) {
         {COLUMNS.map((status) => {
           const colTasks = tasks.filter((t) => t.status === status);
           if (hasFilters && colTasks.length === 0) return null;
+          const statusLabel = projectStatuses?.find(s => s.key === status)?.name || STATUS_LABELS[status] || status;
           return (
             <KanbanColumn
               key={status}
               status={status}
-              title={STATUS_LABELS[status]}
+              title={statusLabel}
               tasks={colTasks}
               projectId={projectId}
               filtered={hasFilters}

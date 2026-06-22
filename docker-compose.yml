@@ -1,44 +1,74 @@
 version: '3.9'
 
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: taskflow
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: taskflow-backend
     restart: unless-stopped
-    environment:
-      - PORT=3001
-      - NODE_ENV=production
-      - CORS_ORIGIN=http://localhost
-      # ⚠️  Change these secrets before deploying!
-      - JWT_SECRET=${JWT_SECRET:-change_this_jwt_secret_32chars_min}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-change_this_refresh_secret_32chars}
-      - BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY:-change_this_backup_key_32chars__}
-      - BACKUP_CRON=${BACKUP_CRON:-0 2 * * *}
-      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
-    volumes:
-      - taskflow-data:/app/data
-      - taskflow-uploads:/app/uploads
-    ports:
-      - "3001:3001"   # Remove in prod (use nginx proxy only)
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/health || exit 1"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3
+      start_period: 20s
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://taskflow:${DB_PASSWORD:-changeme}@db:5432/taskflow
+      DATABASE_SSL: "false"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      APP_URL: ${APP_URL:-http://localhost}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@taskflow.app}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRO_PRICE_ID: ${STRIPE_PRO_PRICE_ID:-}
+      STRIPE_TEAM_PRICE_ID: ${STRIPE_TEAM_PRICE_ID:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    ports:
+      - "3001:3001"
+    volumes:
+      - uploads:/app/uploads
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    container_name: taskflow-frontend
     restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     ports:
       - "80:80"
-    depends_on:
-      - backend
 
 volumes:
-  taskflow-data:    # Persists SQLite database + backups
-  taskflow-uploads: # Persists task file attachments
+  pgdata:
+  uploads:

@@ -1,7 +1,7 @@
 import { Calendar, MessageSquare, Paperclip, AlertTriangle, RefreshCw } from 'lucide-react';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
-import { cn, formatDate, isOverdue } from '@/lib/utils';
+import { cn, formatDate, isOverdue, isDueSoon } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
 
 export function TaskCard({ task, projectId, dragHandleProps = {} }) {
@@ -12,7 +12,8 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
     openTaskDrawer(task.id);
   }
 
-  const overdue = task.deadline && isOverdue(task.deadline) && task.status !== 'done';
+  const overdue  = task.deadline && isOverdue(task.deadline) && task.status !== 'done';
+  const dueSoon  = task.deadline && isDueSoon(task.deadline) && task.status !== 'done' && !overdue;
   const done = task.status === 'done';
   const incomplete = !done && (!task.assignee_id || !task.deadline);
 
@@ -47,10 +48,32 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
         </div>
       )}
 
+      {/* Subtask progress */}
+      {task.subtasks?.length > 0 && (() => {
+        const done = task.subtasks.filter(s => s.status === 'done').length;
+        const pct = Math.round((done / task.subtasks.length) * 100);
+        return (
+          <div className="mb-2.5">
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[10px] text-gray-400">{done}/{task.subtasks.length} subtasks</span>
+              <span className="text-[10px] text-gray-400">{pct}%</span>
+            </div>
+            <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Footer row */}
       <div className="flex items-center justify-between gap-2 mt-2.5">
         <div className="flex items-center gap-1.5">
           <PriorityBadge priority={task.priority} />
+          {task.story_points && (
+            <span className="inline-flex items-center text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded">
+              {task.story_points} SP
+            </span>
+          )}
           {task.recurrence_rule && (
             <span
               title={`Repeats ${task.recurrence_rule}${task.recurrence_interval > 1 ? ` every ${task.recurrence_interval}` : ''}`}
@@ -88,9 +111,9 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
           {task.deadline && (
             <span className={cn(
               'flex items-center gap-1 text-xs rounded-md px-1.5 py-0.5',
-              overdue
-                ? 'bg-red-50 text-red-600 font-semibold'
-                : 'text-gray-400'
+              overdue  ? 'bg-red-50 text-red-600 font-semibold' :
+              dueSoon  ? 'bg-amber-50 text-amber-600 font-medium' :
+              'text-gray-400'
             )}>
               <Calendar size={11} />
               {formatDate(task.deadline)}

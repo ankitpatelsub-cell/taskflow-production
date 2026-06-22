@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tick — Production Setup Guide</title>
+<style>
+  :root { --brand: #6366f1; --dark: #1e1b4b; --gray: #6b7280; --light: #f9fafb; --border: #e5e7eb; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111827; line-height: 1.6; background: #fff; }
+  .cover { background: linear-gradient(135deg, var(--dark) 0%, #312e81 50%, var(--brand) 100%); color: #fff; text-align: center; padding: 80px 40px; page-break-after: always; }
+  .cover h1 { font-size: 3rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+  .cover .sub { font-size: 1.2rem; opacity: .8; margin-bottom: 8px; }
+  .cover .date { font-size: .9rem; opacity: .6; }
+  .toc { padding: 48px 60px; page-break-after: always; }
+  .toc h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 24px; color: var(--dark); border-bottom: 2px solid var(--brand); padding-bottom: 8px; }
+  .toc ol { list-style: none; counter-reset: toc; }
+  .toc li { counter-increment: toc; padding: 8px 0; border-bottom: 1px dotted var(--border); display: flex; justify-content: space-between; }
+  .toc li::before { content: counter(toc) ". "; font-weight: 600; color: var(--brand); margin-right: 8px; }
+  .toc .pg { color: var(--gray); font-size: .9rem; }
+  section { padding: 48px 60px; page-break-inside: avoid; }
+  section + section { border-top: 1px solid var(--border); }
+  h2.sec { font-size: 1.5rem; font-weight: 700; color: var(--dark); margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid var(--brand); }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 10px; color: #374151; }
+  p { margin-bottom: 12px; color: #374151; }
+  ul, ol { margin: 10px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+  code { background: #f3f4f6; border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: 'Courier New', monospace; font-size: .88em; color: #dc2626; }
+  pre { background: #1e1b4b; color: #e0e7ff; border-radius: 8px; padding: 20px 24px; overflow-x: auto; margin: 16px 0; font-family: 'Courier New', monospace; font-size: .85rem; line-height: 1.7; }
+  pre code { background: none; border: none; color: inherit; padding: 0; font-size: inherit; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .req { background: #fee2e2; color: #b91c1c; }
+  .opt { background: #dcfce7; color: #15803d; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .9rem; }
+  th { background: var(--dark); color: #fff; text-align: left; padding: 10px 14px; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--light); }
+  .tip { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 0 6px 6px 0; margin: 16px 0; }
+  .warn { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px 18px; border-radius: 0 6px 6px 0; margin: 16px 0; }
+  .danger { background: #fef2f2; border-left: 4px solid #ef4444; padding: 14px 18px; border-radius: 0 6px 6px 0; margin: 16px 0; }
+  .check ul { list-style: none; margin-left: 0; }
+  .check li::before { content: "☐ "; color: var(--brand); font-weight: bold; }
+  @media print {
+    section { page-break-inside: auto; }
+    h2.sec, h3 { page-break-after: avoid; }
+    pre { white-space: pre-wrap; word-break: break-all; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <h1>Tick</h1>
+  <p class="sub">Production Deployment &amp; Setup Guide</p>
+  <p class="sub">Version 1.0 — Full-Stack Project Management Platform</p>
+  <p class="date">Generated June 2026</p>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><span>System Requirements</span><span class="pg">§1</span></li>
+    <li><span>Quick Start with Docker Compose</span><span class="pg">§2</span></li>
+    <li><span>Environment Variables Reference</span><span class="pg">§3</span></li>
+    <li><span>Manual (Non-Docker) Setup</span><span class="pg">§4</span></li>
+    <li><span>Database Migrations</span><span class="pg">§5</span></li>
+    <li><span>First Login &amp; Initial Configuration</span><span class="pg">§6</span></li>
+    <li><span>Integrations (Email, Slack, AI, OAuth)</span><span class="pg">§7</span></li>
+    <li><span>Security Checklist</span><span class="pg">§8</span></li>
+    <li><span>Maintenance &amp; Backups</span><span class="pg">§9</span></li>
+    <li><span>Upgrade Procedure</span><span class="pg">§10</span></li>
+    <li><span>Troubleshooting</span><span class="pg">§11</span></li>
+  </ol>
+</div>
+
+<!-- §1 System Requirements -->
+<section id="s1">
+  <h2 class="sec">1. System Requirements</h2>
+  <h3>Minimum (Development / Small Team)</h3>
+  <table>
+    <tr><th>Component</th><th>Minimum</th><th>Recommended (Production)</th></tr>
+    <tr><td>CPU</td><td>2 vCPUs</td><td>4+ vCPUs</td></tr>
+    <tr><td>RAM</td><td>2 GB</td><td>8 GB</td></tr>
+    <tr><td>Disk</td><td>20 GB SSD</td><td>100 GB SSD</td></tr>
+    <tr><td>OS</td><td colspan="2">Ubuntu 22.04 LTS / Debian 12 / Amazon Linux 2023</td></tr>
+    <tr><td>Docker</td><td colspan="2">Docker Engine 24+ with Docker Compose v2</td></tr>
+    <tr><td>Node.js (manual)</td><td colspan="2">Node.js 22 LTS</td></tr>
+    <tr><td>PostgreSQL (manual)</td><td colspan="2">PostgreSQL 16</td></tr>
+  </table>
+
+  <h3>Ports Required</h3>
+  <ul>
+    <li><code>80</code> / <code>443</code> — public HTTP/HTTPS (nginx)</li>
+    <li><code>3001</code> — backend API (internal only; do NOT expose publicly)</li>
+    <li><code>5432</code> — PostgreSQL (internal only)</li>
+  </ul>
+</section>
+
+<!-- §2 Docker Compose Quick Start -->
+<section id="s2">
+  <h2 class="sec">2. Quick Start with Docker Compose</h2>
+  <p>The fastest path to a running production stack. All services start in a single command.</p>
+
+  <h3>Step 1 — Clone &amp; enter the repo</h3>
+  <pre><code>git clone https://github.com/your-org/taskflow-production.git
+cd taskflow-production</code></pre>
+
+  <h3>Step 2 — Create your environment file</h3>
+  <pre><code>cp .env.production.example .env
+nano .env   # fill in required values (see §3)</code></pre>
+
+  <h3>Step 3 — Build the frontend</h3>
+  <pre><code>cd frontend
+npm install
+VITE_API_URL=https://your-domain.com/api npm run build
+cd ..</code></pre>
+  <div class="tip">The built files land in <code>frontend/dist/</code>. nginx serves them directly from there.</div>
+
+  <h3>Step 4 — Start the stack</h3>
+  <pre><code>docker compose up -d
+docker compose logs -f</code></pre>
+
+  <h3>Step 5 — Run database migrations</h3>
+  <pre><code>docker compose exec backend node -e "
+const { runMigrations } = require('./src/config/db');
+runMigrations().then(() => { console.log('Done'); process.exit(0); });
+"</code></pre>
+
+  <h3>Step 6 — Verify health</h3>
+  <pre><code>curl https://your-domain.com/api/health
+# Expected: {"status":"ok","db":"connected"}</code></pre>
+
+  <div class="tip"><strong>Tip:</strong> To stop without losing data: <code>docker compose stop</code>. To destroy everything including volumes: <code>docker compose down -v</code> (destructive — deletes DB data).</div>
+</section>
+
+<!-- §3 Environment Variables -->
+<section id="s3">
+  <h2 class="sec">3. Environment Variables Reference</h2>
+  <p>Copy <code>.env.production.example</code> to <code>.env</code> and fill in all <span class="badge req">Required</span> values.</p>
+
+  <h3>Database</h3>
+  <table>
+    <tr><th>Variable</th><th>Example</th><th>Required</th></tr>
+    <tr><td><code>DATABASE_URL</code></td><td><code>postgresql://tick:s3cret@db:5432/tickdb</code></td><td><span class="badge req">Required</span></td></tr>
+    <tr><td><code>POSTGRES_DB</code></td><td><code>tickdb</code></td><td><span class="badge req">Required</span></td></tr>
+    <tr><td><code>POSTGRES_USER</code></td><td><code>tick</code></td><td><span class="badge req">Required</span></td></tr>
+    <tr><td><code>POSTGRES_PASSWORD</code></td><td><code>strong-random-password</code></td><td><span class="badge req">Required</span></td></tr>
+  </table>
+
+  <h3>JWT / Auth</h3>
+  <table>
+    <tr><th>Variable</th><th>Example</th><th>Required</th></tr>
+    <tr><td><code>JWT_SECRET</code></td><td><code>64-char-random-hex</code></td><td><span class="badge req">Required</span></td></tr>
+    <tr><td><code>JWT_REFRESH_SECRET</code></td><td><code>different-64-char-random-hex</code></td><td><span class="badge req">Required</span></td></tr>
+    <tr><td><code>JWT_EXPIRY</code></td><td><code>15m</code></td><td><span class="badge opt">Optional</span></td></tr>
+    <tr><td><code>REFRESH_EXPIRY_DAYS</code></td><td><code>7</code></td><td><span class="badge opt">Optional</span></td></tr>
+    <tr><td><code>COOKIE_SECRET</code></td><td><code>32-char-random-string</code></td><td><span class="badge req">Required</span></td></tr>
+  </table>
+  <div class="warn">Generate secrets with: <code>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code></div>
+
+  <h3>Server</h3>
+  <table>
+    <tr><th>Variable</th><th>Example</th><th>Required</th></tr>
+    <tr><td><code>PORT</code></td><td><code>3001</code></td><td><span class="badge opt">Optional</span></td></tr>
+    <tr><td><code>NODE_ENV</code></td><td><code>production</code></td><td><span class="badge req">Required</span></td></tr>
+    <tr><td><code>FRONTEND_URL</code></td><td><code>https://app.your-domain.com</code></td><td><span class="badge req">Required</span> (CORS)</td></tr>
+  </table>
+
+  <h3>Email (SMTP)</h3>
+  <table>
+    <tr><th>Variable</th><th>Example</th><th>Required</th></tr>
+    <tr><td><code>SMTP_HOST</code></td><td><code>smtp.sendgrid.net</code></td><td><span class="badge opt">Optional*</span></td></tr>
+    <tr><td><code>SMTP_PORT</code></td><td><code>587</code></td><td><span class="badge opt">Optional</span></td></tr>
+    <tr><td><code>SMTP_SECURE</code></td><td><code>false</code></td><td><span class="badge opt">Optional</span></td></tr>
+    <tr><td><code>SMTP_USER</code></td><td><code>apikey</code></td><td><span class="badge opt">Optional*</span></td></tr>
+    <tr><td><code>SMTP_PASS</code></td><td><code>SG.xxx</code></td><td><span class="badge opt">Optional*</span></td></tr>
+    <tr><td><code>EMAIL_FROM</code></td><td><code>Tick &lt;noreply@your-domain.com&gt;</code></td><td><span class="badge opt">Optional*</span></td></tr>
+  </table>
+  <p>*Required for email verification, password reset, and task notification emails.</p>
+
+  <h3>AI (Anthropic)</h3>
+  <table>
+    <tr><th>Variable</th><th>Example</th><th>Required</th></tr>
+    <tr><td><code>ANTHROPIC_API_KEY</code></td><td><code>sk-ant-api03-xxx</code></td><td><span class="badge opt">Optional</span></td></tr>
+  </table>
+  <p>Required for AI task breakdown feature. Leave blank to disable AI features gracefully.</p>
+
+  <h3>OAuth (Google)</h3>
+  <table>
+    <tr><th>Variable</th><th>Example</th><th>Required</th></tr>
+    <tr><td><code>GOOGLE_CLIENT_ID</code></td><td><code>xxx.apps.googleusercontent.com</code></td><td><span class="badge opt">Optional</span></td></tr>
+    <tr><td><code>GOOGLE_CLIENT_SECRET</code></td><td><code>GOCSPX-xxx</code></td><td><span class="badge opt">Optional</span></td></tr>
+    <tr><td><code>GOOGLE_CALLBACK_URL</code></td><td><code>https://your-domain.com/api/auth/google/callback</code></td><td><span class="badge opt">Optional</span></td></tr>
+  </table>
+
+  <h3>Storage</h3>
+  <table>
+    <tr><th>Variable</th><th>Example</th><th>Required</th></tr>
+    <tr><td><code>UPLOAD_DIR</code></td><td><code>/app/uploads</code></td><td><span class="badge opt">Optional</span></td></tr>
+    <tr><td><code>MAX_FILE_SIZE_MB</code></td><td><code>50</code></td><td><span class="badge opt">Optional</span></td></tr>
+  </table>
+</section>
+
+<!-- §4 Manual Setup -->
+<section id="s4">
+  <h2 class="sec">4. Manual (Non-Docker) Setup</h2>
+  <p>If you prefer to run without Docker (e.g., existing server, VPS, managed DB).</p>
+
+  <h3>Install Prerequisites</h3>
+  <pre><code># Node.js 22
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+sudo apt-get install -y nodejs
+
+# PostgreSQL 16
+sudo apt-get install -y postgresql-16
+
+# Nginx
+sudo apt-get install -y nginx</code></pre>
+
+  <h3>Set up the Database</h3>
+  <pre><code>sudo -u postgres psql &lt;&lt;'SQL'
+CREATE USER tick WITH PASSWORD 'your-strong-password';
+CREATE DATABASE tickdb OWNER tick;
+GRANT ALL PRIVILEGES ON DATABASE tickdb TO tick;
+SQL</code></pre>
+
+  <h3>Install Backend Dependencies</h3>
+  <pre><code>cd backend
+npm ci --only=production</code></pre>
+
+  <h3>Set Up Environment</h3>
+  <pre><code>cp ../.env.production.example .env
+# Edit .env with your values
+nano .env</code></pre>
+
+  <h3>Run as a systemd Service</h3>
+  <pre><code>sudo tee /etc/systemd/system/tick-backend.service &lt;&lt;'EOF'
+[Unit]
+Description=Tick Backend API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/tick/backend
+EnvironmentFile=/opt/tick/backend/.env
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable tick-backend
+sudo systemctl start tick-backend</code></pre>
+
+  <h3>Build and Deploy Frontend</h3>
+  <pre><code>cd frontend
+npm ci
+VITE_API_URL=https://your-domain.com/api npm run build
+sudo cp -r dist/* /var/www/tick/</code></pre>
+
+  <h3>Nginx Configuration</h3>
+  <pre><code>sudo cp nginx.conf /etc/nginx/sites-available/tick
+sudo ln -s /etc/nginx/sites-available/tick /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx</code></pre>
+</section>
+
+<!-- §5 Database Migrations -->
+<section id="s5">
+  <h2 class="sec">5. Database Migrations</h2>
+  <p>Migrations live in <code>backend/src/migrations/</code> and run automatically on startup (in Docker). For manual execution:</p>
+
+  <pre><code># With Docker
+docker compose exec backend node -e "
+const { runMigrations } = require('./src/config/db');
+runMigrations().then(() => { console.log('Migrations complete'); process.exit(0); })
+.catch(e => { console.error(e); process.exit(1); });
+"
+
+# Without Docker (from backend/ directory)
+node -e "
+const { runMigrations } = require('./src/config/db');
+runMigrations().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });
+"</code></pre>
+
+  <h3>Migration Files (in order)</h3>
+  <table>
+    <tr><th>File</th><th>Purpose</th></tr>
+    <tr><td><code>001_initial_schema.sql</code></td><td>Core tables: users, projects, tasks, time_logs</td></tr>
+    <tr><td><code>002_...</code></td><td>Auth: refresh_tokens, email verification</td></tr>
+    <tr><td><code>003_...</code></td><td>Notifications, activity logs</td></tr>
+    <tr><td><code>004_...</code></td><td>Sprints, epics</td></tr>
+    <tr><td><code>005_...</code></td><td>Comments, reactions, mentions</td></tr>
+    <tr><td><code>006_...</code></td><td>Custom fields</td></tr>
+    <tr><td><code>007_...</code></td><td>Webhooks, audit logs</td></tr>
+    <tr><td><code>008_...</code></td><td>Subscriptions / plans</td></tr>
+    <tr><td><code>009_...</code></td><td>Share links</td></tr>
+    <tr><td><code>010_workspaces.sql</code></td><td>Workspaces / org model</td></tr>
+    <tr><td><code>011_verify_existing_users.sql</code></td><td>Mark pre-existing users as email-verified</td></tr>
+  </table>
+
+  <div class="warn">Migrations are idempotent — safe to run multiple times. They use <code>IF NOT EXISTS</code> and <code>DO $$ BEGIN ... EXCEPTION WHEN duplicate_column ...</code> guards.</div>
+</section>
+
+<!-- §6 First Login -->
+<section id="s6">
+  <h2 class="sec">6. First Login &amp; Initial Configuration</h2>
+
+  <h3>Create the First Admin User</h3>
+  <p>The first user to register via <code>POST /api/auth/register</code> (or the UI signup page) gets the <code>member</code> role by default. Promote them to <code>super_admin</code>:</p>
+  <pre><code># With Docker
+docker compose exec db psql -U tick -d tickdb -c \
+  "UPDATE users SET role='super_admin' WHERE email='your@email.com';"</code></pre>
+
+  <h3>Configure Your First Workspace</h3>
+  <ol>
+    <li>Log in at <code>https://your-domain.com</code></li>
+    <li>A default workspace is created automatically when you first register</li>
+    <li>Click the workspace name in the sidebar → <strong>Workspace Settings</strong></li>
+    <li>Rename it, set your organization name, and invite team members</li>
+  </ol>
+
+  <h3>Plan Configuration</h3>
+  <p>Insert a subscription record to unlock plan limits:</p>
+  <pre><code># Set the plan (free/pro/team)
+docker compose exec db psql -U tick -d tickdb -c \
+  "INSERT INTO subscriptions (id, plan, status) VALUES (gen_random_uuid(), 'pro', 'active')
+   ON CONFLICT DO NOTHING;"</code></pre>
+  <table>
+    <tr><th>Plan</th><th>Max Projects / Workspace</th><th>Max Members / Workspace</th></tr>
+    <tr><td>free</td><td>3</td><td>5</td></tr>
+    <tr><td>pro</td><td>10</td><td>25</td></tr>
+    <tr><td>team</td><td>Unlimited</td><td>Unlimited</td></tr>
+  </table>
+</section>
+
+<!-- §7 Integrations -->
+<section id="s7">
+  <h2 class="sec">7. Integrations</h2>
+
+  <h3>Email (SMTP / SendGrid)</h3>
+  <ol>
+    <li>Sign up at <a href="https://sendgrid.com">SendGrid</a> (free tier: 100/day) or use any SMTP provider</li>
+    <li>Create an API key with <em>Mail Send</em> permission</li>
+    <li>Set in <code>.env</code>: <code>SMTP_HOST=smtp.sendgrid.net</code>, <code>SMTP_PORT=587</code>, <code>SMTP_USER=apikey</code>, <code>SMTP_PASS=SG.xxx</code></li>
+    <li>Verify by registering a new user — they should receive a verification email</li>
+  </ol>
+
+  <h3>Slack Notifications</h3>
+  <ol>
+    <li>Go to <a href="https://api.slack.com/apps">api.slack.com/apps</a> → Create New App → From Scratch</li>
+    <li>Enable <strong>Incoming Webhooks</strong> → Add to your channel</li>
+    <li>Copy the Webhook URL</li>
+    <li>In Tick: Project Settings → Slack → paste the URL → Save → Test</li>
+  </ol>
+
+  <h3>AI Task Breakdown (Anthropic)</h3>
+  <ol>
+    <li>Sign up at <a href="https://console.anthropic.com">console.anthropic.com</a></li>
+    <li>Create an API key</li>
+    <li>Set <code>ANTHROPIC_API_KEY=sk-ant-xxx</code> in <code>.env</code></li>
+    <li>Restart the backend: <code>docker compose restart backend</code></li>
+    <li>In Tick: open any task → click <strong>AI Breakdown</strong></li>
+  </ol>
+
+  <h3>Google OAuth</h3>
+  <ol>
+    <li>Go to <a href="https://console.cloud.google.com">Google Cloud Console</a> → APIs &amp; Services → Credentials</li>
+    <li>Create OAuth 2.0 Client ID → Web Application</li>
+    <li>Authorized redirect URI: <code>https://your-domain.com/api/auth/google/callback</code></li>
+    <li>Set <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, <code>GOOGLE_CALLBACK_URL</code> in <code>.env</code></li>
+  </ol>
+
+  <h3>Webhooks (Outbound)</h3>
+  <p>Tick can POST events to any HTTPS endpoint. Configure per-project under <strong>Project Settings → Webhooks</strong>. Supported events:</p>
+  <ul>
+    <li><code>task:created</code>, <code>task:updated</code>, <code>task:deleted</code></li>
+    <li><code>comment:created</code></li>
+    <li><code>project:updated</code></li>
+    <li><code>ping</code> (test event)</li>
+  </ul>
+  <p>All payloads include an <code>X-Tick-Signature: sha256=&lt;hex&gt;</code> header when a secret is configured. Deliveries are retried up to 3 times with exponential backoff (1s, 2s, 4s).</p>
+</section>
+
+<!-- §8 Security Checklist -->
+<section id="s8">
+  <h2 class="sec">8. Security Checklist</h2>
+  <div class="check">
+    <ul>
+      <li>Change all default secrets in <code>.env</code> (JWT_SECRET, JWT_REFRESH_SECRET, COOKIE_SECRET, POSTGRES_PASSWORD)</li>
+      <li>Set <code>NODE_ENV=production</code> to enable secure cookies, stricter CORS, and HTTP-only flags</li>
+      <li>Enable HTTPS with a valid TLS certificate (Let's Encrypt / Certbot recommended)</li>
+      <li>Firewall: only expose ports 80/443 publicly; block 3001 and 5432 from the internet</li>
+      <li>Set <code>FRONTEND_URL</code> to your exact frontend origin (used in CORS)</li>
+      <li>Verify rate limits are active: <code>curl -I https://your-domain.com/api/health</code> should include <code>RateLimit-*</code> headers</li>
+      <li>Enable 2FA for all admin accounts (Settings → Security → Enable 2FA)</li>
+      <li>Configure SMTP and verify that new users receive verification emails</li>
+      <li>Review file upload limits: default 50 MB, adjust <code>MAX_FILE_SIZE_MB</code> if needed</li>
+      <li>Set up log rotation for nginx and application logs</li>
+      <li>Enable automated daily database backups (see §9)</li>
+      <li>Test disaster recovery: restore from backup on a staging server</li>
+    </ul>
+  </div>
+
+  <div class="danger">
+    <strong>Never commit <code>.env</code> to version control.</strong> The <code>.env.production.example</code> file contains no real secrets and is safe to commit.
+  </div>
+</section>
+
+<!-- §9 Maintenance & Backups -->
+<section id="s9">
+  <h2 class="sec">9. Maintenance &amp; Backups</h2>
+
+  <h3>Database Backups</h3>
+  <pre><code># Manual backup
+docker compose exec db pg_dump -U tick tickdb | gzip &gt; tick-backup-$(date +%Y%m%d).sql.gz
+
+# Restore
+gunzip -c tick-backup-20260608.sql.gz | docker compose exec -T db psql -U tick tickdb</code></pre>
+
+  <h3>Automated Daily Backups (cron)</h3>
+  <pre><code># /etc/cron.daily/tick-backup
+#!/bin/bash
+cd /opt/tick
+docker compose exec -T db pg_dump -U tick tickdb | \
+  gzip &gt; /var/backups/tick/tick-$(date +%Y%m%d-%H%M%S).sql.gz
+# Keep 30 days
+find /var/backups/tick/ -name "*.sql.gz" -mtime +30 -delete</code></pre>
+
+  <h3>View Application Logs</h3>
+  <pre><code># All services
+docker compose logs -f
+
+# Backend only (last 100 lines)
+docker compose logs --tail=100 backend
+
+# Filter for errors
+docker compose logs backend 2>&amp;1 | grep '"level":50'</code></pre>
+
+  <h3>Update Uploaded Files Backup</h3>
+  <pre><code># The uploads volume is mounted at /app/uploads inside the container
+# Back it up alongside the DB
+docker run --rm -v tick_uploads:/data -v /var/backups/tick:/backup \
+  alpine tar czf /backup/uploads-$(date +%Y%m%d).tar.gz /data</code></pre>
+</section>
+
+<!-- §10 Upgrade Procedure -->
+<section id="s10">
+  <h2 class="sec">10. Upgrade Procedure</h2>
+  <ol>
+    <li><strong>Back up first</strong>: Always take a DB backup before upgrading (see §9)</li>
+    <li><strong>Pull latest code</strong>:
+      <pre><code>git pull origin main</code></pre>
+    </li>
+    <li><strong>Rebuild frontend</strong>:
+      <pre><code>cd frontend &amp;&amp; npm ci &amp;&amp; VITE_API_URL=https://your-domain.com/api npm run build &amp;&amp; cd ..</code></pre>
+    </li>
+    <li><strong>Rebuild and restart services</strong>:
+      <pre><code>docker compose build backend
+docker compose up -d --no-deps backend</code></pre>
+    </li>
+    <li><strong>Run any new migrations</strong>:
+      <pre><code>docker compose exec backend node -e "
+const { runMigrations } = require('./src/config/db');
+runMigrations().then(() => process.exit(0));
+"</code></pre>
+    </li>
+    <li><strong>Verify health</strong>:
+      <pre><code>curl https://your-domain.com/api/health</code></pre>
+    </li>
+  </ol>
+  <div class="tip">For zero-downtime upgrades, run two backend containers behind nginx with <code>upstream</code> and deploy one at a time.</div>
+</section>
+
+<!-- §11 Troubleshooting -->
+<section id="s11">
+  <h2 class="sec">11. Troubleshooting</h2>
+
+  <table>
+    <tr><th>Symptom</th><th>Likely Cause</th><th>Fix</th></tr>
+    <tr>
+      <td><code>Cannot connect to database</code></td>
+      <td>DB not ready / wrong credentials</td>
+      <td>Check <code>DATABASE_URL</code>; run <code>docker compose ps</code> to verify <code>db</code> is healthy</td>
+    </tr>
+    <tr>
+      <td>Login returns 500</td>
+      <td>JWT_SECRET not set</td>
+      <td>Ensure <code>JWT_SECRET</code> and <code>JWT_REFRESH_SECRET</code> are set in <code>.env</code></td>
+    </tr>
+    <tr>
+      <td>Email not received</td>
+      <td>SMTP not configured</td>
+      <td>Check <code>SMTP_*</code> vars; test with <code>docker compose exec backend node -e "require('./src/services/emailService').sendEmail({to:'test@x.com',subject:'test',html:'test'})"</code></td>
+    </tr>
+    <tr>
+      <td>403 <code>EMAIL_NOT_VERIFIED</code> on all API calls</td>
+      <td>User hasn't verified email</td>
+      <td>Resend verification email or run migration <code>011_verify_existing_users.sql</code> to mark existing users as verified</td>
+    </tr>
+    <tr>
+      <td>429 Too Many Requests</td>
+      <td>Rate limit hit</td>
+      <td>Default: 500 req/15min per IP, 120 req/min per user token. Adjust in <code>index.js</code> if needed.</td>
+    </tr>
+    <tr>
+      <td>File upload fails</td>
+      <td>File type not in allowlist or &gt;50 MB</td>
+      <td>Check allowed types in <code>backend/src/utils/fileUpload.js</code></td>
+    </tr>
+    <tr>
+      <td>WebSocket disconnects</td>
+      <td>nginx proxy timeout</td>
+      <td>Verify <code>proxy_read_timeout 86400</code> and upgrade headers in <code>nginx.conf</code></td>
+    </tr>
+    <tr>
+      <td>AI features return 503</td>
+      <td>ANTHROPIC_API_KEY not set</td>
+      <td>Set the key in <code>.env</code> and restart backend</td>
+    </tr>
+    <tr>
+      <td>Webhook delivery failing</td>
+      <td>Target URL unreachable or non-HTTPS</td>
+      <td>Only HTTPS URLs are accepted. Use the webhook test button to check connectivity.</td>
+    </tr>
+    <tr>
+      <td>CORS error in browser</td>
+      <td><code>FRONTEND_URL</code> mismatch</td>
+      <td>Set <code>FRONTEND_URL</code> exactly matching your frontend origin (no trailing slash)</td>
+    </tr>
+  </table>
+
+  <h3>Getting Debug Logs</h3>
+  <pre><code># Enable verbose logging
+docker compose exec backend sh -c "LOG_LEVEL=debug node index.js"
+
+# Check PostgreSQL slow queries
+docker compose exec db psql -U tick -d tickdb -c \
+  "SELECT query, calls, mean_exec_time FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 10;"</code></pre>
+
+  <div class="tip">For further help, open an issue at the project repository or contact your administrator.</div>
+</section>
+
+</body>
+</html>

@@ -1,16 +1,26 @@
 import { Link } from '@tanstack/react-router';
-import { LayoutGrid, List, Calendar, Users, Settings } from 'lucide-react';
+import { LayoutGrid, List, Calendar, CalendarDays, Users, Settings, BarChart2, Zap, Clock, GanttChartSquare, Layers, Flag, ClipboardList } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { AISummaryButton } from '@/components/shared/AISummaryButton';
+import { useTranslation } from 'react-i18next';
 
 export function ProjectNav({ projectId, project }) {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const tabs = [
-    { to: `/app/projects/${projectId}/board`,   icon: LayoutGrid, label: 'Board' },
-    { to: `/app/projects/${projectId}/list`,    icon: List,        label: 'List' },
-    { to: `/app/projects/${projectId}/standup`, icon: Calendar,    label: 'Standup' },
-    { to: `/app/projects/${projectId}/members`, icon: Users,       label: 'Members' },
+    { to: `/app/projects/${projectId}/board`,       icon: LayoutGrid,  label: t('tabs.board') },
+    { to: `/app/projects/${projectId}/list`,        icon: List,        label: t('tabs.list') },
+    { to: `/app/projects/${projectId}/calendar`,    icon: CalendarDays,label: t('tabs.calendar') },
+    { to: `/app/projects/${projectId}/standup`,     icon: Calendar,    label: t('tabs.standup') },
+    { to: `/app/projects/${projectId}/gantt`,        icon: GanttChartSquare, label: t('tabs.gantt') },
+    { to: `/app/projects/${projectId}/sprints`,     icon: Layers,      label: 'Sprints' },
+    { to: `/app/projects/${projectId}/epics`,       icon: Flag,        label: 'Roadmap' },
+    { to: `/app/projects/${projectId}/workload`,    icon: BarChart2,   label: t('tabs.workload') },
+    { to: `/app/projects/${projectId}/automations`, icon: Zap,         label: t('tabs.automations') },
+    { to: `/app/projects/${projectId}/time-report`, icon: Clock,       label: t('tabs.time') },
+    { to: `/app/projects/${projectId}/members`,     icon: Users,       label: t('tabs.members') },
     ...(user?.role === 'admin'
-      ? [{ to: `/app/projects/${projectId}/settings`, icon: Settings, label: 'Settings' }]
+      ? [{ to: `/app/projects/${projectId}/settings`, icon: Settings, label: t('tabs.settings') }]
       : []),
   ];
 
@@ -28,7 +38,7 @@ export function ProjectNav({ projectId, project }) {
       </div>
 
       {/* Tabs — icon + label on the SAME line via flex-row */}
-      <nav className="flex flex-row items-center">
+      <nav className="flex flex-row items-center flex-1 overflow-x-auto">
         {tabs.map(({ to, icon: Icon, label }) => (
           <Link
             key={to}
@@ -37,10 +47,17 @@ export function ProjectNav({ projectId, project }) {
             activeProps={{ className: 'border-indigo-600 !text-indigo-700' }}
           >
             <Icon size={14} className="shrink-0" />
-            {label}
+            <span className="text-xs sm:text-sm">{label}</span>
           </Link>
         ))}
       </nav>
+
+      {/* AI Summary button — right side */}
+      {projectId && (
+        <div className="shrink-0 pl-2">
+          <AISummaryButton projectId={projectId} />
+        </div>
+      )}
     </div>
   );
 }

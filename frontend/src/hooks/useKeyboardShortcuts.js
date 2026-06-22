@@ -18,7 +18,7 @@ import { useThemeStore } from '@/stores/themeStore';
 export function useKeyboardShortcuts() {
   const navigate   = useNavigate();
   const { toggleSidebar, closeTaskDrawer, taskDrawerOpen, activeProjectId, openQuickCreate } = useUiStore();
-  const { toggleTheme } = useThemeStore();
+  const { cycleTheme } = useThemeStore();
 
   useEffect(() => {
     function handler(e) {
@@ -40,7 +40,7 @@ export function useKeyboardShortcuts() {
         case 's':
           if (activeProjectId) navigate({ to: `/app/projects/${activeProjectId}/standup` });
           break;
-        case 't': toggleTheme(); break;
+        case 't': cycleTheme(); break;
         case '\\': toggleSidebar(); break;
         case 'Escape':
           if (taskDrawerOpen) closeTaskDrawer();

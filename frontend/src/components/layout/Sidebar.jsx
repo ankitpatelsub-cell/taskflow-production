@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   LayoutDashboard, Bell, User, Shield, Plus, ChevronDown,
-  ChevronRight, Database, LogOut,
+  ChevronRight, Database, LogOut, CreditCard, BarChart3, Settings, Lock, HelpCircle,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjects } from '@/hooks/useProjects';
@@ -12,15 +12,17 @@ import { isAdminOrAbove, isSuperAdmin } from '@/lib/roles';
 import { useState } from 'react';
 import { CreateProjectModal } from '@/components/shared/CreateProjectModal';
 import { useLogout } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useWorkspaces } from '@/hooks/useWorkspaces';
 
 // ─── Single nav item (icon + label on ONE row) ────────────────────────────────
 function NavItem({ to, icon: Icon, children, badge }) {
   return (
     <Link
       to={to}
-      // Base classes always include flex so icon + text stay on one line
       className="flex flex-row items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all w-full whitespace-nowrap"
-      // activeProps / inactiveProps handle colour without touching layout
       activeProps={{ className: 'bg-white/15 text-white shadow-sm' }}
       inactiveProps={{ className: 'text-slate-400 hover:bg-white/10 hover:text-white' }}
     >
@@ -44,7 +46,7 @@ function SectionLabel({ children }) {
 }
 
 export function Sidebar() {
-  const { sidebarOpen } = useUiStore();
+  const { sidebarOpen, openContact } = useUiStore();
   const { user } = useAuthStore();
   const { data: projects = [] } = useProjects();
   const { data: notifData } = useNotifications();
@@ -53,10 +55,16 @@ export function Sidebar() {
   const navigate = useNavigate();
   const logout = useLogout();
   const router = useRouterState();
+  const { t } = useTranslation();
+  const { currentWorkspaceId } = useWorkspaceStore();
+  const { data: workspaces = [] } = useWorkspaces();
 
   if (!sidebarOpen) return null;
 
   const activeProjects = projects.filter((p) => p.status === 'active');
+  const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
+  const canCreateProject = isAdminOrAbove(user?.role) ||
+    (currentWorkspace && (currentWorkspace.member_role === 'owner' || currentWorkspace.member_role === 'admin'));
   const unreadCount = notifData?.unread_count || 0;
   const currentPath = router.location.pathname;
 
@@ -64,15 +72,24 @@ export function Sidebar() {
     <>
       <aside className="sidebar-width shrink-0 h-full flex flex-col overflow-hidden bg-slate-900">
 
-        {/* ── Logo ─────────────────────────────────────────── */}
-        <div className="flex items-center gap-2.5 px-4 py-4 shrink-0">
-          <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-            <span className="text-white text-xs font-black">TF</span>
+        {/* ── Workspace Switcher ────────────────────────────── */}
+        <div className="px-3 pt-3 pb-2 shrink-0">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-md flex items-center justify-center shadow shrink-0">
+              <span className="text-white text-[10px] font-black">T</span>
+            </div>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tick</span>
+            {currentWorkspaceId && (
+              <button
+                onClick={() => navigate({ to: `/app/workspaces/${currentWorkspaceId}/settings` })}
+                className="ml-auto text-slate-600 hover:text-slate-400 transition-colors p-0.5 rounded"
+                title="Workspace settings"
+              >
+                <Settings size={12} />
+              </button>
+            )}
           </div>
-          <div className="min-w-0">
-            <p className="font-bold text-white text-sm leading-tight">TaskFlow</p>
-            <p className="text-[11px] text-slate-500 leading-tight">Workspace</p>
-          </div>
+          <WorkspaceSwitcher />
         </div>
 
         <div className="mx-4 border-t border-slate-800 shrink-0" />
@@ -80,10 +97,25 @@ export function Sidebar() {
         {/* ── Scrollable nav ────────────────────────────────── */}
         <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5 sidebar-scroll">
 
-          <SectionLabel>Menu</SectionLabel>
-          <NavItem to="/app/dashboard" icon={LayoutDashboard}>Dashboard</NavItem>
-          <NavItem to="/app/notifications" icon={Bell} badge={unreadCount}>Notifications</NavItem>
-          <NavItem to="/app/profile" icon={User}>My Profile</NavItem>
+          {/* Search hint */}
+          <button
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-white/10 hover:text-slate-300 transition-colors mb-1"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <span className="flex-1 text-left text-xs">{t('common.search')}…</span>
+            <kbd className="text-[10px] bg-slate-800 border border-slate-700 rounded px-1 py-0.5 font-mono leading-none">⌘K</kbd>
+          </button>
+
+          <SectionLabel>{t('nav.menu')}</SectionLabel>
+          <NavItem to="/app/dashboard" icon={LayoutDashboard}>{t('nav.dashboard')}</NavItem>
+          <NavItem to="/app/my-space" icon={Lock}>My Space</NavItem>
+          <NavItem to="/app/analytics" icon={BarChart3}>Analytics</NavItem>
+          <NavItem to="/app/notifications" icon={Bell} badge={unreadCount}>{t('nav.notifications')}</NavItem>
+          <NavItem to="/app/profile" icon={User}>{t('nav.profile')}</NavItem>
+          {isAdminOrAbove(user?.role) && (
+            <NavItem to="/app/billing" icon={CreditCard}>{t('nav.billing')}</NavItem>
+          )}
 
           {/* ── Projects ──── */}
           <div className="pt-1">
@@ -91,13 +123,13 @@ export function Sidebar() {
               onClick={() => setProjectsOpen((o) => !o)}
               className="flex flex-row items-center justify-between w-full px-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-300 transition-colors"
             >
-              <span>Projects</span>
+              <span>{t('nav.projects')}</span>
               <span className="flex items-center gap-1">
-                {isAdminOrAbove(user?.role) && (
+                {canCreateProject && (
                   <span
                     onClick={(e) => { e.stopPropagation(); setShowCreateProject(true); }}
                     className="hover:text-indigo-400 cursor-pointer p-0.5 rounded hover:bg-white/10"
-                    title="New project"
+                    title={t('nav.newProject')}
                   >
                     <Plus size={12} />
                   </span>
@@ -129,7 +161,7 @@ export function Sidebar() {
                 })}
                 {activeProjects.length === 0 && (
                   <p className="px-3 py-2 text-xs text-slate-600 italic">
-                    {isAdminOrAbove(user?.role) ? 'No projects yet' : 'No projects assigned'}
+                    {isAdminOrAbove(user?.role) ? t('dashboard.noProjects') : t('dashboard.noProjectsAssigned')}
                   </p>
                 )}
               </div>
@@ -139,14 +171,30 @@ export function Sidebar() {
           {/* ── Admin ──── */}
           {isAdminOrAbove(user?.role) && (
             <div className="pt-1 border-t border-slate-800 mt-2">
-              <SectionLabel>Admin</SectionLabel>
-              <NavItem to="/app/admin/users" icon={Shield}>User Management</NavItem>
+              <SectionLabel>{t('nav.admin')}</SectionLabel>
+              <NavItem to="/app/admin/users" icon={Shield}>{t('nav.userManagement')}</NavItem>
               {isSuperAdmin(user?.role) && (
-                <NavItem to="/app/admin/backups" icon={Database}>Backups</NavItem>
+                <NavItem to="/app/admin/backups" icon={Database}>{t('nav.backups')}</NavItem>
               )}
             </div>
           )}
         </nav>
+
+        {/* ── Version ──────────────────────────────────────── */}
+        <div className="px-4 pb-1 shrink-0">
+          <p className="text-[10px] text-slate-700 select-none">v1.0.0</p>
+        </div>
+
+        {/* ── Contact / Help ───────────────────────────────── */}
+        <div className="px-3 pb-1 shrink-0">
+          <button
+            onClick={openContact}
+            className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:bg-white/10 hover:text-slate-300 transition-colors"
+          >
+            <HelpCircle size={13} className="shrink-0" />
+            Contact Us
+          </button>
+        </div>
 
         {/* ── Bottom user card ──────────────────────────────── */}
         <div className="shrink-0 p-3 border-t border-slate-800">
@@ -164,7 +212,7 @@ export function Sidebar() {
             <button
               onClick={(e) => { e.stopPropagation(); logout.mutate(); }}
               className="text-slate-600 hover:text-red-400 transition-colors p-1 rounded opacity-0 group-hover:opacity-100 shrink-0"
-              title="Sign out"
+              title={t('nav.signOut')}
             >
               <LogOut size={14} />
             </button>

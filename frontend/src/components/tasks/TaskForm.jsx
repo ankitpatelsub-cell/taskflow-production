@@ -2,8 +2,8 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/api';
+import { useProjectMembers } from '@/hooks/useProjects';
+import { useProjectStatuses } from '@/hooks/useProjectStatuses';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,11 +35,8 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
     try { return JSON.parse(defaultValues.recurrence_days || '[]'); } catch { return []; }
   })();
 
-  const { data: members = [] } = useQuery({
-    queryKey: ['project-members', projectId],
-    queryFn: () => api.get(`/projects/${projectId}`).then((r) => r.data.members ?? []),
-    enabled: !!projectId,
-  });
+  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: statuses = [] } = useProjectStatuses(projectId);
 
   function handleDayToggle(day, checked, currentVal) {
     const current = (() => { try { return JSON.parse(currentVal || '[]'); } catch { return []; } })();
@@ -94,10 +91,15 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Status</label>
           <Select {...register('status')}>
-            <option value="todo">To Do</option>
-            <option value="in_progress">In Progress</option>
-            <option value="review">Review</option>
-            <option value="done">Done</option>
+            {statuses.length > 0
+              ? statuses.map(s => <option key={s.key} value={s.key}>{s.name}</option>)
+              : <>
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="review">Review</option>
+                  <option value="done">Done</option>
+                </>
+            }
           </Select>
         </div>
       </div>
@@ -118,9 +120,22 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Estimated hours</label>
-        <Input type="number" step="0.5" {...register('estimated_hours')} placeholder="e.g. 4" />
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Estimated hours</label>
+          <Input type="number" step="0.5" {...register('estimated_hours')} placeholder="e.g. 4" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Story Points</label>
+          <input
+            type="number"
+            min="1"
+            max="100"
+            placeholder="—"
+            {...register('story_points', { valueAsNumber: true })}
+            className="w-24 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
       </div>
 
       {/* ── Recurrence ──────────────────────────────────────────────────────── */}

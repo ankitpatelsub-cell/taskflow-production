@@ -9,8 +9,9 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { useAuthStore } from '@/stores/authStore';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Mail } from 'lucide-react';
 import { ProjectNav } from './ProjectNav';
+import { InviteMemberModal } from '@/components/shared/InviteMemberModal';
 
 export function MembersPage() {
   const { projectId } = useParams({ strict: false });
@@ -19,6 +20,7 @@ export function MembersPage() {
   const addMember = useAddMember(projectId);
   const removeMember = useRemoveMember(projectId);
   const [selectedUser, setSelectedUser] = useState('');
+  const [showInvite, setShowInvite] = useState(false);
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['users'],
@@ -33,7 +35,14 @@ export function MembersPage() {
     <div className="h-full flex flex-col">
       <ProjectNav projectId={projectId} project={project} />
       <div className="p-6 max-w-2xl mx-auto w-full">
-        <h3 className="font-semibold text-gray-800 mb-4">Project Members ({project?.members?.length || 0})</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-800">Project Members ({project?.members?.length || 0})</h3>
+          {isProjectManagerOrAbove(user?.role) && (
+            <Button size="sm" variant="outline" onClick={() => setShowInvite(true)}>
+              <Mail size={14} className="mr-1.5" /> Invite by email
+            </Button>
+          )}
+        </div>
 
         {isProjectManagerOrAbove(user?.role) && nonMembers.length > 0 && (
           <div className="flex gap-2 mb-4">
@@ -84,6 +93,9 @@ export function MembersPage() {
           ))}
         </div>
       </div>
+      {showInvite && (
+        <InviteMemberModal projectId={projectId} onClose={() => setShowInvite(false)} />
+      )}
     </div>
   );
 }

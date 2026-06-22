@@ -14,11 +14,11 @@ const sizes = {
   icon: 'p-2',
 };
 
-export function Button({ variant = 'primary', size = 'md', className, children, disabled, ...props }) {
+export function Button({ variant = 'primary', size = 'md', className, children, disabled, loading, ...props }) {
   return (
     <button
       {...props}
-      disabled={disabled}
+      disabled={disabled || !!loading}
       className={cn(
         'inline-flex items-center justify-center gap-1.5 rounded-lg transition-all',
         'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1',
