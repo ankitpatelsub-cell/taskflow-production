@@ -68,6 +68,7 @@ const milestoneRoutes      = require('./src/routes/milestones');
 const { apiKeyRouter }     = require('./src/routes/apiKeys');
 const okrRoutes            = require('./src/routes/okrs');
 const digestRoutes         = require('./src/routes/digest');
+const searchRoutes         = require('./src/routes/search');
 
 const app = express();
 const server = http.createServer(app);
@@ -174,6 +175,8 @@ app.use('/api', (req, res, next) => {
 });
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
+app.use('/api/search',                       searchRoutes);
+app.use('/api/projects/all',                 searchRoutes); // compat route for CommandPalette
 app.use('/api/auth',                         authRoutes);
 app.use('/api/workspaces',                   workspaceRoutes);
 app.use('/api/users',                        userRoutes);
