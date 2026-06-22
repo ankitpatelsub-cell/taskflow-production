@@ -65,6 +65,7 @@ const personalTaskRoutes   = require('./src/routes/personalTasks');
 const projectStatusRoutes  = require('./src/routes/projectStatuses');
 const taskWatcherRoutes    = require('./src/routes/taskWatchers');
 const milestoneRoutes      = require('./src/routes/milestones');
+const { apiKeyRouter }     = require('./src/routes/apiKeys');
 
 const app = express();
 const server = http.createServer(app);
@@ -157,8 +158,10 @@ app.use('/api', (req, res, next) => {
   }
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) return next(); // unauthenticated — let route handle it
+  const token = header.slice(7);
+  if (token.startsWith('tick_')) return next(); // API key — no JWT claims to check
   try {
-    const payload = _verifyAccess(header.slice(7));
+    const payload = _verifyAccess(token);
     if (!payload.email_verified) {
       return res.status(403).json({ error: 'Email not verified', code: 'EMAIL_NOT_VERIFIED' });
     }
@@ -198,6 +201,7 @@ app.use('/api/projects/:projectId/automations',  automationRoutes);
 app.use('/api/projects/:projectId/guests',       guestRoutes);
 app.use('/api/guest',                            guestPublicRoutes); // public — no auth
 app.use('/api/me/tasks',                         personalTaskRoutes);
+app.use('/api/me/api-keys',                      apiKeyRouter);
 app.use('/api/projects/:projectId/statuses',     projectStatusRoutes);
 app.use('/api/projects/:projectId/ai-summary',   aiSummaryRoutes);
 app.use('/api/templates',                    templateRoutes);

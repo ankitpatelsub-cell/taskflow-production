@@ -3,10 +3,10 @@ import { useAuthStore } from '@/stores/authStore';
 import { Avatar } from '@/components/ui/Avatar';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { getGroupedTimezones, getCurrentTimezone } from '@/lib/timezones';
-import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell, Palette, Monitor, Sun, Moon, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell, Palette, Monitor, Sun, Moon, ShieldCheck, Key, Copy, Plus, Eye, EyeOff } from 'lucide-react';
 import { TwoFactorSettings } from '@/components/settings/TwoFactorSettings';
 import { useTranslation } from 'react-i18next';
 import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
@@ -16,8 +16,174 @@ import {
   disableDesktopNotifs,
 } from '@/hooks/useDesktopNotifications';
 import { useThemeStore } from '@/stores/themeStore';
+import { toast } from '@/components/ui/Toast';
 
 const grouped = getGroupedTimezones();
+
+function ApiKeysSection() {
+  const qc = useQueryClient();
+  const [newKeyName, setNewKeyName] = useState('');
+  const [newKeyScopes, setNewKeyScopes] = useState('read');
+  const [newKeyExpiry, setNewKeyExpiry] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [revealedKey, setRevealedKey] = useState(null); // { id, key }
+
+  const { data: keys = [], isLoading } = useQuery({
+    queryKey: ['api-keys'],
+    queryFn: () => api.get('/me/api-keys').then((r) => r.data),
+  });
+
+  const createKey = useMutation({
+    mutationFn: (body) => api.post('/me/api-keys', body).then((r) => r.data),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['api-keys'] });
+      setRevealedKey({ id: data.id, key: data.key });
+      setNewKeyName(''); setNewKeyScopes('read'); setNewKeyExpiry('');
+      setShowCreate(false);
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Failed to create API key'),
+  });
+
+  const deleteKey = useMutation({
+    mutationFn: (id) => api.delete(`/me/api-keys/${id}`),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ['api-keys'] });
+      if (revealedKey?.id === id) setRevealedKey(null);
+      toast.success('API key revoked');
+    },
+    onError: () => toast.error('Failed to revoke API key'),
+  });
+
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100 dark:border-slate-700">
+        <div className="flex items-center gap-2">
+          <Key size={18} className="text-indigo-500" />
+          <h3 className="font-bold text-gray-900 dark:text-white text-sm">API Keys</h3>
+          <span className="text-xs text-gray-400">({keys.length}/10)</span>
+        </div>
+        {!showCreate && keys.length < 10 && (
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus size={13} /> New key
+          </Button>
+        )}
+      </div>
+
+      {revealedKey && (
+        <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2">
+            Copy your API key now — it won't be shown again.
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2 font-mono break-all text-gray-800 dark:text-gray-200">
+              {revealedKey.key}
+            </code>
+            <button
+              onClick={() => { navigator.clipboard.writeText(revealedKey.key); toast.success('Copied!'); }}
+              className="p-2 rounded-lg text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+              title="Copy"
+            >
+              <Copy size={15} />
+            </button>
+          </div>
+          <button
+            onClick={() => setRevealedKey(null)}
+            className="mt-2 text-xs text-amber-600 hover:underline"
+          >
+            I've saved it — dismiss
+          </button>
+        </div>
+      )}
+
+      {showCreate && (
+        <form
+          className="mb-4 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            createKey.mutate({
+              name: newKeyName,
+              scopes: newKeyScopes,
+              expires_days: newKeyExpiry ? Number(newKeyExpiry) : undefined,
+            });
+          }}
+        >
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1">Key name *</label>
+            <Input value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} placeholder="e.g. CI deploy script" required autoFocus />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1">Scopes</label>
+              <select
+                value={newKeyScopes}
+                onChange={(e) => setNewKeyScopes(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 dark:border-slate-600 px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="read">read</option>
+                <option value="read,write">read + write</option>
+                <option value="read,write,admin">read + write + admin</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1">Expires in (days)</label>
+              <Input
+                type="number"
+                min="1"
+                max="365"
+                value={newKeyExpiry}
+                onChange={(e) => setNewKeyExpiry(e.target.value)}
+                placeholder="Never"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button type="button" variant="secondary" size="sm" className="flex-1" onClick={() => setShowCreate(false)}>Cancel</Button>
+            <Button type="submit" size="sm" className="flex-1" disabled={!newKeyName.trim() || createKey.isPending}>
+              {createKey.isPending ? 'Creating…' : 'Create key'}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {isLoading ? (
+        <div className="space-y-2">{[1,2].map((i) => <div key={i} className="h-12 bg-gray-100 dark:bg-slate-700 rounded-xl animate-pulse" />)}</div>
+      ) : keys.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-6">No API keys yet. Create one to access the REST API.</p>
+      ) : (
+        <div className="space-y-2">
+          {keys.map((k) => {
+            const expired = k.expires_at && new Date(k.expires_at) < new Date();
+            return (
+              <div key={k.id} className={`flex items-center gap-3 p-3 rounded-xl border ${expired ? 'border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10' : 'border-gray-100 dark:border-slate-700'}`}>
+                <Key size={14} className={expired ? 'text-red-400' : 'text-gray-400'} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">{k.name}</p>
+                  <p className="text-xs text-gray-400 font-mono">{k.key_prefix}… · {k.scopes}
+                    {k.expires_at && <span className={expired ? ' text-red-500' : ''}> · {expired ? 'expired' : `expires ${new Date(k.expires_at).toLocaleDateString()}`}</span>}
+                    {k.last_used_at && <span> · last used {new Date(k.last_used_at).toLocaleDateString()}</span>}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { if (!confirm(`Revoke "${k.name}"?`)) return; deleteKey.mutate(k.id); }}
+                  className="text-gray-300 hover:text-red-500 transition-colors p-1 rounded"
+                  title="Revoke key"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+        <p className="text-xs text-gray-400">
+          Use your API key as a Bearer token: <code className="bg-gray-100 dark:bg-slate-700 px-1 rounded">Authorization: Bearer tick_xxx</code>
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function Section({ title, icon: Icon, children }) {
   return (
@@ -360,6 +526,9 @@ export function ProfilePage() {
       <Section title="Two-Factor Authentication" icon={ShieldCheck}>
         <TwoFactorSettings />
       </Section>
+
+      {/* API Keys */}
+      <ApiKeysSection />
 
       {/* Danger Zone */}
       <div className="rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
