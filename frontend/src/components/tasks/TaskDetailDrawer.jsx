@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Drawer } from '@/components/ui/Drawer';
 import { Button } from '@/components/ui/Button';
 import { useTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
+import { useTaskWatchers, useWatchTask, useUnwatchTask } from '@/hooks/useTaskWatchers';
 import { useProjectMembers } from '@/hooks/useProjects';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, formatDate, formatTimeAgo, isOverdue, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell, GitBranch, Copy, Zap } from 'lucide-react';
+import { Calendar, Clock, Paperclip, Plus, Trash2, Edit3, X, RefreshCw, Timer, Link2, Check, Bell, BellOff, GitBranch, Copy, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
@@ -50,6 +51,11 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
   const [editingField, setEditingField] = useState(null); // 'priority' | 'assignee' | 'deadline'
 
   const { data: members = [] } = useProjectMembers(projectId);
+  const { data: watcherData } = useTaskWatchers(taskId);
+  const watchMutation = useWatchTask(taskId);
+  const unwatchMutation = useUnwatchTask(taskId);
+  const isWatching = watcherData?.isWatching ?? false;
+  const watcherCount = watcherData?.count ?? 0;
 
   if (isLoading) {
     return (
@@ -198,6 +204,18 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
               <Button size="sm" variant="secondary" onClick={handleDuplicate} title="Duplicate task">
                 <Copy size={13} />
               </Button>
+              <button
+                onClick={() => isWatching ? unwatchMutation.mutate() : watchMutation.mutate()}
+                title={isWatching ? 'Stop watching' : 'Watch task — get notified on updates'}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  isWatching
+                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'
+                }`}
+              >
+                {isWatching ? <BellOff size={13} /> : <Bell size={13} />}
+                {watcherCount > 0 && <span>{watcherCount}</span>}
+              </button>
               <div className="w-px h-5 bg-gray-200 dark:bg-slate-600" />
               <Button size="sm" variant="danger" onClick={handleDelete} title="Delete task">
                 <Trash2 size={13} />

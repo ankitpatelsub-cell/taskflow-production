@@ -57,6 +57,7 @@ const GuestViewPage       = lazy(() => import('./pages/GuestViewPage').then((m) 
 const AnalyticsPage         = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const WorkspaceSettingsPage = lazy(() => import('./pages/WorkspaceSettingsPage').then((m) => ({ default: m.WorkspaceSettingsPage })));
 const MySpacePage           = lazy(() => import('./pages/MySpacePage').then((m) => ({ default: m.MySpacePage })));
+const MilestonesPage        = lazy(() => import('./pages/MilestonesPage').then((m) => ({ default: m.MilestonesPage })));
 
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 const PageLoader  = () => <div className="p-6 space-y-4"><TableSkeleton rows={8} /></div>;
@@ -131,6 +132,7 @@ const routes = [
   { path: '/projects/$projectId/sprints',       Component: S(SprintsPage) },
   { path: '/projects/$projectId/sprints/$sprintId', Component: S(SprintDetailPage) },
   { path: '/projects/$projectId/epics',         Component: S(EpicsPage) },
+  { path: '/projects/$projectId/milestones',   Component: S(MilestonesPage) },
   { path: '/projects/$projectId/members',       Component: S(MembersPage) },
   { path: '/projects/$projectId/settings',      Component: S(ProjectSettingsPage) },
   { path: '/my-space',                           Component: S(MySpacePage) },

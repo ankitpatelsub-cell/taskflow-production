@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const { queryOne, queryAll, execute } = require('../config/db');
 const { authenticate, requireProjectAccess, requireWriteAccess } = require('../middleware/auth');
-const { logActivity, notifyTaskAssigned } = require('../services/notificationService');
+const { logActivity, notifyTaskAssigned, notifyWatchers } = require('../services/notificationService');
 const { broadcast } = require('../services/wsService');
 const { notifySlack } = require('../services/slackService');
 const { validate, createTaskSchema, updateTaskSchema } = require('../config/validate');
@@ -518,6 +518,14 @@ router.patch('/:taskId', requireWriteAccess, validate(updateTaskSchema), async (
     await logActivity('task', req.params.taskId, req.user.id, 'updated', old, req.body);
     if (assignee_id !== undefined && assignee_id !== old.assignee_id) {
       await notifyTaskAssigned({ id: req.params.taskId, title: title || old.title, assignee_id }, req.user);
+    }
+    if (status !== undefined && status !== old.status) {
+      await notifyWatchers(
+        { id: req.params.taskId, title: title || old.title },
+        req.user.id,
+        'task_updated',
+        `${req.user.name} moved "${title || old.title}" to ${status}`
+      );
     }
 
     let nextTaskId = null;

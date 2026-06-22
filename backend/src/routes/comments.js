@@ -2,7 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { queryOne, queryAll, execute } = require('../config/db');
 const { authenticate } = require('../middleware/auth');
-const { notifyComment, createNotification } = require('../services/notificationService');
+const { notifyComment, createNotification, notifyWatchers } = require('../services/notificationService');
 const { broadcast } = require('../services/wsService');
 const { validate, createCommentSchema } = require('../config/validate');
 
@@ -27,7 +27,7 @@ async function requireTaskAccess(req, res, next) {
 }
 router.use(requireTaskAccess);
 
-// GET /api/tasks/:taskId/comments
+// GET /api/tasks/:taskId/comments  — returns flat list; replies have parent_comment_id set
 router.get('/', async (req, res) => {
   try {
     const comments = await queryAll(`
@@ -41,14 +41,24 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/tasks/:taskId/comments
+// POST /api/tasks/:taskId/comments  — accepts optional parent_comment_id for replies
 router.post('/', validate(createCommentSchema), async (req, res) => {
   try {
-    const { content } = req.body;
+    const { content, parent_comment_id } = req.body;
+
+    // Validate parent belongs to same task
+    if (parent_comment_id) {
+      const parent = await queryOne('SELECT task_id FROM comments WHERE id = ?', [parent_comment_id]);
+      if (!parent || parent.task_id !== req.params.taskId) {
+        return res.status(400).json({ error: 'Invalid parent comment' });
+      }
+    }
 
     const id = uuidv4();
-    await execute('INSERT INTO comments (id, task_id, user_id, content) VALUES (?, ?, ?, ?)',
-      [id, req.params.taskId, req.user.id, content]);
+    await execute(
+      'INSERT INTO comments (id, task_id, user_id, content, parent_comment_id) VALUES (?, ?, ?, ?, ?)',
+      [id, req.params.taskId, req.user.id, content, parent_comment_id || null]
+    );
 
     const [comment, task] = await Promise.all([
       queryOne('SELECT * FROM comments WHERE id = ?', [id]),
@@ -56,6 +66,7 @@ router.post('/', validate(createCommentSchema), async (req, res) => {
     ]);
 
     await notifyComment(comment, task, req.user);
+    await notifyWatchers(task, req.user.id, 'task_comment', `${req.user.name} commented on "${task.title}"`);
 
     // Notify @mentioned project members
     const handles = (content.match(/@([\w.'-]+)/g) || []).map((m) => m.slice(1).toLowerCase());

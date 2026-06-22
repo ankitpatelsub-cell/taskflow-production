@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { execute, queryOne } = require('../config/db');
+const { execute, queryOne, queryAll } = require('../config/db');
 const { broadcastToUser } = require('./wsService');
 const { sendEmail } = require('./emailService');
 const logger = require('../config/logger');
@@ -80,4 +80,18 @@ async function notifyComment(comment, task, commenter) {
   }
 }
 
-module.exports = { logActivity, createNotification, notifyTaskAssigned, notifyComment };
+async function notifyWatchers(task, actorId, type, message) {
+  try {
+    const watchers = await queryAll(
+      'SELECT user_id FROM task_watchers WHERE task_id = ? AND user_id != ?',
+      [task.id, actorId]
+    );
+    await Promise.all(
+      watchers.map((w) => createNotification(w.user_id, type, message, 'task', task.id))
+    );
+  } catch (err) {
+    logger.error({ taskId: task.id, err: err.message }, 'notify_watchers.failed');
+  }
+}
+
+module.exports = { logActivity, createNotification, notifyTaskAssigned, notifyComment, notifyWatchers };
