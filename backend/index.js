@@ -66,6 +66,7 @@ const projectStatusRoutes  = require('./src/routes/projectStatuses');
 const taskWatcherRoutes    = require('./src/routes/taskWatchers');
 const milestoneRoutes      = require('./src/routes/milestones');
 const { apiKeyRouter }     = require('./src/routes/apiKeys');
+const okrRoutes            = require('./src/routes/okrs');
 
 const app = express();
 const server = http.createServer(app);
@@ -186,6 +187,7 @@ app.use('/api/tasks/:taskId/links',              taskLinkRoutes);
 app.use('/api/tasks/:taskId/dependencies',       dependencyRoutes);
 app.use('/api/tasks/:taskId/watch',              taskWatcherRoutes);
 app.use('/api/projects/:projectId/milestones',   milestoneRoutes);
+app.use('/api/projects/:projectId/okrs',         okrRoutes);
 app.use('/api/projects/:projectId/sprints',     sprintRoutes);
 app.use('/api/projects/:projectId/sprints',     sprintInsightsRoutes);
 app.use('/api/projects/:projectId/epics',       epicRoutes);
