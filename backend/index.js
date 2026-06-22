@@ -67,6 +67,7 @@ const taskWatcherRoutes    = require('./src/routes/taskWatchers');
 const milestoneRoutes      = require('./src/routes/milestones');
 const { apiKeyRouter }     = require('./src/routes/apiKeys');
 const okrRoutes            = require('./src/routes/okrs');
+const digestRoutes         = require('./src/routes/digest');
 
 const app = express();
 const server = http.createServer(app);
@@ -204,6 +205,7 @@ app.use('/api/projects/:projectId/guests',       guestRoutes);
 app.use('/api/guest',                            guestPublicRoutes); // public — no auth
 app.use('/api/me/tasks',                         personalTaskRoutes);
 app.use('/api/me/api-keys',                      apiKeyRouter);
+app.use('/api/me/digest-subscriptions',          digestRoutes);
 app.use('/api/projects/:projectId/statuses',     projectStatusRoutes);
 app.use('/api/projects/:projectId/ai-summary',   aiSummaryRoutes);
 app.use('/api/templates',                    templateRoutes);

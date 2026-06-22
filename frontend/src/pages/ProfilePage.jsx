@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { getGroupedTimezones, getCurrentTimezone } from '@/lib/timezones';
-import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell, Palette, Monitor, Sun, Moon, ShieldCheck, Key, Copy, Plus, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle2, User, Globe, Lock, Trash2, Download, AlertTriangle, Bell, Palette, Monitor, Sun, Moon, ShieldCheck, Key, Copy, Plus, Eye, EyeOff, Mail, Send } from 'lucide-react';
 import { TwoFactorSettings } from '@/components/settings/TwoFactorSettings';
 import { useTranslation } from 'react-i18next';
 import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
@@ -19,6 +19,163 @@ import { useThemeStore } from '@/stores/themeStore';
 import { toast } from '@/components/ui/Toast';
 
 const grouped = getGroupedTimezones();
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const HOURS = Array.from({ length: 24 }, (_, i) => {
+  const ampm = i < 12 ? 'AM' : 'PM';
+  const h = i % 12 || 12;
+  return { value: i, label: `${h}:00 ${ampm} UTC` };
+});
+
+function DigestSection() {
+  const qc = useQueryClient();
+  const [showCreate, setShowCreate] = useState(false);
+  const [frequency, setFrequency] = useState('weekly');
+  const [dayOfWeek, setDayOfWeek] = useState(1);
+  const [hourUtc, setHourUtc] = useState(8);
+  const [sending, setSending] = useState(null);
+
+  const { data: subs = [], isLoading } = useQuery({
+    queryKey: ['digest-subs'],
+    queryFn: () => api.get('/me/digest-subscriptions').then((r) => r.data),
+  });
+
+  const createSub = useMutation({
+    mutationFn: (body) => api.post('/me/digest-subscriptions', body).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['digest-subs'] });
+      toast.success('Digest subscription created');
+      setShowCreate(false);
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Failed to create subscription'),
+  });
+
+  const deleteSub = useMutation({
+    mutationFn: (id) => api.delete(`/me/digest-subscriptions/${id}`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['digest-subs'] }); toast.success('Subscription removed'); },
+    onError: () => toast.error('Failed to remove subscription'),
+  });
+
+  async function sendNow(id) {
+    setSending(id);
+    try {
+      await api.post(`/me/digest-subscriptions/${id}/send-now`);
+      toast.success('Digest sent to your email!');
+    } catch {
+      toast.error('Failed to send digest');
+    } finally {
+      setSending(null);
+    }
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100 dark:border-slate-700">
+        <div className="flex items-center gap-2">
+          <Mail size={18} className="text-indigo-500" />
+          <h3 className="font-bold text-gray-900 dark:text-white text-sm">Email Digest</h3>
+        </div>
+        {!showCreate && (
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus size={13} /> Subscribe
+          </Button>
+        )}
+      </div>
+
+      <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
+        Receive a summary email with overdue tasks, upcoming deadlines, recent activity, and sprint progress.
+      </p>
+
+      {showCreate && (
+        <form
+          className="mb-4 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            createSub.mutate({ frequency, day_of_week: dayOfWeek, hour_utc: hourUtc });
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1">Frequency</label>
+              <select
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 dark:border-slate-600 px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+            {frequency === 'weekly' && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1">Day</label>
+                <select
+                  value={dayOfWeek}
+                  onChange={(e) => setDayOfWeek(Number(e.target.value))}
+                  className="w-full rounded-xl border border-gray-200 dark:border-slate-600 px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {DAYS.map((d, i) => <option key={i} value={i}>{d}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1">Delivery time</label>
+            <select
+              value={hourUtc}
+              onChange={(e) => setHourUtc(Number(e.target.value))}
+              className="w-full rounded-xl border border-gray-200 dark:border-slate-600 px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {HOURS.map((h) => <option key={h.value} value={h.value}>{h.label}</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button type="button" variant="secondary" size="sm" className="flex-1" onClick={() => setShowCreate(false)}>Cancel</Button>
+            <Button type="submit" size="sm" className="flex-1" disabled={createSub.isPending}>
+              {createSub.isPending ? 'Subscribing…' : 'Subscribe'}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {isLoading ? (
+        <div className="h-12 bg-gray-100 dark:bg-slate-700 rounded-xl animate-pulse" />
+      ) : subs.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-4">No digest subscriptions yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {subs.map((s) => (
+            <div key={s.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 dark:border-slate-700">
+              <Mail size={14} className="text-indigo-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 dark:text-white capitalize">{s.frequency} digest</p>
+                <p className="text-xs text-gray-400">
+                  {s.frequency === 'weekly' ? `Every ${DAYS[s.day_of_week]}, ` : ''}{HOURS[s.hour_utc]?.label}
+                  {s.last_sent_at && ` · last sent ${new Date(s.last_sent_at).toLocaleDateString()}`}
+                </p>
+              </div>
+              <button
+                onClick={() => sendNow(s.id)}
+                disabled={sending === s.id}
+                className="text-gray-300 hover:text-indigo-500 transition-colors p-1 rounded"
+                title="Send now"
+              >
+                <Send size={13} />
+              </button>
+              <button
+                onClick={() => { if (!confirm('Remove this digest subscription?')) return; deleteSub.mutate(s.id); }}
+                className="text-gray-300 hover:text-red-500 transition-colors p-1 rounded"
+                title="Remove"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ApiKeysSection() {
   const qc = useQueryClient();
@@ -526,6 +683,9 @@ export function ProfilePage() {
       <Section title="Two-Factor Authentication" icon={ShieldCheck}>
         <TwoFactorSettings />
       </Section>
+
+      {/* Email Digest */}
+      <DigestSection />
 
       {/* API Keys */}
       <ApiKeysSection />

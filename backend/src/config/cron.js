@@ -3,6 +3,7 @@ const { BACKUP_CRON } = require('./env');
 const { createBackup } = require('../services/backupService');
 const { execute, queryAll } = require('./db');
 const { createNotification } = require('../services/notificationService');
+const { runDigestJob } = require('../services/digestService');
 const logger = require('./logger');
 
 function startCronJobs() {
@@ -63,6 +64,15 @@ function startCronJobs() {
       }
     } catch (err) {
       logger.error({ err: err.message }, '[cron] reminder check failed');
+    }
+  });
+
+  // Send email digests at the start of each hour (each subscription specifies its hour_utc)
+  cron.schedule('0 * * * *', async () => {
+    try {
+      await runDigestJob();
+    } catch (err) {
+      logger.error({ err: err.message }, '[cron] digest job failed');
     }
   });
 
