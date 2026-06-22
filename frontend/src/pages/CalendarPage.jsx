@@ -3,10 +3,11 @@ import { useParams, Link } from '@tanstack/react-router';
 import { useTasks, useCreateTask } from '@/hooks/useTasks';
 import { useProject } from '@/hooks/useProjects';
 import { ProjectNav } from './ProjectNav';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import { TaskForm } from '@/components/tasks/TaskForm';
+import { useAuthStore } from '@/stores/authStore';
 
 const STATUS_COLOR = {
   todo:        'bg-gray-100 text-gray-700 border-gray-200',
@@ -38,6 +39,18 @@ export function CalendarPage() {
   const { data: tasks = [] } = useTasks(projectId);
   const create = useCreateTask(projectId);
   const [addDate, setAddDate] = useState(null);
+  const { token } = useAuthStore();
+
+  async function downloadIcal() {
+    const res = await fetch(`/api/projects/${projectId}/ical.ics`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${project?.name || 'tasks'}.ics`; a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const today = new Date();
   const [year,  setYear]  = useState(today.getFullYear());
@@ -79,7 +92,14 @@ export function CalendarPage() {
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
             {MONTH_NAMES[month]} {year}
           </h2>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadIcal}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              title="Export to iCalendar (.ics)"
+            >
+              <Download size={13} /> Export .ics
+            </button>
             <button
               onClick={prevMonth}
               className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"

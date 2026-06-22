@@ -60,6 +60,7 @@ const MySpacePage           = lazy(() => import('./pages/MySpacePage').then((m) 
 const MilestonesPage        = lazy(() => import('./pages/MilestonesPage').then((m) => ({ default: m.MilestonesPage })));
 const OKRsPage              = lazy(() => import('./pages/OKRsPage').then((m) => ({ default: m.OKRsPage })));
 const SearchPage            = lazy(() => import('./pages/SearchPage').then((m) => ({ default: m.SearchPage })));
+const ActivityPage          = lazy(() => import('./pages/ActivityPage').then((m) => ({ default: m.ActivityPage })));
 
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 const PageLoader  = () => <div className="p-6 space-y-4"><TableSkeleton rows={8} /></div>;
@@ -136,6 +137,7 @@ const routes = [
   { path: '/projects/$projectId/epics',         Component: S(EpicsPage) },
   { path: '/projects/$projectId/milestones',   Component: S(MilestonesPage) },
   { path: '/projects/$projectId/okrs',         Component: S(OKRsPage) },
+  { path: '/projects/$projectId/activity',     Component: S(ActivityPage) },
   { path: '/projects/$projectId/members',       Component: S(MembersPage) },
   { path: '/projects/$projectId/settings',      Component: S(ProjectSettingsPage) },
   { path: '/search',                              Component: S(SearchPage) },

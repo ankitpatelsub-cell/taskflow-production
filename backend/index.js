@@ -69,6 +69,8 @@ const { apiKeyRouter }     = require('./src/routes/apiKeys');
 const okrRoutes            = require('./src/routes/okrs');
 const digestRoutes         = require('./src/routes/digest');
 const searchRoutes         = require('./src/routes/search');
+const activityRoutes       = require('./src/routes/activity');
+const icalRoutes           = require('./src/routes/ical');
 
 const app = express();
 const server = http.createServer(app);
@@ -192,6 +194,8 @@ app.use('/api/tasks/:taskId/dependencies',       dependencyRoutes);
 app.use('/api/tasks/:taskId/watch',              taskWatcherRoutes);
 app.use('/api/projects/:projectId/milestones',   milestoneRoutes);
 app.use('/api/projects/:projectId/okrs',         okrRoutes);
+app.use('/api/projects/:projectId/activity',     activityRoutes);
+app.use('/api/projects/:projectId/ical.ics',    icalRoutes);
 app.use('/api/projects/:projectId/sprints',     sprintRoutes);
 app.use('/api/projects/:projectId/sprints',     sprintInsightsRoutes);
 app.use('/api/projects/:projectId/epics',       epicRoutes);
