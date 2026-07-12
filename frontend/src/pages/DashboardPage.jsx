@@ -44,7 +44,7 @@ export function DashboardPage() {
   const stats = [
     { labelKey: 'dashboard.statActiveProjects', value: activeProjectsCount, icon: FolderKanban, gradient: 'from-indigo-500 to-indigo-600' },
     { labelKey: 'dashboard.statTotalTasks',     value: totalTasks,          icon: CheckCircle2, gradient: 'from-emerald-500 to-emerald-600' },
-    { labelKey: 'dashboard.statMyOpenTasks',    value: myTasks.length,      icon: Clock,        gradient: overdueCount > 0 ? 'from-red-500 to-red-600' : 'from-blue-500 to-blue-600' },
+    { labelKey: 'dashboard.statMyOpenTasks',    value: myTasks.length,      icon: Clock,        gradient: overdueCount > 0 ? 'from-red-500 to-red-600' : 'from-coral-400 to-coral-500' },
     { labelKey: 'dashboard.statArchived',       value: archivedCount,       icon: Archive,      gradient: 'from-gray-400 to-gray-500' },
   ];
 

@@ -21,7 +21,7 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
     <div
       onClick={open}
       className={cn(
-        'bg-white rounded-xl p-3.5 cursor-pointer transition-all select-none',
+        'bg-white rounded-2xl p-3.5 cursor-pointer transition-all select-none',
         'border shadow-sm hover:shadow-md',
         overdue ? 'border-red-200 hover:border-red-300' : incomplete ? 'border-amber-200 hover:border-amber-300' : 'border-gray-100 hover:border-indigo-200',
         done && 'opacity-60'

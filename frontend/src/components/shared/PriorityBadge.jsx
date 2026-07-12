@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils';
 
 const config = {
-  low:      { label: 'Low',      class: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-400' },
-  medium:   { label: 'Medium',   class: 'bg-blue-50 text-blue-700 border-blue-200',           dot: 'bg-blue-400' },
-  high:     { label: 'High',     class: 'bg-orange-50 text-orange-700 border-orange-200',     dot: 'bg-orange-400' },
-  critical: { label: 'Critical', class: 'bg-red-50 text-red-700 border-red-200',               dot: 'bg-red-500' },
+  low:      { label: 'Low',      class: 'bg-emerald-50 text-emerald-700 border-emerald-200/60', dot: 'bg-emerald-400' },
+  medium:   { label: 'Medium',   class: 'bg-blue-50 text-blue-700 border-blue-200/60',           dot: 'bg-blue-400' },
+  high:     { label: 'High',     class: 'bg-orange-50 text-orange-700 border-orange-200/60',     dot: 'bg-orange-400' },
+  critical: { label: 'Critical', class: 'bg-red-50 text-red-700 border-red-200/60',               dot: 'bg-red-500' },
 };
 
 export function PriorityBadge({ priority }) {

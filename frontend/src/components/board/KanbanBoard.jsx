@@ -92,7 +92,7 @@ export function KanbanBoard({ projectId, filters = {} }) {
       </div>
       <DragOverlay dropAnimation={{ duration: 180 }}>
         {activeTask && (
-          <div className="rotate-2 scale-105 shadow-2xl opacity-90">
+          <div className="rotate-2 scale-105 shadow-xl opacity-90">
             <TaskCard task={activeTask} projectId={projectId} />
           </div>
         )}

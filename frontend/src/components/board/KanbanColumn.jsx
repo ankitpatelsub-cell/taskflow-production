@@ -86,7 +86,7 @@ export function KanbanColumn({ status, title, tasks, projectId }) {
 
         {tasks.length === 0 && !quickAdd && (
           <div
-            className="h-24 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center px-3 cursor-pointer hover:border-indigo-300 hover:bg-white/50 transition-colors"
+            className="h-24 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center px-3 cursor-pointer hover:border-indigo-300 hover:bg-white/50 transition-colors"
             onClick={openQuickAdd}
           >
             <p className="text-xs font-medium text-gray-400">No tasks yet</p>

@@ -75,7 +75,7 @@ export function Sidebar() {
         {/* ── Workspace Switcher ────────────────────────────── */}
         <div className="px-3 pt-3 pb-2 shrink-0">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-md flex items-center justify-center shadow shrink-0">
+            <div className="w-6 h-6 bg-gradient-to-br from-indigo-400 to-coral-400 rounded-md flex items-center justify-center shadow shrink-0">
               <span className="text-white text-[10px] font-black">T</span>
             </div>
             <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tick</span>
@@ -202,7 +202,7 @@ export function Sidebar() {
             className="flex flex-row items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer group"
             onClick={() => navigate({ to: '/app/profile' })}
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-coral-400 flex items-center justify-center text-white text-xs font-bold shrink-0">
               {user?.name?.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">

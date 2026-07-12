@@ -61,7 +61,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
     return (
       <Drawer open onClose={onClose} title="Loading…" wide>
         <div className="p-6 space-y-3">
-          {[1,2,3,4].map(i => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}
+          {[1,2,3,4].map(i => <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />)}
         </div>
       </Drawer>
     );
@@ -188,7 +188,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                   value={task.priority || 'medium'}
                   onBlur={() => setEditingField(null)}
                   onChange={(e) => { update.mutate({ priority: e.target.value }); setEditingField(null); }}
-                  className="text-xs border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
+                  className="text-xs border border-indigo-300 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
                 >
                   {['low','medium','high','critical'].map(p => <option key={p} value={p}>{t(`priority.${p}`)}</option>)}
                 </select>
@@ -207,7 +207,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
               <button
                 onClick={() => isWatching ? unwatchMutation.mutate() : watchMutation.mutate()}
                 title={isWatching ? 'Stop watching' : 'Watch task — get notified on updates'}
-                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-medium transition-colors ${
                   isWatching
                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
                     : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'
@@ -244,7 +244,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                           setEditingField(null);
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full text-sm border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full text-sm border border-indigo-300 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       >
                         <option value="">{t('task.unassigned')}</option>
                         {members.map(m => (
@@ -281,7 +281,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                           setEditingField(null);
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full text-sm border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full text-sm border border-indigo-300 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                     ) : task.deadline ? (
                       <div className={cn('flex items-center gap-1.5 text-sm font-medium', overdue ? 'text-red-600' : 'text-gray-800 dark:text-slate-200')}>
@@ -315,7 +315,7 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                             if (newVal !== oldVal) update.mutate({ reminder_at: newVal });
                             setEditingField(null);
                           }}
-                          className="flex-1 text-sm border border-indigo-300 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="flex-1 text-sm border border-indigo-300 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                         {task.reminder_at && (
                           <button
@@ -409,13 +409,13 @@ export function TaskDetailDrawer({ projectId, taskId, onClose }) {
                         }}
                         rows={4}
                         placeholder="Add a description…"
-                        className="w-full text-sm text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-indigo-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-relaxed"
+                        className="w-full text-sm text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-indigo-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-relaxed"
                       />
                       <div className="flex items-center gap-2 mt-2">
                         <button
                           onClick={saveDesc}
                           disabled={update.isPending}
-                          className="flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                          className="flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50"
                         >
                           <Check size={11} /> Save
                         </button>

@@ -97,10 +97,10 @@ export function AppShell() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950">
+    <div className="flex h-screen overflow-hidden bg-surface-app">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          className="fixed inset-0 bg-gray-900/40 z-30 lg:hidden"
           onClick={toggleSidebar}
         />
       )}

@@ -88,11 +88,11 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 p-4 relative overflow-hidden">
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-800/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-coral-500/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-sm relative">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30">
+          <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-coral-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30">
             {totpStep
               ? <ShieldCheck size={28} className="text-white" />
               : <CheckSquare size={28} className="text-white" />

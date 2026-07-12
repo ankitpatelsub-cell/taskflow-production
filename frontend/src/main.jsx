@@ -7,6 +7,11 @@ import { routeTree } from './routeTree';
 import { useThemeStore } from './stores/themeStore';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
 import './lib/i18n';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@fontsource/plus-jakarta-sans/800.css';
 import './index.css';
 
 // Sentry frontend error tracking

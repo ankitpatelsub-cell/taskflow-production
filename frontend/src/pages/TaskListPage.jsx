@@ -192,7 +192,7 @@ export function TaskListPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tasks…"
-                className="pl-7 pr-7 py-1.5 text-xs border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-40 sm:focus:w-52 transition-all"
+                className="pl-7 pr-7 py-1.5 text-xs border border-gray-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-40 sm:focus:w-52 transition-all"
               />
               {search && (
                 <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -226,7 +226,7 @@ export function TaskListPage() {
             <button
               onClick={() => setFilters((f) => ({ ...f, assignee: f.assignee === user?.id ? undefined : user?.id }))}
               className={cn(
-                'text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors',
+                'text-xs px-2.5 py-1.5 rounded-xl border font-medium transition-colors',
                 filters.assignee === user?.id
                   ? 'bg-indigo-600 text-white border-indigo-600'
                   : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-700 hover:border-indigo-300'
@@ -238,7 +238,7 @@ export function TaskListPage() {
             <select
               value={filters.status || ''}
               onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value || undefined }))}
-              className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="">All statuses</option>
               <option value="todo">To Do</option>
@@ -250,7 +250,7 @@ export function TaskListPage() {
             <select
               value={filters.assignee || ''}
               onChange={(e) => setFilters((f) => ({ ...f, assignee: e.target.value || undefined }))}
-              className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="">All assignees</option>
               {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -258,7 +258,7 @@ export function TaskListPage() {
             <select
               value={filters.priority || ''}
               onChange={(e) => setFilters((f) => ({ ...f, priority: e.target.value || undefined }))}
-              className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="">All priorities</option>
               {['low','medium','high','critical'].map((p) => <option key={p} value={p}>{p}</option>)}
@@ -278,7 +278,7 @@ export function TaskListPage() {
               <select
                 value={bulkStatus}
                 onChange={(e) => setBulkStatus(e.target.value)}
-                className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
+                className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
               >
                 <option value="">Status…</option>
                 <option value="todo">To Do</option>
@@ -293,7 +293,7 @@ export function TaskListPage() {
               <select
                 value={bulkAssignee}
                 onChange={(e) => setBulkAssignee(e.target.value)}
-                className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
+                className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
               >
                 <option value="">Assign to…</option>
                 <option value="__unassign__">Unassign</option>
@@ -306,7 +306,7 @@ export function TaskListPage() {
               <select
                 value={bulkPriority}
                 onChange={(e) => setBulkPriority(e.target.value)}
-                className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
+                className="text-xs border border-indigo-300 dark:border-indigo-600 rounded-xl px-2 py-1 bg-white dark:bg-slate-700 dark:text-white focus:outline-none"
               >
                 <option value="">Priority…</option>
                 {['low','medium','high','critical'].map(p => <option key={p} value={p}>{p}</option>)}

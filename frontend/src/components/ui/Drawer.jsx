@@ -15,7 +15,7 @@ export function Drawer({ open, onClose, title, children, wide }) {
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40 transition-opacity"
+        className="fixed inset-0 bg-gray-900/25 backdrop-blur-[2px] z-40 transition-opacity"
         onClick={onClose}
       />
       <div
@@ -24,7 +24,7 @@ export function Drawer({ open, onClose, title, children, wide }) {
           'border-l border-gray-100 animate-[slidein_0.2s_ease]',
           wide ? 'w-full max-w-2xl' : 'w-full max-w-lg'
         )}
-        style={{ '--tw-shadow': '0 25px 50px -12px rgba(0,0,0,0.25)' }}
+        style={{ '--tw-shadow': '0 25px 50px -12px rgba(58,47,36,0.25)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0 bg-white">
