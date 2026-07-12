@@ -1,0 +1,32 @@
+{$DOMAIN:localhost} {
+	root * /usr/share/nginx/html
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy backend:3001
+	}
+
+	handle /ws {
+		reverse_proxy backend:3001
+	}
+
+	handle /share/* {
+		reverse_proxy backend:3001
+	}
+
+	handle /uploads/* {
+		reverse_proxy backend:3001
+	}
+
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+}

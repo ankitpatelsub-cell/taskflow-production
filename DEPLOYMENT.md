@@ -118,6 +118,15 @@ Hobby plan ($5/mo) to keep it always-on.
 ## Alternative: single-server deploy
 
 If you prefer everything on one $6/mo VPS (Hetzner/DigitalOcean), the repo's
-`docker-compose.yml` + `nginx.conf` + `Dockerfile` run the full stack with one
-command — see `SETUP_GUIDE.html` for that path. Vercel + Railway above is the
-easier and faster route.
+`docker-compose.yml` runs the full stack (Postgres + backend + Caddy-served
+frontend with automatic Let's Encrypt HTTPS) with one command:
+
+```bash
+git clone <repo-url> && cd taskflow-production
+cp .env.production.example .env   # fill in DOMAIN, JWT secrets, DB_PASSWORD, etc.
+docker compose up -d --build
+```
+
+Point the domain's A record at the VPS IP before starting — Caddy provisions
+the TLS cert automatically on first boot. Vercel + Railway above is the
+easier and faster route if you'd rather not manage a server.
