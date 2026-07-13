@@ -24,20 +24,23 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 p-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 p-4 relative overflow-hidden">
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-coral-500/20 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-sm relative">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30">
+          <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-coral-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30">
             <CheckSquare size={28} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white">Tick</h1>
         </div>
 
-        <div className="bg-white/95 rounded-2xl shadow-2xl p-8">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/10 p-8">
           {sent ? (
             <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <CheckSquare size={20} className="text-green-600" />
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckSquare size={20} className="text-emerald-600" />
               </div>
               <h2 className="font-bold text-lg text-gray-900 mb-2">Check your email</h2>
               <p className="text-gray-500 text-sm">If an account exists for <strong>{email}</strong>, we sent a reset link. Check your spam folder too.</p>

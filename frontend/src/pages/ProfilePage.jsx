@@ -237,7 +237,7 @@ function ApiKeysSection() {
             </code>
             <button
               onClick={() => { navigator.clipboard.writeText(revealedKey.key); toast.success('Copied!'); }}
-              className="p-2 rounded-lg text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+              className="p-2 rounded-xl text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
               title="Copy"
             >
               <Copy size={15} />

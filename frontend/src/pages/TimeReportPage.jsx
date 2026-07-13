@@ -66,7 +66,7 @@ export function TimeReportPage() {
               type="date"
               value={from}
               onChange={e => setFrom(e.target.value)}
-              className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200"
+              className="text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -75,12 +75,12 @@ export function TimeReportPage() {
               type="date"
               value={to}
               onChange={e => setTo(e.target.value)}
-              className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200"
+              className="text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200"
             />
           </div>
           <button
             onClick={exportCSV}
-            className="ml-auto flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 border border-indigo-200 hover:border-indigo-300 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-800 dark:border-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+            className="ml-auto flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 border border-indigo-200 hover:border-indigo-300 rounded-xl px-3 py-1.5 bg-white dark:bg-slate-800 dark:border-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
           >
             <Download size={14} />
             Export CSV
@@ -115,7 +115,7 @@ export function TimeReportPage() {
             <h3 className="font-bold text-gray-800 dark:text-white mb-3 text-sm">By Team Member</h3>
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
               {isLoading ? (
-                <div className="space-y-2 p-4">{[1,2,3].map(i => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+                <div className="space-y-2 p-4">{[1,2,3].map(i => <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : byUser.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-8">No time logged yet</p>
               ) : (
@@ -150,7 +150,7 @@ export function TimeReportPage() {
             <h3 className="font-bold text-gray-800 dark:text-white mb-3 text-sm">By Task (Top logged)</h3>
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
               {isLoading ? (
-                <div className="space-y-2 p-4">{[1,2,3].map(i => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+                <div className="space-y-2 p-4">{[1,2,3].map(i => <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : tasksWithTime.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-8">No time logged on tasks yet</p>
               ) : (

@@ -60,7 +60,7 @@ function TaskRow({ task, checked, onToggle }) {
     <button
       onClick={onToggle}
       className={cn(
-        'w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg border text-left transition-colors',
+        'w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-colors',
         checked
           ? 'border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20'
           : 'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50'
@@ -151,13 +151,13 @@ export function AISprintPlannerPanel({ projectId, sprintId, onClose, onApply }) 
   const totalTasks    = plan?.tasks?.length ?? 0;
 
   const inputClass =
-    'w-full px-3 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500';
+    'w-full px-3 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500';
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40"
+        className="fixed inset-0 bg-gray-900/30 backdrop-blur-[2px] z-40"
         onClick={onClose}
       />
 
@@ -181,7 +181,7 @@ export function AISprintPlannerPanel({ projectId, sprintId, onClose, onApply }) 
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 rounded-lg p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 rounded-xl p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
           >
             <X size={16} />
           </button>

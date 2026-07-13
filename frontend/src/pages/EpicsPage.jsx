@@ -268,7 +268,7 @@ function EpicCard({ epic, onDelete, onUpdate }) {
                 value={epic.status || 'active'}
                 onChange={(e) => onUpdate(epic.id, { status: e.target.value })}
                 onClick={(e) => e.stopPropagation()}
-                className="text-xs border border-gray-200 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="text-xs border border-gray-200 rounded-xl px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
               >
                 <option value="active">Active</option>
                 <option value="completed">Completed</option>
@@ -280,7 +280,7 @@ function EpicCard({ epic, onDelete, onUpdate }) {
                     onDelete(epic.id);
                   }
                 }}
-                className="p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                className="p-1.5 text-gray-300 hover:text-red-500 rounded-xl hover:bg-red-50 transition-colors"
                 title="Delete epic"
               >
                 <Trash2 size={13} />
@@ -295,7 +295,7 @@ function EpicCard({ epic, onDelete, onUpdate }) {
                 epic.tasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center gap-2.5 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100"
+                    className="flex items-center gap-2.5 px-3 py-2 bg-gray-50 rounded-xl border border-gray-100"
                   >
                     <span
                       className={cn(
@@ -444,20 +444,20 @@ export function EpicsPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setWeekOffset((w) => w - WEEK_COUNT)}
-                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                    className="p-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                     title="Previous period"
                   >
                     <ChevronLeft size={15} />
                   </button>
                   <button
                     onClick={() => setWeekOffset(0)}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                    className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                   >
                     Today
                   </button>
                   <button
                     onClick={() => setWeekOffset((w) => w + WEEK_COUNT)}
-                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                    className="p-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                     title="Next period"
                   >
                     <ChevronRight size={15} />

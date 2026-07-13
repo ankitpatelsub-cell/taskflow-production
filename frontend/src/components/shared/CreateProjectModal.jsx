@@ -26,7 +26,7 @@ export function CreateProjectModal({ onClose }) {
     <Modal open onClose={onClose} title="Create Project">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Name *</label>
           <Input
             value={name}
             onChange={(e) => { setName(e.target.value); if (nameError) setNameError(''); }}
@@ -36,17 +36,17 @@ export function CreateProjectModal({ onClose }) {
           {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             placeholder="Optional description"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Color</label>
           <div className="flex items-center gap-3">
             <div className="flex flex-wrap gap-2 flex-1">
               {COLORS.map((c) => (
@@ -63,7 +63,7 @@ export function CreateProjectModal({ onClose }) {
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                className="w-8 h-8 rounded cursor-pointer border border-gray-200 dark:border-slate-600"
                 title="Custom color"
               />
               <span className="text-xs text-gray-400 font-mono">{color}</span>

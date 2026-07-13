@@ -64,7 +64,7 @@ export function LandingPage() {
             </Link>
             <Link
               to="/register"
-              className="px-4 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
+              className="px-4 py-1.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
             >
               Get started free
             </Link>

@@ -119,7 +119,7 @@ export function SlackSettings({ projectId }) {
         {/* Current webhook status */}
         {currentUrl ? (
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+            <div className="mt-0.5 w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
               <CheckCircle2 size={15} className="text-green-500" />
             </div>
             <div className="flex-1 min-w-0">
@@ -134,7 +134,7 @@ export function SlackSettings({ projectId }) {
           </div>
         ) : (
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+            <div className="mt-0.5 w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
               <SlackLogo size={16} />
             </div>
             <div>

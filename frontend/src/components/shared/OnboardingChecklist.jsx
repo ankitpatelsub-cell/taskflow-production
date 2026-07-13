@@ -55,7 +55,7 @@ export function OnboardingChecklist() {
     <div className="fixed bottom-5 right-5 z-40 w-72 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 cursor-pointer"
+        className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-500 to-coral-400 cursor-pointer"
         onClick={() => setExpanded(e => !e)}
       >
         <div className="flex items-center gap-2">

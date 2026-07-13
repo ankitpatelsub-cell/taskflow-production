@@ -91,7 +91,7 @@ function TemplateSkeleton() {
       </div>
       <div className="flex items-center justify-between">
         <div className="h-4 w-20 bg-gray-100 dark:bg-slate-700 rounded-full" />
-        <div className="h-7 w-24 bg-gray-100 dark:bg-slate-700 rounded-lg" />
+        <div className="h-7 w-24 bg-gray-100 dark:bg-slate-700 rounded-xl" />
       </div>
     </div>
   );
@@ -144,7 +144,7 @@ function SaveAsTemplateSection({ projectId }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Template name…"
-            className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
+            className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
           />
           <Button
@@ -212,7 +212,7 @@ export function TemplateGalleryModal({ onSelect, onClose, projectId }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search templates…"
-          className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
+          className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
         />
       </div>
 
@@ -223,7 +223,7 @@ export function TemplateGalleryModal({ onSelect, onClose, projectId }) {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={cn(
-              'shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors',
+              'shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors',
               activeTab === tab.key
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700'

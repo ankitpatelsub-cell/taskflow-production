@@ -44,7 +44,7 @@ function SectionTitle({ children }) {
 // ── Summary stat card ─────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, gradient, sub }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm hover:shadow-md transition-shadow">
       <div
         className={cn(
           'w-10 h-10 rounded-xl flex items-center justify-center mb-3 shadow-sm bg-gradient-to-br',
@@ -69,7 +69,7 @@ function PageSkeleton() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 space-y-3 shadow-sm"
+            className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 space-y-3 shadow-sm"
           >
             <Skeleton className="w-10 h-10 rounded-xl" />
             <Skeleton className="h-6 w-16" />
@@ -79,13 +79,13 @@ function PageSkeleton() {
       </div>
       {/* Charts row */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Skeleton className="h-64 rounded-xl" />
-        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-64 rounded-2xl" />
+        <Skeleton className="h-64 rounded-2xl" />
       </div>
       {/* Bottom row */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Skeleton className="h-72 rounded-xl" />
-        <Skeleton className="h-72 rounded-xl" />
+        <Skeleton className="h-72 rounded-2xl" />
+        <Skeleton className="h-72 rounded-2xl" />
       </div>
     </div>
   );
@@ -112,7 +112,7 @@ function TaskProgressBar({ done = 0, total = 0, color = '#6366f1' }) {
 // ── Weekly trend chart ────────────────────────────────────────────────────────
 function WeeklyTrendChart({ data = [] }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm">
       <SectionTitle>Weekly Completion Trend</SectionTitle>
       {data.length === 0 ? (
         <div className="flex items-center justify-center h-48 text-gray-400 dark:text-slate-500 text-sm">
@@ -121,15 +121,15 @@ function WeeklyTrendChart({ data = [] }) {
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#EDE5DA" />
             <XAxis
               dataKey="week"
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              tick={{ fontSize: 11, fill: '#8A7660' }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              tick={{ fontSize: 11, fill: '#8A7660' }}
               tickLine={false}
               axisLine={false}
               allowDecimals={false}
@@ -146,9 +146,9 @@ function WeeklyTrendChart({ data = [] }) {
             <Line
               type="monotone"
               dataKey="completed"
-              stroke="#6366f1"
+              stroke="#7C6AE8"
               strokeWidth={2.5}
-              dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
+              dot={{ r: 4, fill: '#7C6AE8', strokeWidth: 0 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
@@ -161,7 +161,7 @@ function WeeklyTrendChart({ data = [] }) {
 // ── Overdue by project bar chart ──────────────────────────────────────────────
 function OverdueByProjectChart({ data = [] }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm">
       <SectionTitle>Overdue by Project</SectionTitle>
       {data.length === 0 ? (
         <div className="flex items-center justify-center h-48 text-gray-400 dark:text-slate-500 text-sm">
@@ -170,10 +170,10 @@ function OverdueByProjectChart({ data = [] }) {
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#EDE5DA" />
             <XAxis
               dataKey="project"
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              tick={{ fontSize: 11, fill: '#8A7660' }}
               tickLine={false}
               axisLine={false}
               interval={0}
@@ -182,7 +182,7 @@ function OverdueByProjectChart({ data = [] }) {
               height={data.length > 4 ? 50 : 30}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              tick={{ fontSize: 11, fill: '#8A7660' }}
               tickLine={false}
               axisLine={false}
               allowDecimals={false}
@@ -207,7 +207,7 @@ function OverdueByProjectChart({ data = [] }) {
 // ── Projects health list ──────────────────────────────────────────────────────
 function ProjectsHealthSection({ projects = [] }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm">
       <SectionTitle>Project Health</SectionTitle>
       {projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-slate-500">
@@ -248,7 +248,7 @@ function ProjectsHealthSection({ projects = [] }) {
 // ── Team performance section ──────────────────────────────────────────────────
 function TeamPerformanceSection({ members = [] }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm">
       <SectionTitle>Team Performance (Last 30 days)</SectionTitle>
       {members.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-slate-500">

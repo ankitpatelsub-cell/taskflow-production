@@ -114,7 +114,7 @@ export function WorkflowSettings({ projectId }) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm space-y-2">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-10 bg-gray-100 dark:bg-slate-700 rounded-lg animate-pulse" />
+          <div key={i} className="h-10 bg-gray-100 dark:bg-slate-700 rounded-xl animate-pulse" />
         ))}
       </div>
     );
@@ -155,7 +155,7 @@ export function WorkflowSettings({ projectId }) {
                         if (e.key === 'Enter') saveEdit(status);
                         if (e.key === 'Escape') cancelEdit();
                       }}
-                      className="w-full text-sm border border-indigo-300 rounded-lg px-2 py-0.5 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full text-sm border border-indigo-300 rounded-xl px-2 py-0.5 bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   ) : (
                     <button

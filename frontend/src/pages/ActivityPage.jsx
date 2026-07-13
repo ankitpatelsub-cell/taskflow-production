@@ -138,7 +138,7 @@ export function ActivityPage() {
               <select
                 value={filterUser}
                 onChange={(e) => setFilterUser(e.target.value)}
-                className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="text-xs border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">All members</option>
                 {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -146,7 +146,7 @@ export function ActivityPage() {
               <select
                 value={filterAction}
                 onChange={(e) => setFilterAction(e.target.value)}
-                className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="text-xs border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">All actions</option>
                 <option value="created">Created</option>

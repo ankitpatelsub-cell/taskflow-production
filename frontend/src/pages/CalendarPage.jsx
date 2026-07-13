@@ -95,26 +95,26 @@ export function CalendarPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={downloadIcal}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
               title="Export to iCalendar (.ics)"
             >
               <Download size={13} /> Export .ics
             </button>
             <button
               onClick={prevMonth}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"
+              className="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={() => { setYear(today.getFullYear()); setMonth(today.getMonth()); }}
-              className="px-3 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+              className="px-3 py-1 text-xs font-semibold rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
             >
               Today
             </button>
             <button
               onClick={nextMonth}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"
+              className="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"
             >
               <ChevronRight size={18} />
             </button>
@@ -122,7 +122,7 @@ export function CalendarPage() {
         </div>
 
         {/* Calendar grid */}
-        <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-slate-700 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
+        <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-slate-700 rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700">
           {/* Day headers */}
           {DAY_NAMES.map(d => (
             <div key={d} className="bg-gray-50 dark:bg-slate-800 py-2 text-center text-xs font-semibold text-gray-500 dark:text-slate-400">

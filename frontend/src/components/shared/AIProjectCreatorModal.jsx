@@ -22,7 +22,7 @@ const DURATION_OPTIONS = [1, 2, 4, 8, 12];
 // ── Generated task row ────────────────────────────────────────────────────────
 function GeneratedTaskRow({ task }) {
   return (
-    <div className="flex items-start gap-3 px-3 py-2.5 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700">
+    <div className="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-800 dark:text-white leading-snug">
           {task.title}
@@ -153,7 +153,7 @@ export function AIProjectCreatorModal({ projectId, onClose, onDone }) {
                 key={w}
                 onClick={() => setDuration(w)}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors',
+                  'px-3 py-1.5 rounded-xl border text-sm font-semibold transition-colors',
                   duration === w
                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                     : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400 border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'

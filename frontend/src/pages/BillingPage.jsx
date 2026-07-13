@@ -7,9 +7,9 @@ import { toast } from '@/components/ui/Toast';
 
 const PLAN_ICONS = { free: Shield, pro: Zap, team: Building2 };
 const PLAN_COLORS = {
-  free: 'border-slate-200 bg-white',
-  pro:  'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-400',
-  team: 'border-slate-200 bg-white',
+  free: 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800',
+  pro:  'border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800',
+  team: 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800',
 };
 
 export function BillingPage() {
@@ -77,23 +77,23 @@ export function BillingPage() {
               className={`rounded-2xl border-2 p-6 flex flex-col transition-all ${PLAN_COLORS[planKey]}`}
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                  <Icon size={20} className="text-indigo-600" />
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+                  <Icon size={20} className="text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
-                  <div className="font-bold text-slate-900">{plan.name}</div>
-                  <div className="text-sm text-slate-500">
+                  <div className="font-bold text-slate-900 dark:text-white">{plan.name}</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
                     {plan.price === 0 ? 'Free forever' : `$${plan.price}/mo`}
                   </div>
                 </div>
                 {isCurrent && (
-                  <span className="ml-auto text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full px-2.5 py-1">
+                  <span className="ml-auto text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-full px-2.5 py-1">
                     Current
                   </span>
                 )}
               </div>
 
-              <ul className="space-y-2 flex-1 mb-6 text-sm text-slate-600">
+              <ul className="space-y-2 flex-1 mb-6 text-sm text-slate-600 dark:text-slate-300">
                 <PlanFeature label={plan.projects === -1 ? 'Unlimited projects' : `${plan.projects} project${plan.projects > 1 ? 's' : ''}`} />
                 <PlanFeature label={plan.members === -1 ? 'Unlimited members' : `Up to ${plan.members} members`} />
                 <PlanFeature label={plan.tasks === -1 ? 'Unlimited tasks' : `Up to ${plan.tasks} tasks`} />
@@ -125,7 +125,7 @@ export function BillingPage() {
 
       {/* Manage existing subscription */}
       {currentPlan !== 'free' && (
-        <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-5 flex items-center justify-between">
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-5 flex items-center justify-between">
           <div>
             <div className="font-medium text-slate-900 dark:text-slate-100">Manage subscription</div>
             <div className="text-sm text-slate-500">Update payment method, download invoices, or cancel.</div>

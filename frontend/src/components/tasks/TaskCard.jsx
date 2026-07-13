@@ -21,15 +21,19 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
     <div
       onClick={open}
       className={cn(
-        'bg-white rounded-2xl p-3.5 cursor-pointer transition-all select-none',
+        'bg-white dark:bg-slate-800 rounded-2xl p-3.5 cursor-pointer transition-all select-none',
         'border shadow-sm hover:shadow-md',
-        overdue ? 'border-red-200 hover:border-red-300' : incomplete ? 'border-amber-200 hover:border-amber-300' : 'border-gray-100 hover:border-indigo-200',
+        overdue
+          ? 'border-red-200 dark:border-red-800 hover:border-red-300'
+          : incomplete
+            ? 'border-amber-200 dark:border-amber-800 hover:border-amber-300'
+            : 'border-gray-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-600',
         done && 'opacity-60'
       )}
       {...dragHandleProps}
     >
       {/* Title */}
-      <p className={cn('text-sm font-medium text-gray-800 mb-2 line-clamp-2 leading-snug', done && 'line-through text-gray-400')}>
+      <p className={cn('text-sm font-medium text-gray-800 dark:text-slate-100 mb-2 line-clamp-2 leading-snug', done && 'line-through text-gray-400 dark:text-slate-500')}>
         {task.title}
       </p>
 
@@ -58,7 +62,7 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
               <span className="text-[10px] text-gray-400">{done}/{task.subtasks.length} subtasks</span>
               <span className="text-[10px] text-gray-400">{pct}%</span>
             </div>
-            <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-1 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
               <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
             </div>
           </div>
@@ -111,9 +115,9 @@ export function TaskCard({ task, projectId, dragHandleProps = {} }) {
           {task.deadline && (
             <span className={cn(
               'flex items-center gap-1 text-xs rounded-md px-1.5 py-0.5',
-              overdue  ? 'bg-red-50 text-red-600 font-semibold' :
-              dueSoon  ? 'bg-amber-50 text-amber-600 font-medium' :
-              'text-gray-400'
+              overdue  ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold' :
+              dueSoon  ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-medium' :
+              'text-gray-400 dark:text-slate-500'
             )}>
               <Calendar size={11} />
               {formatDate(task.deadline)}

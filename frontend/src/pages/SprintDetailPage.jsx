@@ -107,13 +107,13 @@ function BurndownChart({ sprint, burndownData }) {
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis
           dataKey="date"
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={{ fontSize: 11, fill: '#A5917A' }}
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
         />
         <YAxis
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={{ fontSize: 11, fill: '#A5917A' }}
           tickLine={false}
           axisLine={false}
           allowDecimals={false}
@@ -122,7 +122,7 @@ function BurndownChart({ sprint, burndownData }) {
         <Tooltip
           contentStyle={{
             borderRadius: '10px',
-            border: '1px solid #e5e7eb',
+            border: '1px solid #EDE5DA',
             fontSize: '12px',
             boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
           }}
@@ -135,7 +135,7 @@ function BurndownChart({ sprint, burndownData }) {
         <Line
           type="linear"
           dataKey="Ideal"
-          stroke="#d1d5db"
+          stroke="#CBB9A3"
           strokeWidth={2}
           strokeDasharray="5 4"
           dot={false}
@@ -144,9 +144,9 @@ function BurndownChart({ sprint, burndownData }) {
         <Line
           type="monotone"
           dataKey="Actual"
-          stroke="#6366f1"
+          stroke="#7C6AE8"
           strokeWidth={2.5}
-          dot={{ r: 3, fill: '#6366f1' }}
+          dot={{ r: 3, fill: '#7C6AE8' }}
           activeDot={{ r: 5 }}
           connectNulls={false}
         />
@@ -245,7 +245,7 @@ function AddTasksModal({ projectId, sprintId, sprintTaskIds, onClose }) {
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+            <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : backlogTasks.length === 0 ? (

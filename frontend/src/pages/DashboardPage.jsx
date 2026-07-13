@@ -42,10 +42,17 @@ export function DashboardPage() {
   }
 
   const stats = [
-    { labelKey: 'dashboard.statActiveProjects', value: activeProjectsCount, icon: FolderKanban, gradient: 'from-indigo-500 to-indigo-600' },
-    { labelKey: 'dashboard.statTotalTasks',     value: totalTasks,          icon: CheckCircle2, gradient: 'from-emerald-500 to-emerald-600' },
-    { labelKey: 'dashboard.statMyOpenTasks',    value: myTasks.length,      icon: Clock,        gradient: overdueCount > 0 ? 'from-red-500 to-red-600' : 'from-coral-400 to-coral-500' },
-    { labelKey: 'dashboard.statArchived',       value: archivedCount,       icon: Archive,      gradient: 'from-gray-400 to-gray-500' },
+    { labelKey: 'dashboard.statActiveProjects', value: activeProjectsCount, icon: FolderKanban,
+      tint: 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800', iconTint: 'bg-indigo-500' },
+    { labelKey: 'dashboard.statTotalTasks',     value: totalTasks,          icon: CheckCircle2,
+      tint: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800', iconTint: 'bg-emerald-500' },
+    { labelKey: 'dashboard.statMyOpenTasks',    value: myTasks.length,      icon: Clock,
+      tint: overdueCount > 0
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'
+        : 'bg-coral-50 dark:bg-coral-900/20 border-coral-100 dark:border-coral-800',
+      iconTint: overdueCount > 0 ? 'bg-red-500' : 'bg-coral-500' },
+    { labelKey: 'dashboard.statArchived',       value: archivedCount,       icon: Archive,
+      tint: 'bg-gray-50 dark:bg-slate-800 border-gray-100 dark:border-slate-700', iconTint: 'bg-gray-400' },
   ];
 
   function openTask(task) {
@@ -53,36 +60,46 @@ export function DashboardPage() {
     openTaskDrawer(task.id);
   }
 
+  const today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+
   return (
-    <div className="p-6 max-w-5xl mx-auto page-fade">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {getGreeting()}, {user?.name?.split(' ')[0]}!
-        </h2>
-        <p className="text-gray-500 dark:text-slate-400 mt-1">{t('dashboard.overview')}</p>
-      </div>
+    <div className="relative">
+      {/* Ambient background glow */}
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-indigo-200/40 dark:bg-indigo-900/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-40 -right-24 w-80 h-80 bg-coral-200/40 dark:bg-coral-900/15 rounded-full blur-3xl pointer-events-none" />
 
-      {overdueCount > 0 && (
-        <div className="mb-6 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3">
-          <AlertTriangle size={18} className="text-red-500 shrink-0" />
-          <p className="text-sm font-semibold text-red-700 dark:text-red-400">
-            {t('dashboard.overdueAlert', { count: overdueCount })}
-          </p>
-        </div>
-      )}
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-8 lg:grid-cols-4">
-        {stats.map(({ labelKey, value, icon: Icon, gradient }) => (
-          <div key={labelKey} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-3 shadow-sm`}>
-              <Icon size={20} className="text-white" />
+      <div className="relative p-6 max-w-6xl mx-auto page-fade">
+        {/* Hero greeting */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 via-indigo-400 to-coral-400 p-7 sm:p-8 mb-8 shadow-md">
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-20 left-1/3 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          <p className="relative text-white/70 text-sm font-medium mb-1">{today}</p>
+          <h2 className="relative text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            {getGreeting()}, {user?.name?.split(' ')[0]}!
+          </h2>
+          <p className="relative text-white/80 mt-1.5 text-sm sm:text-base">{t('dashboard.overview')}</p>
+          {overdueCount > 0 && (
+            <div className="relative mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full">
+              <AlertTriangle size={14} className="text-white shrink-0" />
+              <p className="text-xs font-semibold text-white">
+                {t('dashboard.overdueAlert', { count: overdueCount })}
+              </p>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{t(labelKey)}</p>
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4 mb-8 lg:grid-cols-4">
+          {stats.map(({ labelKey, value, icon: Icon, tint, iconTint }) => (
+            <div key={labelKey} className={`rounded-2xl border p-5 shadow-sm hover:shadow-md transition-shadow ${tint}`}>
+              <div className={`w-10 h-10 rounded-2xl ${iconTint} flex items-center justify-center mb-3 shadow-sm`}>
+                <Icon size={20} className="text-white" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{t(labelKey)}</p>
+            </div>
+          ))}
+        </div>
 
       <div className="grid gap-8 lg:grid-cols-5">
         {/* My Tasks */}
@@ -245,6 +262,7 @@ export function DashboardPage() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

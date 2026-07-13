@@ -37,7 +37,7 @@ export function InviteMemberModal({ projectId, onClose }) {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {invite.error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-3 py-2">
               {invite.error.response?.data?.error || 'Failed to send invitation'}
             </div>
           )}
@@ -61,7 +61,7 @@ export function InviteMemberModal({ projectId, onClose }) {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="viewer">Viewer — read only</option>
               <option value="member">Member — can create & edit tasks</option>

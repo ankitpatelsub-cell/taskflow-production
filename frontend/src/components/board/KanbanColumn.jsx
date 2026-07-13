@@ -8,10 +8,10 @@ import { useCreateTask } from '@/hooks/useTasks';
 import { cn } from '@/lib/utils';
 
 const COLUMN_STYLES = {
-  todo:        { dot: 'bg-slate-400',   bg: 'bg-slate-50'   },
-  in_progress: { dot: 'bg-indigo-400',  bg: 'bg-indigo-50'  },
-  review:      { dot: 'bg-amber-400',   bg: 'bg-amber-50'   },
-  done:        { dot: 'bg-emerald-400', bg: 'bg-emerald-50' },
+  todo:        { dot: 'bg-slate-400',   bg: 'bg-slate-50 dark:bg-slate-800/50'      },
+  in_progress: { dot: 'bg-indigo-400',  bg: 'bg-indigo-50 dark:bg-indigo-900/20'    },
+  review:      { dot: 'bg-amber-400',   bg: 'bg-amber-50 dark:bg-amber-900/15'      },
+  done:        { dot: 'bg-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/15'  },
 };
 
 function SortableTaskCard({ task, projectId }) {
@@ -63,13 +63,13 @@ export function KanbanColumn({ status, title, tasks, projectId }) {
       {/* Column header */}
       <div className="px-3.5 pt-3.5 pb-2 flex items-center gap-2 shrink-0">
         <span className={cn('w-2.5 h-2.5 rounded-full', styles.dot)} />
-        <span className="text-sm font-bold text-gray-700 flex-1">{title}</span>
-        <span className="bg-white/80 text-gray-500 text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
+        <span className="text-sm font-bold text-gray-700 dark:text-slate-200 flex-1">{title}</span>
+        <span className="bg-white/80 dark:bg-slate-700/80 text-gray-500 dark:text-slate-300 text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
           {tasks.length}
         </span>
         <button
           onClick={openQuickAdd}
-          className="w-6 h-6 flex items-center justify-center rounded-lg bg-white/60 text-gray-500 hover:bg-white hover:text-indigo-600 transition-all shadow-sm"
+          className="w-6 h-6 flex items-center justify-center rounded-lg bg-white/60 dark:bg-slate-700/60 text-gray-500 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all shadow-sm"
           title="Add task"
         >
           <Plus size={14} />
@@ -86,17 +86,17 @@ export function KanbanColumn({ status, title, tasks, projectId }) {
 
         {tasks.length === 0 && !quickAdd && (
           <div
-            className="h-24 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center px-3 cursor-pointer hover:border-indigo-300 hover:bg-white/50 transition-colors"
+            className="h-24 border-2 border-dashed border-gray-200 dark:border-slate-600 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center px-3 cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors"
             onClick={openQuickAdd}
           >
-            <p className="text-xs font-medium text-gray-400">No tasks yet</p>
-            <p className="text-[11px] text-gray-300">Click to add one or drop a card here</p>
+            <p className="text-xs font-medium text-gray-400 dark:text-slate-500">No tasks yet</p>
+            <p className="text-[11px] text-gray-300 dark:text-slate-600">Click to add one or drop a card here</p>
           </div>
         )}
 
         {/* Inline quick-add input */}
         {quickAdd && (
-          <div className="bg-white rounded-xl border border-indigo-200 shadow-sm p-2.5 space-y-2">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-indigo-200 dark:border-indigo-700 shadow-sm p-2.5 space-y-2">
             <textarea
               ref={inputRef}
               value={quickTitle}
@@ -107,7 +107,7 @@ export function KanbanColumn({ status, title, tasks, projectId }) {
               }}
               placeholder="Task title… (Enter to save)"
               rows={2}
-              className="w-full text-sm text-gray-800 bg-transparent resize-none focus:outline-none placeholder:text-gray-300"
+              className="w-full text-sm text-gray-800 dark:text-white bg-transparent resize-none focus:outline-none placeholder:text-gray-300 dark:placeholder:text-slate-500"
             />
             <div className="flex items-center gap-1.5">
               <button

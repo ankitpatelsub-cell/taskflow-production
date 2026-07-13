@@ -98,7 +98,7 @@ function BreakdownPanel({ projectId, taskId, task, onDone }) {
                 <button
                   onClick={() => toggleCheck(i)}
                   className={cn(
-                    'w-full flex items-start gap-2.5 px-3 py-2 rounded-lg border text-left transition-colors',
+                    'w-full flex items-start gap-2.5 px-3 py-2 rounded-xl border text-left transition-colors',
                     checked[i]
                       ? 'border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-700'
                       : 'border-gray-200 bg-white dark:bg-slate-800 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'
@@ -287,7 +287,7 @@ export function AITaskPanel({ projectId, taskId, task }) {
         <button
           onClick={() => setActivePanel(activePanel === 'breakdown' ? null : 'breakdown')}
           className={cn(
-            'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors',
+            'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors',
             activePanel === 'breakdown'
               ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
               : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 border-gray-200 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300'
@@ -299,7 +299,7 @@ export function AITaskPanel({ projectId, taskId, task }) {
         <button
           onClick={() => setActivePanel(activePanel === 'estimate' ? null : 'estimate')}
           className={cn(
-            'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors',
+            'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors',
             activePanel === 'estimate'
               ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
               : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 border-gray-200 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300'

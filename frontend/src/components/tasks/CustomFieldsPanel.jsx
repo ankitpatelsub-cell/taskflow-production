@@ -26,7 +26,7 @@ function TextField({ field, value, onSave }) {
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') { setDraft(value ?? ''); setEditing(false); }
         }}
-        className="w-full text-sm border border-indigo-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        className="w-full text-sm border border-indigo-300 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
       />
     );
   }
@@ -35,7 +35,7 @@ function TextField({ field, value, onSave }) {
     <button
       onClick={() => { setDraft(value ?? ''); setEditing(true); }}
       className={cn(
-        'text-sm text-left w-full px-2.5 py-1.5 rounded-lg border border-transparent hover:border-indigo-200 hover:bg-indigo-50 transition-colors',
+        'text-sm text-left w-full px-2.5 py-1.5 rounded-xl border border-transparent hover:border-indigo-200 hover:bg-indigo-50 transition-colors',
         value ? 'text-gray-800' : 'text-gray-400 italic'
       )}
     >
@@ -66,7 +66,7 @@ function NumberField({ field, value, onSave }) {
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') { setDraft(value ?? ''); setEditing(false); }
         }}
-        className="w-full text-sm border border-indigo-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        className="w-full text-sm border border-indigo-300 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
       />
     );
   }
@@ -75,7 +75,7 @@ function NumberField({ field, value, onSave }) {
     <button
       onClick={() => { setDraft(value ?? ''); setEditing(true); }}
       className={cn(
-        'text-sm text-left w-full px-2.5 py-1.5 rounded-lg border border-transparent hover:border-indigo-200 hover:bg-indigo-50 transition-colors',
+        'text-sm text-left w-full px-2.5 py-1.5 rounded-xl border border-transparent hover:border-indigo-200 hover:bg-indigo-50 transition-colors',
         value != null ? 'text-gray-800 font-medium' : 'text-gray-400 italic'
       )}
     >
@@ -91,7 +91,7 @@ function SelectField({ field, value, onSave }) {
     <select
       value={value ?? ''}
       onChange={(e) => onSave(e.target.value || null)}
-      className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      className="w-full text-sm border border-gray-200 rounded-xl px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
     >
       <option value="">— None —</option>
       {options.map((opt) => (
@@ -107,7 +107,7 @@ function DateField({ field, value, onSave }) {
       type="date"
       value={value ? String(value).slice(0, 10) : ''}
       onChange={(e) => onSave(e.target.value || null)}
-      className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      className="w-full text-sm border border-gray-200 rounded-xl px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
     />
   );
 }
@@ -150,7 +150,7 @@ function UrlField({ field, value, onSave }) {
           if (e.key === 'Escape') { setDraft(value ?? ''); setEditing(false); }
         }}
         placeholder="https://…"
-        className="w-full text-sm border border-indigo-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        className="w-full text-sm border border-indigo-300 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
       />
     );
   }
@@ -181,7 +181,7 @@ function UrlField({ field, value, onSave }) {
   return (
     <button
       onClick={() => { setDraft(''); setEditing(true); }}
-      className="text-sm text-left w-full px-2.5 py-1.5 rounded-lg border border-transparent hover:border-indigo-200 hover:bg-indigo-50 transition-colors text-gray-400 italic"
+      className="text-sm text-left w-full px-2.5 py-1.5 rounded-xl border border-transparent hover:border-indigo-200 hover:bg-indigo-50 transition-colors text-gray-400 italic"
     >
       Click to add URL…
     </button>
@@ -251,7 +251,7 @@ export function CustomFieldsPanel({ projectId, taskId }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-8 bg-gray-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-8 bg-gray-100 rounded-xl animate-pulse" />
         ))}
       </div>
     );

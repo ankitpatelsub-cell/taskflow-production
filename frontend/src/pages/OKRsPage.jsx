@@ -213,25 +213,25 @@ function AddKeyResultForm({ projectId, objectiveId, onDone }) {
         placeholder="Key result title…"
         required
         autoFocus
-        className="flex-1 text-sm border border-indigo-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white dark:border-slate-500"
+        className="flex-1 text-sm border border-indigo-300 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white dark:border-slate-500"
       />
       <input
         type="number"
         value={target}
         onChange={(e) => setTarget(e.target.value)}
         min="1"
-        className="w-16 text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white text-center"
+        className="w-16 text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white text-center"
         title="Target value"
       />
       <input
         value={unit}
         onChange={(e) => setUnit(e.target.value)}
-        className="w-12 text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white text-center"
+        className="w-12 text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white text-center"
         placeholder="%"
         title="Unit"
       />
-      <button type="submit" disabled={create.isPending} className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors"><Check size={15} /></button>
-      <button type="button" onClick={onDone} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"><X size={15} /></button>
+      <button type="submit" disabled={create.isPending} className="p-1.5 rounded-xl text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors"><Check size={15} /></button>
+      <button type="button" onClick={onDone} className="p-1.5 rounded-xl text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"><X size={15} /></button>
     </form>
   );
 }

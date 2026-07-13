@@ -110,12 +110,12 @@ function SetupFlow({ onClose }) {
             <KeyRound size={12} /> Can't scan? Enter this code manually:
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-sm font-mono bg-gray-50 rounded-lg px-3 py-1.5 text-gray-800 select-all break-all">
+            <code className="flex-1 text-sm font-mono bg-gray-50 rounded-xl px-3 py-1.5 text-gray-800 select-all break-all">
               {manualCode}
             </code>
             <button
               onClick={copyCode}
-              className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              className="shrink-0 p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               title="Copy code"
             >
               {copied ? <CheckCircle2 size={15} className="text-emerald-500" /> : <Copy size={15} />}

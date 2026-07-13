@@ -51,7 +51,7 @@ function AddTaskRow({ onAdd }) {
   }
 
   return (
-    <div className="bg-white border border-indigo-200 rounded-xl p-4 shadow-sm space-y-3">
+    <div className="bg-white border border-indigo-200 rounded-2xl p-4 shadow-sm space-y-3">
       <input
         ref={inputRef}
         value={title}
@@ -72,7 +72,7 @@ function AddTaskRow({ onAdd }) {
         <select
           value={priority}
           onChange={e => setPriority(e.target.value)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-gray-50 text-gray-600 outline-none focus:ring-1 focus:ring-indigo-400"
+          className="text-xs border border-gray-200 rounded-xl px-2 py-1 bg-gray-50 text-gray-600 outline-none focus:ring-1 focus:ring-indigo-400"
         >
           <option value="high">🔴 High</option>
           <option value="medium">🟡 Medium</option>
@@ -83,7 +83,7 @@ function AddTaskRow({ onAdd }) {
           type="date"
           value={dueDate}
           onChange={e => setDueDate(e.target.value)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-gray-50 text-gray-600 outline-none focus:ring-1 focus:ring-indigo-400"
+          className="text-xs border border-gray-200 rounded-xl px-2 py-1 bg-gray-50 text-gray-600 outline-none focus:ring-1 focus:ring-indigo-400"
         />
         <div className="ml-auto flex gap-2">
           <Button size="sm" variant="ghost" onClick={cancel}><X size={13} /></Button>

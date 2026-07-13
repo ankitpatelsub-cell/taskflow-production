@@ -34,7 +34,7 @@ export function NotificationBell() {
     <Popover.Root>
       <Popover.Trigger asChild>
         <button
-          className="relative p-1.5 text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          className="relative p-1.5 text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
           title="Notifications"
         >
           <Bell size={18} />

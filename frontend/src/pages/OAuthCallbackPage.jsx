@@ -28,8 +28,11 @@ export function OAuthCallbackPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900">
-      <div className="text-center text-white">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 relative overflow-hidden">
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-coral-500/20 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="text-center text-white relative">
         <Loader2 size={32} className="animate-spin mx-auto mb-3" />
         <p className="text-indigo-200">Signing you in…</p>
       </div>

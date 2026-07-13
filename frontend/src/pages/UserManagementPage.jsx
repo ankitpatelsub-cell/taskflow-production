@@ -20,7 +20,7 @@ const grouped = getGroupedTimezones();
 // ─── Stat card ────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, color }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-4 shadow-sm flex items-center gap-4">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-4 shadow-sm flex items-center gap-4">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
         <Icon size={18} />
       </div>
@@ -61,7 +61,7 @@ function UserFormModal({ onClose, editUser = null }) {
     <Modal open onClose={onClose} title={isEdit ? `Edit — ${editUser.name}` : 'Add New User'}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {error && (
-          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3">
             <AlertTriangle size={15} />
             {error.response?.data?.error || 'Something went wrong'}
           </div>
@@ -69,14 +69,14 @@ function UserFormModal({ onClose, editUser = null }) {
 
         {/* Name */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Full Name *</label>
           <Input {...register('name', { required: 'Name is required' })} placeholder="e.g. Priya Sharma" />
           {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
         </div>
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address *</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Email Address *</label>
           <Input
             type="email"
             {...register('email', { required: 'Email is required' })}
@@ -90,7 +90,7 @@ function UserFormModal({ onClose, editUser = null }) {
         {/* Password — only on create */}
         {!isEdit && (
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password *</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Password *</label>
             <Input
               type="password"
               {...register('password', { required: 'Password required', minLength: { value: 6, message: 'Min 6 characters' } })}
@@ -104,7 +104,7 @@ function UserFormModal({ onClose, editUser = null }) {
         {/* Role + Timezone side by side */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Role</label>
             <Select {...register('role')}>
               {ALL_ROLES
                 .filter((r) => isSuperAdmin(currentUser?.role) || r !== 'super_admin')
@@ -118,10 +118,10 @@ function UserFormModal({ onClose, editUser = null }) {
             </p>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Timezone</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Timezone</label>
             <select
               {...register('timezone')}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-gray-200 dark:border-slate-600 px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {grouped.map(([region, zones]) => (
                 <optgroup key={region} label={region}>
@@ -134,7 +134,7 @@ function UserFormModal({ onClose, editUser = null }) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-3 border-t border-gray-100 dark:border-slate-700">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={isPending}>
             {isPending ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save Changes' : 'Create User')}
@@ -170,16 +170,16 @@ function ResetPasswordModal({ user: targetUser, onClose }) {
   return (
     <Modal open onClose={onClose} title={`Reset Password — ${targetUser.name}`}>
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">Set a new password for <strong>{targetUser.email}</strong>. Share it securely with the user.</p>
+        <p className="text-sm text-gray-600 dark:text-slate-300">Set a new password for <strong>{targetUser.email}</strong>. Share it securely with the user.</p>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">New Password</label>
           <div className="flex gap-2">
             <Input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Enter or generate password" className="flex-1" />
             <Button type="button" variant="secondary" size="sm" onClick={generateRandom}>Generate</Button>
             {pw && <Button type="button" variant="secondary" size="sm" onClick={copyPw}>{copied ? '✓' : 'Copy'}</Button>}
           </div>
         </div>
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-slate-700">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
           <Button
             variant="danger"
@@ -245,9 +245,9 @@ export function UserManagementPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total Users"  value={total}  icon={Users}  color="bg-indigo-50 text-indigo-600" />
-        <StatCard label="Active"       value={active} icon={UserCheck} color="bg-emerald-50 text-emerald-600" />
-        <StatCard label="Admins"       value={admins} icon={Shield} color="bg-amber-50 text-amber-600" />
+        <StatCard label="Total Users"  value={total}  icon={Users}  color="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400" />
+        <StatCard label="Active"       value={active} icon={UserCheck} color="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" />
+        <StatCard label="Admins"       value={admins} icon={Shield} color="bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" />
       </div>
 
       {/* Filters */}
@@ -277,7 +277,7 @@ export function UserManagementPage() {
         {isLoading ? (
           <div className="p-8 text-center text-gray-400">
             <div className="space-y-2">
-              {[1,2,3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
+              {[1,2,3].map(i => <div key={i} className="h-12 bg-gray-100 dark:bg-slate-700 rounded-xl animate-pulse" />)}
             </div>
           </div>
         ) : (
@@ -343,21 +343,21 @@ export function UserManagementPage() {
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => setEditUser(u)}
-                        className="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors dark:hover:bg-indigo-900/30"
+                        className="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-colors dark:hover:bg-indigo-900/30"
                         title="Edit user"
                       >
                         <Shield size={15} />
                       </button>
                       <button
                         onClick={() => setResetUser(u)}
-                        className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors dark:hover:bg-amber-900/30"
+                        className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-xl transition-colors dark:hover:bg-amber-900/30"
                         title="Reset password"
                       >
                         <Key size={15} />
                       </button>
                       <button
                         onClick={() => toggle.mutate({ id: u.id, is_active: u.is_active ? 0 : 1 })}
-                        className={`p-1.5 rounded-lg transition-colors ${
+                        className={`p-1.5 rounded-xl transition-colors ${
                           u.is_active
                             ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30'
                             : 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'

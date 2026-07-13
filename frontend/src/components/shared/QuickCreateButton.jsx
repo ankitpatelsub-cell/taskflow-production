@@ -40,7 +40,7 @@ export function QuickCreateButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-30 w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-300 dark:shadow-indigo-900/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+        className="fixed bottom-6 right-6 z-30 w-12 h-12 bg-gradient-to-br from-indigo-500 to-coral-400 hover:from-indigo-600 hover:to-coral-500 text-white rounded-full shadow-lg shadow-indigo-300 dark:shadow-indigo-900/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
         title="Quick create task (Q)"
       >
         <Plus size={22} />
@@ -50,7 +50,7 @@ export function QuickCreateButton() {
         <Modal open onClose={() => setOpen(false)} title="Quick Create Task">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Task title *</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Task title *</label>
               <Input
                 autoFocus
                 value={title}
@@ -61,7 +61,7 @@ export function QuickCreateButton() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Project *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Project *</label>
                 <Select value={projectId} onChange={(e) => { setProjectId(e.target.value); if (errors.projectId) setErrors((p) => ({ ...p, projectId: '' })); }}>
                   <option value="">Select project…</option>
                   {activeProjects.map((p) => (
@@ -71,7 +71,7 @@ export function QuickCreateButton() {
                 {errors.projectId && <p className="text-xs text-red-500 mt-1">{errors.projectId}</p>}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Priority</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-1.5">Priority</label>
                 <Select value={priority} onChange={(e) => setPriority(e.target.value)}>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -80,7 +80,7 @@ export function QuickCreateButton() {
                 </Select>
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-slate-700">
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={create.isPending}>
                 {create.isPending ? 'Creating…' : 'Create Task'}

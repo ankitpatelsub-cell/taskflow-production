@@ -80,7 +80,7 @@ export function SearchPage() {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="text-xs border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Any status</option>
               {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
@@ -88,7 +88,7 @@ export function SearchPage() {
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="text-xs border border-gray-200 dark:border-slate-600 rounded-xl px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Any priority</option>
               {PRIORITIES.map((p) => <option key={p} value={p} className="capitalize">{p}</option>)}

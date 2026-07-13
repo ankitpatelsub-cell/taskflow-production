@@ -104,20 +104,20 @@ export function GanttPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setWeekOffset((w) => w - WEEK_COUNT)}
-                className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                className="p-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                 title="Previous period"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={() => setWeekOffset(0)}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                className="px-3 py-1.5 text-sm font-medium rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
               >
                 Today
               </button>
               <button
                 onClick={() => setWeekOffset((w) => w + WEEK_COUNT)}
-                className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                className="p-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                 title="Next period"
               >
                 <ChevronRight size={16} />

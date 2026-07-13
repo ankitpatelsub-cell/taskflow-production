@@ -51,7 +51,7 @@ export function RetroAutopilotModal({ projectId, sprint, onClose }) {
               </p>
             </div>
             {retroMutation.isError && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-700 dark:text-red-400">
+              <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-700 dark:text-red-400">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                 {retroMutation.error?.response?.data?.error || 'Failed to generate. Please try again.'}
               </div>
@@ -77,15 +77,15 @@ export function RetroAutopilotModal({ projectId, sprint, onClose }) {
           <div className="space-y-5">
             {/* Metrics row */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-3 text-center">
+              <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-3 text-center">
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{result.metrics.completion_rate}%</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Completed</p>
               </div>
-              <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-3 text-center">
+              <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-3 text-center">
                 <p className={cn('text-2xl font-bold', healthColor)}>{result.retrospective.health_score}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Health Score</p>
               </div>
-              <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-3 text-center">
+              <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-3 text-center">
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{result.metrics.scope_adds}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Scope Adds</p>
               </div>
@@ -93,7 +93,7 @@ export function RetroAutopilotModal({ projectId, sprint, onClose }) {
 
             {/* Key metric */}
             {result.retrospective.key_metric && (
-              <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-3">
+              <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-3">
                 <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
                   🎯 {result.retrospective.key_metric}
                 </p>
@@ -144,7 +144,7 @@ export function RetroAutopilotModal({ projectId, sprint, onClose }) {
                 </p>
                 <div className="space-y-2">
                   {result.retrospective.action_items.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2 p-2.5 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                    <div key={i} className="flex items-start gap-2 p-2.5 bg-gray-50 dark:bg-slate-800 rounded-xl">
                       <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded mt-0.5 whitespace-nowrap">{item.by_when}</span>
                       <div>
                         <p className="text-sm text-gray-800 dark:text-gray-200">{item.action}</p>

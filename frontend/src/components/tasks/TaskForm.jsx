@@ -90,7 +90,7 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
         <Input {...register('title', { required: true })} placeholder="Task title" />
         {errors.title && <p className="text-xs text-red-500 mt-1">Title is required</p>}
         {similarTasks.length > 0 && !defaultValues.id && (
-          <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1.5">
               <AlertTriangle size={12} /> Similar tasks already exist
             </div>
@@ -116,7 +116,7 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
         <textarea
           {...register('description')}
           rows={3}
-          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 dark:text-white"
+          className="w-full rounded-xl border border-gray-300 dark:border-slate-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 dark:text-white"
           placeholder="Task description..."
         />
       </div>
@@ -176,7 +176,7 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
             max="100"
             placeholder="—"
             {...register('story_points', { valueAsNumber: true })}
-            className="w-24 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-24 border border-gray-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
       </div>
@@ -239,7 +239,7 @@ export function TaskForm({ projectId, defaultValues = {}, onSubmit, onCancel, lo
                     type="button"
                     onClick={() => handleDayToggle(value, !active, recurrenceDays)}
                     className={cn(
-                      'w-9 h-9 rounded-lg text-xs font-semibold border transition-colors',
+                      'w-9 h-9 rounded-xl text-xs font-semibold border transition-colors',
                       active
                         ? 'bg-indigo-600 text-white border-indigo-600'
                         : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-600 hover:border-indigo-400'

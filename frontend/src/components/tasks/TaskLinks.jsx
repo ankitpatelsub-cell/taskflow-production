@@ -89,13 +89,13 @@ export function TaskLinks({ taskId }) {
             value={url}
             onChange={e => setUrl(e.target.value)}
             placeholder="https://github.com/org/repo/pull/123"
-            className="w-full text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 dark:text-white"
+            className="w-full text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 dark:text-white"
           />
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Title (optional)"
-            className="w-full text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 dark:text-white"
+            className="w-full text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 dark:text-white"
           />
           <div className="flex gap-2">
             <Button size="sm" type="submit" loading={add.isPending}>Add link</Button>

@@ -43,7 +43,7 @@ function EmojiPicker({ onSelect, onClose }) {
           <button
             key={emoji}
             onClick={() => { onSelect(emoji); onClose(); }}
-            className="w-8 h-8 flex items-center justify-center text-lg rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            className="w-8 h-8 flex items-center justify-center text-lg rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
             title={emoji}
           >
             {emoji}

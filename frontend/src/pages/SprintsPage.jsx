@@ -195,7 +195,7 @@ function CreateSprintModal({ projectId, onClose }) {
   }
 
   const inputClass =
-    'w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white';
+    'w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

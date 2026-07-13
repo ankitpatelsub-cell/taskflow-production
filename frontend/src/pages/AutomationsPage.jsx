@@ -117,7 +117,7 @@ export function AutomationsPage() {
                 <select
                   value={form.trigger_type}
                   onChange={e => setForm(f => ({ ...f, trigger_type: e.target.value, trigger_value: '' }))}
-                  className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   {Object.entries(TRIGGER_LABELS).map(([v, l]) => (
                     <option key={v} value={v}>{l}</option>
@@ -127,7 +127,7 @@ export function AutomationsPage() {
                   <select
                     value={form.trigger_value}
                     onChange={e => setForm(f => ({ ...f, trigger_value: e.target.value }))}
-                    className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="">any status</option>
                     {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS_MAP[s]}</option>)}
@@ -141,7 +141,7 @@ export function AutomationsPage() {
                 <select
                   value={form.action_type}
                   onChange={e => setForm(f => ({ ...f, action_type: e.target.value, action_value: '' }))}
-                  className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   {Object.entries(ACTION_LABELS).map(([v, l]) => (
                     <option key={v} value={v}>{l}</option>
@@ -151,7 +151,7 @@ export function AutomationsPage() {
                   <select
                     value={form.action_value}
                     onChange={e => setForm(f => ({ ...f, action_value: e.target.value }))}
-                    className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="">select status…</option>
                     {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS_MAP[s]}</option>)}
@@ -163,7 +163,7 @@ export function AutomationsPage() {
                     placeholder="Optional custom message…"
                     value={form.action_value}
                     onChange={e => setForm(f => ({ ...f, action_value: e.target.value }))}
-                    className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1"
+                    className="text-sm border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 bg-gray-50 dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1"
                   />
                 )}
               </div>

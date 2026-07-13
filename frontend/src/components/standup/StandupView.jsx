@@ -150,12 +150,12 @@ export function StandupView({ projectId }) {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="text-sm border border-gray-300 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+            className="text-sm border border-gray-300 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
           >
             <option value="">All statuses</option>
             <option value="todo">To Do</option>

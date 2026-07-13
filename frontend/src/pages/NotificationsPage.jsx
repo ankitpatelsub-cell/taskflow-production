@@ -53,7 +53,7 @@ export function NotificationsPage() {
       </div>
 
       {notifications.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 py-16 text-center">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm py-16 text-center">
           <Bell size={40} className="mx-auto text-gray-200 dark:text-slate-600 mb-3" />
           <p className="font-medium text-gray-500 dark:text-slate-400">No notifications yet</p>
           <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">You'll see assignment updates, comments, and reminders here.</p>
@@ -63,7 +63,7 @@ export function NotificationsPage() {
           {unread.length > 0 && (
             <div>
               <p className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">New</p>
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 divide-y divide-gray-100 dark:divide-slate-700 shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 divide-y divide-gray-100 dark:divide-slate-700 shadow-sm overflow-hidden">
                 {unread.map((n) => (
                   <NotifRow key={n.id} n={n} onRead={() => markOne.mutate(n.id)} />
                 ))}
@@ -74,7 +74,7 @@ export function NotificationsPage() {
           {read.length > 0 && (
             <div>
               <p className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Earlier</p>
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 divide-y divide-gray-100 dark:divide-slate-700 overflow-hidden opacity-75">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 divide-y divide-gray-100 dark:divide-slate-700 overflow-hidden opacity-75">
                 {read.map((n) => (
                   <NotifRow key={n.id} n={n} />
                 ))}

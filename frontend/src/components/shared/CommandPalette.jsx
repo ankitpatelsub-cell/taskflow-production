@@ -132,9 +132,9 @@ export function CommandPalette({ open, onClose }) {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-gray-900/40 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="w-full max-w-xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden"
+        className="w-full max-w-xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input */}
@@ -159,7 +159,7 @@ export function CommandPalette({ open, onClose }) {
                 key={f.id}
                 onClick={() => setFilter(f.id)}
                 className={cn(
-                  'px-2.5 py-1 rounded-lg text-xs font-medium transition-colors',
+                  'px-2.5 py-1 rounded-xl text-xs font-medium transition-colors',
                   filter === f.id
                     ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
                     : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700'

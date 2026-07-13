@@ -181,7 +181,7 @@ function WebhookRow({ webhook, projectId }) {
     <div className="p-4 space-y-3">
       {/* URL + status */}
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+        <div className="mt-0.5 w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
           <Globe size={15} className="text-indigo-500" />
         </div>
         <div className="flex-1 min-w-0">
@@ -240,7 +240,7 @@ function WebhookRow({ webhook, projectId }) {
         ) : (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="ml-auto p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="ml-auto p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
             title="Delete webhook"
           >
             <Trash2 size={15} />

@@ -102,7 +102,7 @@ function GuestView({ token }) {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-lg shrink-0"
+              className="w-8 h-8 rounded-xl shrink-0"
               style={{ backgroundColor: project.color || '#6366f1' }}
             />
             <div>
@@ -158,7 +158,7 @@ function GuestView({ token }) {
 
       {/* Comment modal */}
       {commentTask && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-gray-900/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <h3 className="font-bold text-gray-800 mb-1">Add comment</h3>
             <p className="text-sm text-gray-500 mb-4 truncate">"{commentTask.title}"</p>

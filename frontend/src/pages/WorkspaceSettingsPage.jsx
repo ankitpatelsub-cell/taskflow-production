@@ -118,7 +118,7 @@ export function WorkspaceSettingsPage() {
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value)}
-              className="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm px-3 text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm px-3 text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="member">Member</option>
               <option value="admin">Admin</option>
@@ -135,8 +135,8 @@ export function WorkspaceSettingsPage() {
             const isSelf = m.id === user?.id;
             const canModify = isAdmin && m.role !== 'owner' && !isSelf;
             return (
-              <div key={m.id} className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
+              <div key={m.id} className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-coral-400 flex items-center justify-center text-white text-sm font-bold shrink-0">
                   {m.name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">

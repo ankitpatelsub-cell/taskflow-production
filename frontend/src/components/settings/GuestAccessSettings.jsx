@@ -35,7 +35,7 @@ function CopyButton({ text }) {
   return (
     <button
       onClick={handleCopy}
-      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+      className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
       title="Copy link"
     >
       {copied ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Copy size={14} />}
@@ -246,7 +246,7 @@ export function GuestAccessSettings({ projectId }) {
                   if (!confirm(`Revoke "${link.label}"? Anyone using this link will lose access immediately.`)) return;
                   revoke.mutate(link.id);
                 }}
-                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                 title="Revoke link"
               >
                 <Trash2 size={14} />

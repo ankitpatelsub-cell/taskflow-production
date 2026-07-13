@@ -77,7 +77,7 @@ export function TaskDependencies({ taskId, projectId }) {
               autoFocus
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
-              className="flex-1 text-sm border border-indigo-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 text-sm border border-indigo-300 rounded-xl px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Select a task…</option>
               {availableTasks.map((t) => (
@@ -87,7 +87,7 @@ export function TaskDependencies({ taskId, projectId }) {
             <button
               onClick={handleAdd}
               disabled={!selected || addDep.isPending}
-              className="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
             >
               Save
             </button>

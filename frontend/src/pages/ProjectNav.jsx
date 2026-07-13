@@ -28,14 +28,14 @@ export function ProjectNav({ projectId, project }) {
   ];
 
   return (
-    <div className="px-4 border-b border-gray-100 bg-white flex flex-row items-center shadow-sm shrink-0 overflow-x-auto">
+    <div className="px-4 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-row items-center shadow-sm shrink-0 overflow-x-auto">
       {/* Project colour + name */}
-      <div className="flex flex-row items-center gap-2 py-3 pr-4 mr-2 border-r border-gray-100 shrink-0">
+      <div className="flex flex-row items-center gap-2 py-3 pr-4 mr-2 border-r border-gray-100 dark:border-slate-700 shrink-0">
         <div
           className="w-4 h-4 rounded shrink-0"
           style={{ backgroundColor: project?.color || '#6366f1' }}
         />
-        <span className="font-bold text-gray-900 text-sm whitespace-nowrap max-w-[120px] truncate">
+        <span className="font-bold text-gray-900 dark:text-white text-sm whitespace-nowrap max-w-[120px] truncate">
           {project?.name || '…'}
         </span>
       </div>
@@ -46,8 +46,8 @@ export function ProjectNav({ projectId, project }) {
           <Link
             key={to}
             to={to}
-            className="flex flex-row items-center gap-1.5 px-3 py-3.5 text-sm font-medium border-b-2 border-transparent text-gray-500 whitespace-nowrap shrink-0 hover:text-gray-800 hover:border-gray-300 transition-colors"
-            activeProps={{ className: 'border-indigo-600 !text-indigo-700' }}
+            className="flex flex-row items-center gap-1.5 px-3 py-3.5 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-slate-400 whitespace-nowrap shrink-0 hover:text-gray-800 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-500 transition-colors"
+            activeProps={{ className: 'border-indigo-600 dark:border-indigo-400 !text-indigo-700 dark:!text-indigo-400' }}
           >
             <Icon size={14} className="shrink-0" />
             <span className="text-xs sm:text-sm">{label}</span>
