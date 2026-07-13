@@ -1,7 +1,6 @@
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { Sidebar } from './Sidebar';
-import { Topbar } from './Topbar';
+import { TopNav } from './TopNav';
 import { useAuthStore } from '@/stores/authStore';
 import { TaskDetailDrawer } from '@/components/tasks/TaskDetailDrawer';
 import { useUiStore } from '@/stores/uiStore';
@@ -19,7 +18,7 @@ import { useDesktopNotifications } from '@/hooks/useDesktopNotifications';
 export function AppShell() {
   const { isAuthenticated, accessToken } = useAuthStore();
   const [cmdOpen, setCmdOpen] = useState(false);
-  const { taskDrawerOpen, selectedTaskId, activeProjectId, closeTaskDrawer, sidebarOpen, toggleSidebar } = useUiStore();
+  const { taskDrawerOpen, selectedTaskId, activeProjectId, closeTaskDrawer } = useUiStore();
   const navigate = useNavigate();
   const { initTheme } = useThemeStore();
   const { location } = useRouterState();
@@ -97,29 +96,12 @@ export function AppShell() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-app">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-gray-900/40 z-30 lg:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
-
-      <div className={`
-        fixed inset-y-0 left-0 z-40 lg:relative lg:z-auto
-        transition-transform duration-200
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:hidden'}
-      `}>
-        <Sidebar />
-      </div>
-
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0 w-full">
-        <Topbar />
-        <EmailVerificationBanner />
-        <main className="flex-1 overflow-auto">
-          <Outlet />
-        </main>
-      </div>
+    <div className="flex flex-col h-screen overflow-hidden bg-surface-app relative">
+      <TopNav />
+      <EmailVerificationBanner />
+      <main className="flex-1 overflow-auto min-w-0 w-full">
+        <Outlet />
+      </main>
 
       {taskDrawerOpen && selectedTaskId && activeProjectId && (
         <TaskDetailDrawer

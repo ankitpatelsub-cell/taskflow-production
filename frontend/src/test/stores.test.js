@@ -59,26 +59,26 @@ describe('authStore', () => {
 describe('uiStore', () => {
   beforeEach(() => {
     useUiStore.setState({
-      sidebarOpen: true,
+      sidebarOpen: false,
       activeProjectId: null,
       taskDrawerOpen: false,
       selectedTaskId: null,
     });
   });
 
-  it('initial state has sidebar open, drawer closed', () => {
+  it('initial state has mobile nav closed, drawer closed', () => {
     const state = useUiStore.getState();
-    expect(state.sidebarOpen).toBe(true);
+    expect(state.sidebarOpen).toBe(false);
     expect(state.taskDrawerOpen).toBe(false);
     expect(state.selectedTaskId).toBeNull();
     expect(state.activeProjectId).toBeNull();
   });
 
-  it('toggleSidebar() flips sidebarOpen', () => {
-    useUiStore.getState().toggleSidebar();
-    expect(useUiStore.getState().sidebarOpen).toBe(false);
+  it('toggleSidebar() flips sidebarOpen (mobile nav drawer)', () => {
     useUiStore.getState().toggleSidebar();
     expect(useUiStore.getState().sidebarOpen).toBe(true);
+    useUiStore.getState().toggleSidebar();
+    expect(useUiStore.getState().sidebarOpen).toBe(false);
   });
 
   it('setActiveProject() sets the active project id', () => {

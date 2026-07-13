@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 
 export const useUiStore = create((set) => ({
-  sidebarOpen: true,
+  // Drives the mobile nav drawer in TopNav (the desktop nav is always visible)
+  sidebarOpen: false,
   activeProjectId: null,
   taskDrawerOpen: false,
   selectedTaskId: null,
